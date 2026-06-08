@@ -38,9 +38,13 @@
 	<RoleFilter bind:selected={role} />
 
 	{#if data.heroes.length === 0}
-		<p class="rounded-2xl border border-line bg-surface p-6 text-ink-muted">No heroes loaded yet. Connect the backend API.</p>
+		<p class="rounded-2xl border border-line bg-surface p-6 text-ink-muted">
+			No heroes loaded yet. Connect the backend API.
+		</p>
 	{:else if filtered.length === 0}
-		<p class="rounded-2xl border border-line bg-surface p-6 text-ink-muted">No heroes match your filters.</p>
+		<p class="rounded-2xl border border-line bg-surface p-6 text-ink-muted">
+			No heroes match your filters.
+		</p>
 	{:else}
 		<ul class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6">
 			{#each filtered as hero (hero.id)}

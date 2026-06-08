@@ -32,7 +32,8 @@
 		<div class="rounded-xl border border-line-strong bg-surface-2 p-4 shadow-xl shadow-black/40">
 			<p class="font-display font-bold text-ink">
 				{hero.name}
-				{#if hero.title}<span class="font-body font-normal text-ink-muted">— {hero.title}</span>{/if}
+				{#if hero.title}<span class="font-body font-normal text-ink-muted">— {hero.title}</span
+					>{/if}
 			</p>
 			<p class="mt-0.5 text-xs capitalize" style="color:{roleColor(hero.role)}">{hero.role}</p>
 			{#if hero.specialities && hero.specialities.length}

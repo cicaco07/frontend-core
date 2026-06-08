@@ -18,12 +18,17 @@
 <div class="min-h-screen bg-bg text-ink">
 	<header class="sticky top-0 z-50 border-b border-line bg-bg/82 backdrop-blur-xl">
 		<nav class="mx-auto flex h-14 max-w-7xl items-center justify-between gap-6 px-4 sm:px-6">
-			<a href={resolve('/')} class="font-display text-lg font-bold tracking-[0.18em] text-ink uppercase">
+			<a
+				href={resolve('/')}
+				class="font-display text-lg font-bold tracking-[0.18em] text-ink uppercase"
+			>
 				ML THEORYCRAFT
 			</a>
 			<ul class="hidden items-center gap-7 text-[13px] font-medium text-ink-muted md:flex">
 				{#each nav as item (item.href)}
-					<li><a class="transition hover:text-accent" href={resolve(item.href)}>{item.label}</a></li>
+					<li>
+						<a class="transition hover:text-accent" href={resolve(item.href)}>{item.label}</a>
+					</li>
 				{/each}
 			</ul>
 			<a

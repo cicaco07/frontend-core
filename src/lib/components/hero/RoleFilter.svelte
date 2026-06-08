@@ -13,12 +13,12 @@
 	<button
 		type="button"
 		onclick={() => (selected = null)}
-	class="rounded-full border px-3 py-1 text-sm transition"
-	class:border-line-strong={selected === null}
-	class:bg-surface-3={selected === null}
-	class:text-ink={selected === null}
-	class:border-line={selected !== null}
-	class:text-ink-muted={selected !== null}
+		class="rounded-full border px-3 py-1 text-sm transition"
+		class:border-line-strong={selected === null}
+		class:bg-surface-3={selected === null}
+		class:text-ink={selected === null}
+		class:border-line={selected !== null}
+		class:text-ink-muted={selected !== null}
 	>
 		All
 	</button>

@@ -63,9 +63,13 @@
 	</div>
 
 	{#if data.items.length === 0}
-		<p class="rounded-2xl border border-line bg-surface p-6 text-ink-muted">No items loaded yet. Connect the backend API.</p>
+		<p class="rounded-2xl border border-line bg-surface p-6 text-ink-muted">
+			No items loaded yet. Connect the backend API.
+		</p>
 	{:else if filtered.length === 0}
-		<p class="rounded-2xl border border-line bg-surface p-6 text-ink-muted">No items match your filters.</p>
+		<p class="rounded-2xl border border-line bg-surface p-6 text-ink-muted">
+			No items match your filters.
+		</p>
 	{:else}
 		<ul class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 			{#each filtered as item (item.id)}

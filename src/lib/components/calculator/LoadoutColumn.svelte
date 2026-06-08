@@ -36,7 +36,10 @@
 	}
 </script>
 
-<div class="space-y-4 rounded-2xl border border-line bg-surface/82 p-4" style="border-top:3px solid {accent}">
+<div
+	class="space-y-4 rounded-2xl border border-line bg-surface/82 p-4"
+	style="border-top:3px solid {accent}"
+>
 	<label class="block">
 		<span class="font-display text-xs font-bold tracking-wide text-ink-faint uppercase">Hero</span>
 		<select
@@ -65,12 +68,15 @@
 	{/if}
 
 	<label class="block">
-		<span class="font-display text-xs font-bold tracking-wide text-ink-faint uppercase">Level: {loadout.level}</span>
+		<span class="font-display text-xs font-bold tracking-wide text-ink-faint uppercase"
+			>Level: {loadout.level}</span
+		>
 		<input type="range" min="1" max="15" bind:value={loadout.level} class="mt-1 w-full" />
 	</label>
 
 	<label class="block">
-		<span class="font-display text-xs font-bold tracking-wide text-ink-faint uppercase">Emblem</span>
+		<span class="font-display text-xs font-bold tracking-wide text-ink-faint uppercase">Emblem</span
+		>
 		<select
 			onchange={onEmblem}
 			value={loadout.emblem?.slug ?? ''}

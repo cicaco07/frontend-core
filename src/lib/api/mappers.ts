@@ -165,7 +165,10 @@ export function mapItem(item: BackendItem): Item {
 }
 
 export function mapEmblem(emblem: BackendEmblem): Emblem {
-	const stats = typeof emblem.attributes === 'object' && Array.isArray(emblem.attributes) ? parseStatStrings(emblem.attributes) : {};
+	const stats =
+		typeof emblem.attributes === 'object' && Array.isArray(emblem.attributes)
+			? parseStatStrings(emblem.attributes)
+			: {};
 	return {
 		id: emblem._id,
 		slug: slugify(emblem.name),

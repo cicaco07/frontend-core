@@ -15,7 +15,9 @@
 	<div class="mb-6 flex flex-wrap items-center justify-between gap-3">
 		<div>
 			<h1 class="font-display text-3xl font-bold text-ink">Theorycrafter</h1>
-			<p class="mt-1 text-sm text-ink-muted">Hitung damage, DPS, dan output build secara real-time.</p>
+			<p class="mt-1 text-sm text-ink-muted">
+				Hitung damage, DPS, dan output build secara real-time.
+			</p>
 		</div>
 		<a
 			href={resolve('/theorycrafter/versus')}
@@ -34,15 +36,23 @@
 			accent="#ff865b"
 		/>
 
-		<section class="flex min-h-[520px] items-center justify-center rounded-3xl border border-line bg-surface/60 p-6 text-center">
+		<section
+			class="flex min-h-[520px] items-center justify-center rounded-3xl border border-line bg-surface/60 p-6 text-center"
+		>
 			<div>
 				<div class="mx-auto mb-5 size-40 rounded-full border border-accent/40 bg-accent/10"></div>
-				<h2 class="font-display text-4xl font-bold text-ink uppercase">{loadout.hero?.name ?? 'LAYLA'}</h2>
+				<h2 class="font-display text-4xl font-bold text-ink uppercase">
+					{loadout.hero?.name ?? 'LAYLA'}
+				</h2>
 				<p class="mt-2 text-sm text-ink-muted">Malefic Gun build · Physical carry</p>
 				<div class="mt-5 flex justify-center gap-3">
 					{#each loadout.items.slice(0, 4) as item (item.id)}
 						<span class="size-14 overflow-hidden rounded-xl border border-line bg-surface-3">
-							{#if item.imageUrl}<img src={item.imageUrl} alt={item.name} class="h-full w-full object-cover" />{/if}
+							{#if item.imageUrl}<img
+									src={item.imageUrl}
+									alt={item.name}
+									class="h-full w-full object-cover"
+								/>{/if}
 						</span>
 					{/each}
 				</div>
