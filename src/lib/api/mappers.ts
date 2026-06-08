@@ -128,10 +128,10 @@ export function mapHero(hero: BackendHero): Hero {
 	const base = hero.base_stats?.[0] ?? null;
 	return {
 		id: hero._id,
-		slug: slugify(hero.alias || hero.name),
+		slug: slugify(hero.name),
 		name: hero.name,
 		role: normalizeRole(hero.role),
-		imageUrl: hero.avatar || hero.image,
+		imageUrl: hero.image || hero.avatar,
 		baseStats: mapBaseStat(base),
 		statsPerLevel: {},
 		skills: (hero.skills ?? []).map((skill) => ({
