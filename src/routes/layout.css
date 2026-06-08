@@ -1,2 +1,71 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/typography';
+
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=JetBrains+Mono:wght@400;600;700&family=Sora:wght@400;500;600;700&display=swap');
+
+@theme {
+	--color-bg: #091319;
+	--color-surface: #0f1923;
+	--color-surface-2: #14222c;
+	--color-surface-3: #1d2b34;
+	--color-line: #26343d;
+	--color-line-strong: #3a4a55;
+	--color-ink: #e8eef5;
+	--color-ink-muted: #9fb9d0;
+	--color-ink-faint: #6a7a89;
+	--color-accent: #ff865b;
+	--color-accent-2: #b387fa;
+	--color-secondary: #fd6f9c;
+	--color-physical: #ffb86b;
+	--color-magic: #89e0eb;
+	--color-true: #f4f7ff;
+	--color-positive: #addfad;
+	--color-negative: #ff7a7c;
+	--color-warning: #f1c891;
+	--color-good: #addfad;
+	--color-bad: #ff7a7c;
+	--color-gold: #f1c891;
+	--color-role-tank: #6d8aad;
+	--color-role-fighter: #c2724a;
+	--color-role-assassin: #fd6f9c;
+	--color-role-mage: #89e0eb;
+	--color-role-marksman: #ffb86b;
+	--color-role-support: #addfad;
+}
+
+@layer base {
+	:root {
+		font-family: 'Sora', system-ui, sans-serif;
+		background: #091319;
+		color: #e8eef5;
+	}
+
+	body {
+		min-height: 100vh;
+		background:
+			radial-gradient(circle at top left, rgb(255 134 91 / 0.16), transparent 30rem),
+			radial-gradient(circle at top right, rgb(179 135 250 / 0.14), transparent 28rem),
+			#091319;
+	}
+
+	button,
+	input,
+	textarea,
+	select {
+		font: inherit;
+	}
+}
+
+@layer utilities {
+	.font-display {
+		font-family: 'Chakra Petch', system-ui, sans-serif;
+	}
+
+	.font-body {
+		font-family: 'Sora', system-ui, sans-serif;
+	}
+
+	.font-mono-stat {
+		font-family: 'JetBrains Mono', ui-monospace, monospace;
+	}
+}

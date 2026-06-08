@@ -7,29 +7,34 @@
 
 	const nav = [
 		{ href: '/heroes', label: 'Heroes' },
-		{ href: '/items', label: 'Items' },
-		{ href: '/emblems', label: 'Emblems' },
 		{ href: '/builds', label: 'Builds' },
 		{ href: '/tournaments', label: 'Tournaments' },
-		{ href: '/stats', label: 'Stats' },
 		{ href: '/theorycrafter', label: 'Theorycrafter' }
 	] as const;
 </script>
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
-<div class="min-h-screen bg-slate-950 text-slate-100">
-	<header class="border-b border-slate-800">
-		<nav class="mx-auto flex max-w-6xl items-center gap-6 px-4 py-4">
-			<a href={resolve('/')} class="text-lg font-bold tracking-tight">ML Theorycraft</a>
-			<ul class="flex flex-wrap gap-4 text-sm text-slate-300">
+<div class="min-h-screen bg-bg text-ink">
+	<header class="sticky top-0 z-50 border-b border-line bg-bg/82 backdrop-blur-xl">
+		<nav class="mx-auto flex h-14 max-w-7xl items-center justify-between gap-6 px-4 sm:px-6">
+			<a href={resolve('/')} class="font-display text-lg font-bold tracking-[0.18em] text-ink uppercase">
+				ML THEORYCRAFT
+			</a>
+			<ul class="hidden items-center gap-7 text-[13px] font-medium text-ink-muted md:flex">
 				{#each nav as item (item.href)}
-					<li><a class="hover:text-white" href={resolve(item.href)}>{item.label}</a></li>
+					<li><a class="transition hover:text-accent" href={resolve(item.href)}>{item.label}</a></li>
 				{/each}
 			</ul>
+			<a
+				href={resolve('/theorycrafter')}
+				class="rounded-full border border-accent/40 bg-accent/10 px-4 py-1.5 text-xs font-semibold text-accent transition hover:bg-accent hover:text-bg"
+			>
+				Mulai
+			</a>
 		</nav>
 	</header>
-	<main class="mx-auto max-w-6xl px-4 py-8">
+	<main>
 		{@render children()}
 	</main>
 </div>
