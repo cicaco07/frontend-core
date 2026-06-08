@@ -2,9 +2,9 @@ import type { Hero, Item, Emblem, StatBlock } from '$lib/types';
 import {
 	sumStats,
 	scaleStatsByLevel,
-	computeDamage,
 	basicAttackDps,
-	averageBasicAttack
+	averageBasicAttack,
+	heroSkillDamage
 } from '$lib/calc/formulas';
 import { emptyStatBlock } from '$lib/types';
 
@@ -38,20 +38,8 @@ export class Loadout {
 	skillDamage(skillId: string): number {
 		if (!this.hero) return 0;
 		const skill = this.hero.skills.find((s) => s.id === skillId);
-		if (!skill || skill.damageType === 'none') return 0;
-
-		const rank = Math.min(skill.baseDamage.length - 1, Math.max(0, this.level - 1));
-		let raw = skill.baseDamage[rank] ?? 0;
-		for (const s of skill.scaling) {
-			raw += this.finalStats[s.stat] * s.ratio;
-		}
-
-		return computeDamage({
-			rawDamage: raw,
-			damageType: skill.damageType,
-			attacker: this.finalStats,
-			target: this.target
-		});
+		if (!skill) return 0;
+		return heroSkillDamage(skill, this.finalStats, this.target, this.level);
 	}
 
 	addItem(item: Item) {

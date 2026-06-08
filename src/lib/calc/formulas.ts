@@ -1,5 +1,6 @@
 import type { DamageType, StatBlock } from '../types/stats';
 import { emptyStatBlock } from '../types/stats';
+import type { HeroSkill } from '../types/hero';
 
 export function sumStats(blocks: Array<Partial<StatBlock>>): StatBlock {
 	const total = emptyStatBlock();
@@ -85,6 +86,41 @@ export function basicAttackDps(
 	baseAttackSpeed = 1
 ): number {
 	return averageBasicAttack(attacker, target) * attacksPerSecond(attacker, baseAttackSpeed);
+}
+
+// Raw = base damage at the skill's rank (capped to its array) + stat scaling.
+export function heroSkillDamage(
+	skill: HeroSkill,
+	attacker: StatBlock,
+	target: StatBlock,
+	level: number
+): number {
+	if (skill.damageType === 'none') return 0;
+
+	const rank = Math.min(skill.baseDamage.length - 1, Math.max(0, level - 1));
+	let raw = skill.baseDamage[rank] ?? 0;
+	for (const s of skill.scaling) {
+		raw += attacker[s.stat] * s.ratio;
+	}
+
+	return computeDamage({ rawDamage: raw, damageType: skill.damageType, attacker, target });
+}
+
+export function skillBurst(
+	skills: HeroSkill[],
+	attacker: StatBlock,
+	target: StatBlock,
+	level: number
+): number {
+	return skills.reduce((sum, skill) => sum + heroSkillDamage(skill, attacker, target, level), 0);
+}
+
+// Effective HP against a damage type: hp / mitigationMultiplier(resistance).
+// True damage bypasses mitigation, so EHP = raw hp.
+export function effectiveHp(target: StatBlock, against: DamageType): number {
+	if (against === 'true') return target.hp;
+	const res = against === 'physical' ? target.physicalDefense : target.magicDefense;
+	return target.hp / mitigationMultiplier(res);
 }
 
 function clamp01(value: number): number {
