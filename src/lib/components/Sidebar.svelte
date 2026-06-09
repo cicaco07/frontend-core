@@ -18,14 +18,12 @@
 
 	let {
 		collapsed = $bindable(false),
-		ontoggle = () => {},
 		mobileOpen = $bindable(false),
 		onMobileClose = () => {},
 		theme = $bindable<'dark' | 'light'>('dark'),
 		onThemeToggle = () => {}
 	}: {
 		collapsed?: boolean;
-		ontoggle?: () => void;
 		mobileOpen?: boolean;
 		onMobileClose?: () => void;
 		theme?: 'dark' | 'light';
@@ -145,8 +143,8 @@
 	<div class="border-t border-line p-2">
 		<button
 			type="button"
-			onclick={ontoggle}
-			class="btn mx-auto flex btn-square size-10 items-center justify-center btn-ghost"
+			onclick={() => (collapsed = !collapsed)}
+			class="btn btn-ghost btn-square size-10 flex items-center justify-center mx-auto"
 			aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
 		>
 			{#if collapsed}
