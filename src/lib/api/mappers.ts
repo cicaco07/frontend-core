@@ -111,11 +111,12 @@ export function mapBaseStat(input?: BackendBaseStat | null): StatBlock {
 }
 
 const STAT_PATTERNS: Array<[keyof StatBlock, RegExp, boolean]> = [
-	['physicalAttack', /physical\s+attack|\bpa\b/i, false],
-	['magicPower', /magic\s+power|\bmp\b/i, false],
-	['physicalDefense', /physical\s+defen[sc]e|armor/i, false],
-	['magicDefense', /magic\s+defen[sc]e|magic\s+resist/i, false],
+	['physicalAttack', /physical\s+attack|\bpa\b|adaptive\s+attack/i, false],
+	['magicPower', /magic\s+power|\bmp\b|adaptive\s+attack/i, false],
+	['physicalDefense', /physical\s+defen[sc]e|armor|hybrid\s+defen[sc]e/i, false],
+	['magicDefense', /magic\s+defen[sc]e|magic\s+resist|hybrid\s+defen[sc]e/i, false],
 	['hp', /\bhp\b/i, false],
+	['hpRegen', /hp\s+regen|hybrid\s+regen/i, false],
 	['mana', /\bmana\b/i, false],
 	['movementSpeed', /movement\s+speed/i, false],
 	['attackSpeedPct', /attack\s+speed/i, true],
@@ -124,8 +125,8 @@ const STAT_PATTERNS: Array<[keyof StatBlock, RegExp, boolean]> = [
 	['cooldownReductionPct', /cooldown|\bcdr\b/i, true],
 	['lifestealPct', /lifesteal/i, true],
 	['spellVampPct', /spell\s+vamp/i, true],
-	['physicalPenFlat', /physical\s+pen/i, false],
-	['magicPenFlat', /magic\s+pen/i, false]
+	['physicalPenFlat', /physical\s+pen|adaptive\s+pen/i, false],
+	['magicPenFlat', /magic\s+pen|adaptive\s+pen/i, false]
 ];
 
 export function parseStatStrings(attributes: string[] = []): Partial<StatBlock> {
@@ -184,20 +185,33 @@ export function mapItem(item: BackendItem): Item {
 }
 
 export function mapEmblem(emblem: BackendEmblem): Emblem {
-	const stats =
-		typeof emblem.attributes === 'object' && Array.isArray(emblem.attributes)
-			? parseStatStrings(emblem.attributes)
-			: {};
+	let stats: Partial<StatBlock> = {};
+	if (Array.isArray(emblem.attributes)) {
+		const strings: string[] = [];
+		for (const entry of emblem.attributes) {
+			if (typeof entry === 'string') {
+				strings.push(entry);
+			} else if (typeof entry === 'object' && entry !== null) {
+				for (const [key, val] of Object.entries(entry)) {
+					if (key !== 'icon' && typeof val === 'string') {
+						strings.push(`${key} ${val}`);
+					}
+				}
+			}
+		}
+		stats = parseStatStrings(strings);
+	}
 	return {
 		id: emblem._id,
 		slug: slugify(emblem.name),
 		name: emblem.name,
+		type: emblem.type,
 		baseStats: stats,
 		talents: [
 			{
 				id: `${emblem._id}-benefit`,
-				name: emblem.type,
-				description: emblem.benefit || emblem.description || 'No talent description available.',
+				name: emblem.benefit ? emblem.name : emblem.type,
+				description: emblem.benefit || emblem.description || '',
 				stats: {}
 			}
 		]

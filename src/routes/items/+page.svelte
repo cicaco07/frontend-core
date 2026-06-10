@@ -10,12 +10,14 @@
 	let query = $state('');
 
 	const filtered = $derived(
-		data.items.filter((item) => {
-			const matchesCat = category === null || item.category === category;
-			const matchesQuery =
-				query.trim() === '' || item.name.toLowerCase().includes(query.trim().toLowerCase());
-			return matchesCat && matchesQuery;
-		})
+		data.items
+			.filter((item) => {
+				const matchesCat = category === null || item.category === category;
+				const matchesQuery =
+					query.trim() === '' || item.name.toLowerCase().includes(query.trim().toLowerCase());
+				return matchesCat && matchesQuery;
+			})
+			.sort((a, b) => a.cost - b.cost)
 	);
 </script>
 
@@ -55,7 +57,7 @@
 				class:text-ink-muted={category !== cat}
 				style={category === cat
 					? `border-color:${categoryColor(cat)};background:${categoryColor(cat)}22`
-					: 'border-color:#1e293b'}
+					: ''}
 			>
 				{titleCase(cat)}
 			</button>
