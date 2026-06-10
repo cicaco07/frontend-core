@@ -7,14 +7,16 @@
 	let { data }: { data: PageData } = $props();
 
 	let role = $state<HeroRole | null>(null);
+	let lane = $state<string | null>(null);
 	let query = $state('');
 
 	const filtered = $derived(
 		data.heroes.filter((hero) => {
 			const matchesRole = role === null || hero.role === role;
+			const matchesLane = lane === null || (hero.lanes && hero.lanes.includes(lane));
 			const matchesQuery =
 				query.trim() === '' || hero.name.toLowerCase().includes(query.trim().toLowerCase());
-			return matchesRole && matchesQuery;
+			return matchesRole && matchesLane && matchesQuery;
 		})
 	);
 </script>
@@ -35,7 +37,7 @@
 		/>
 	</div>
 
-	<RoleFilter bind:selected={role} />
+	<RoleFilter bind:selectedRole={role} bind:selectedLane={lane} />
 
 	{#if data.heroes.length === 0}
 		<p class="rounded-2xl border border-line bg-surface p-6 text-ink-muted">

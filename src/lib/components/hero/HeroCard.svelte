@@ -11,7 +11,7 @@
 		href={resolve('/heroes/[slug]', { slug: hero.slug })}
 		class="block overflow-hidden border border-line bg-surface-3 transition hover:border-line-strong"
 	>
-		<div class="relative aspect-[3/4] overflow-hidden">
+		<div class="relative aspect-[2/3] overflow-hidden">
 			{#if hero.imageUrl}
 				<img
 					src={hero.imageUrl}
@@ -27,8 +27,10 @@
 				{titleCase(hero.role)}
 			</div>
 
-			<div class="absolute right-0 bottom-0 left-0 bg-black/60 px-2 py-2 backdrop-blur-sm">
-				<p class="truncate text-sm font-bold text-white">{hero.name}</p>
+			<div
+				class="absolute inset-x-0 bottom-0 flex items-end justify-center bg-linear-to-t from-black/70 via-black/30 to-transparent pt-16 pb-2"
+			>
+				<p class="text-center text-sm font-bold text-white drop-shadow-md">{hero.name}</p>
 			</div>
 		</div>
 	</a>
@@ -51,20 +53,10 @@
 				>
 					{titleCase(hero.role)}
 				</span>
-				{#if hero.specialities && hero.specialities.length}
-					{#each hero.specialities.slice(0, 3) as spec (spec)}
-						<span class="rounded bg-surface-3 px-1.5 py-0.5 text-[10px] text-ink-muted"
-							>{titleCase(spec)}</span
-						>
-					{/each}
+				{#if hero.lanes && hero.lanes.length}
+					<span class="text-[11px] text-ink-muted">{hero.lanes.join(' · ')}</span>
 				{/if}
 			</div>
-			{#if hero.lanes && hero.lanes.length}
-				<p class="mt-1.5 text-[11px] text-ink-muted">
-					<span class="text-ink-faint">Lane:</span>
-					{hero.lanes.join(' · ')}
-				</p>
-			{/if}
 			{#if hero.lore}
 				<p class="mt-2 line-clamp-3 text-xs leading-relaxed text-ink-muted">{hero.lore}</p>
 			{/if}
