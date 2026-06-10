@@ -1,52 +1,114 @@
-@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=JetBrains+Mono:wght@400;600;700&family=Sora:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap');
 @import 'tailwindcss';
 @plugin '@tailwindcss/typography';
 @plugin 'daisyui' {
 	themes: false;
 }
 
+:root,
+:root[data-theme='dark'] {
+	--c-bg: #091319;
+	--c-surface: #0f1923;
+	--c-surface-2: #14222c;
+	--c-surface-3: #1d2b34;
+	--c-line: #26343d;
+	--c-line-strong: #3a4a55;
+	--c-ink: #e8eef5;
+	--c-ink-muted: #9fb9d0;
+	--c-ink-faint: #6a7a89;
+	--c-accent: #ff865b;
+	--c-accent-2: #b387fa;
+	--c-secondary: #fd6f9c;
+	--c-physical: #ffb86b;
+	--c-magic: #89e0eb;
+	--c-true: #f4f7ff;
+	--c-positive: #addfad;
+	--c-negative: #ff7a7c;
+	--c-warning: #f1c891;
+	--c-good: #addfad;
+	--c-bad: #ff7a7c;
+	--c-gold: #f1c891;
+	--c-role-tank: #6d8aad;
+	--c-role-fighter: #c2724a;
+	--c-role-assassin: #fd6f9c;
+	--c-role-mage: #89e0eb;
+	--c-role-marksman: #ffb86b;
+	--c-role-support: #addfad;
+}
+
+:root[data-theme='light'] {
+	--c-bg: #f8f9fb;
+	--c-surface: #ffffff;
+	--c-surface-2: #f0f2f5;
+	--c-surface-3: #e4e7ec;
+	--c-line: #d0d5dd;
+	--c-line-strong: #98a2b3;
+	--c-ink: #1a1d26;
+	--c-ink-muted: #4a5568;
+	--c-ink-faint: #98a2b3;
+	--c-accent: #e06030;
+	--c-accent-2: #7c3aed;
+	--c-secondary: #e04070;
+	--c-physical: #d97706;
+	--c-magic: #0891b2;
+	--c-true: #1a1d26;
+	--c-positive: #16a34a;
+	--c-negative: #dc2626;
+	--c-warning: #d97706;
+	--c-good: #16a34a;
+	--c-bad: #dc2626;
+	--c-gold: #d97706;
+	--c-role-tank: #4a7ab5;
+	--c-role-fighter: #b5553a;
+	--c-role-assassin: #e04070;
+	--c-role-mage: #0891b2;
+	--c-role-marksman: #d97706;
+	--c-role-support: #16a34a;
+}
+
 @theme {
-	--color-bg: #091319;
-	--color-surface: #0f1923;
-	--color-surface-2: #14222c;
-	--color-surface-3: #1d2b34;
-	--color-line: #26343d;
-	--color-line-strong: #3a4a55;
-	--color-ink: #e8eef5;
-	--color-ink-muted: #9fb9d0;
-	--color-ink-faint: #6a7a89;
-	--color-accent: #ff865b;
-	--color-accent-2: #b387fa;
-	--color-secondary: #fd6f9c;
-	--color-physical: #ffb86b;
-	--color-magic: #89e0eb;
-	--color-true: #f4f7ff;
-	--color-positive: #addfad;
-	--color-negative: #ff7a7c;
-	--color-warning: #f1c891;
-	--color-good: #addfad;
-	--color-bad: #ff7a7c;
-	--color-gold: #f1c891;
-	--color-role-tank: #6d8aad;
-	--color-role-fighter: #c2724a;
-	--color-role-assassin: #fd6f9c;
-	--color-role-mage: #89e0eb;
-	--color-role-marksman: #ffb86b;
-	--color-role-support: #addfad;
+	--color-bg: var(--c-bg);
+	--color-surface: var(--c-surface);
+	--color-surface-2: var(--c-surface-2);
+	--color-surface-3: var(--c-surface-3);
+	--color-line: var(--c-line);
+	--color-line-strong: var(--c-line-strong);
+	--color-ink: var(--c-ink);
+	--color-ink-muted: var(--c-ink-muted);
+	--color-ink-faint: var(--c-ink-faint);
+	--color-accent: var(--c-accent);
+	--color-accent-2: var(--c-accent-2);
+	--color-secondary: var(--c-secondary);
+	--color-physical: var(--c-physical);
+	--color-magic: var(--c-magic);
+	--color-true: var(--c-true);
+	--color-positive: var(--c-positive);
+	--color-negative: var(--c-negative);
+	--color-warning: var(--c-warning);
+	--color-good: var(--c-good);
+	--color-bad: var(--c-bad);
+	--color-gold: var(--c-gold);
+	--color-role-tank: var(--c-role-tank);
+	--color-role-fighter: var(--c-role-fighter);
+	--color-role-assassin: var(--c-role-assassin);
+	--color-role-mage: var(--c-role-mage);
+	--color-role-marksman: var(--c-role-marksman);
+	--color-role-support: var(--c-role-support);
 }
 
 @layer base {
 	:root {
-		font-family: 'Sora', system-ui, sans-serif;
-		background: #091319;
-		color: #e8eef5;
+		font-family: 'Poppins', system-ui, sans-serif;
+		background: var(--color-bg);
+		color: var(--color-ink);
 	}
 
 	body {
 		min-height: 100vh;
 		background:
 			radial-gradient(circle at top left, rgb(255 134 91 / 0.16), transparent 30rem),
-			radial-gradient(circle at top right, rgb(179 135 250 / 0.14), transparent 28rem), #091319;
+			radial-gradient(circle at top right, rgb(179 135 250 / 0.14), transparent 28rem),
+			var(--color-bg);
 	}
 
 	button,
@@ -59,11 +121,11 @@
 
 @layer utilities {
 	.font-display {
-		font-family: 'Chakra Petch', system-ui, sans-serif;
+		font-family: 'Poppins', system-ui, sans-serif;
 	}
 
 	.font-body {
-		font-family: 'Sora', system-ui, sans-serif;
+		font-family: 'Poppins', system-ui, sans-serif;
 	}
 
 	.font-mono-stat {

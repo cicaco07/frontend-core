@@ -57,8 +57,8 @@
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
 {#if isLanding}
-	<div class="min-h-screen bg-bg text-ink">
-		<header class="sticky top-0 z-50 border-b border-line bg-bg/82 backdrop-blur-xl">
+	<div class="relative min-h-screen bg-bg text-ink">
+		<header class="absolute inset-x-0 top-0 z-50">
 			<nav class="mx-auto flex h-14 max-w-7xl items-center justify-between gap-6 px-4 sm:px-6">
 				<a
 					href={resolve('/')}

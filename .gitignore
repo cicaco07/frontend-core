@@ -26,3 +26,4 @@ test-results
 
 /.kiro
 /.sisyphus
+/.playwright-mcp

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import heroImage from '$lib/../assets/landing/novaria.jpg';
 
 	const features = [
 		{
@@ -33,9 +34,14 @@
 	] as const;
 </script>
 
-<section class="mx-auto flex min-h-[460px] max-w-7xl items-center px-4 py-16 sm:px-6 lg:py-20">
-	<div class="grid w-full gap-10 lg:grid-cols-[620px_1fr] lg:items-center">
-		<div class="space-y-7">
+<section class="relative min-h-screen overflow-hidden">
+	<div class="absolute inset-0 z-0">
+		<img src={heroImage} alt="" class="h-full w-full object-cover object-[75%_center]" />
+		<div class="absolute inset-0 bg-linear-to-r from-bg via-bg/85 to-bg/15"></div>
+	</div>
+
+	<div class="relative z-10 mx-auto flex min-h-screen max-w-7xl items-center px-4 pt-14 sm:px-6">
+		<div class="max-w-xl space-y-7">
 			<p
 				class="font-display inline-flex rounded-full border border-line bg-surface/80 px-4 py-1.5 text-xs font-bold tracking-[0.22em] text-accent uppercase"
 			>
@@ -67,35 +73,11 @@
 				</a>
 			</div>
 		</div>
-
-		<div
-			class="relative min-h-[348px] overflow-hidden rounded-[2rem] border border-line bg-surface shadow-2xl"
-		>
-			<div
-				class="absolute inset-0 bg-[radial-gradient(circle_at_35%_25%,rgb(255_134_91/0.28),transparent_14rem),radial-gradient(circle_at_72%_70%,rgb(179_135_250/0.24),transparent_16rem)]"
-			></div>
-			<div class="absolute inset-6 rounded-[1.5rem] border border-line-strong/70 bg-bg/28"></div>
-			<p
-				class="font-display absolute top-8 left-8 text-xs tracking-[0.28em] text-ink-faint uppercase"
-			>
-				hero artwork
-			</p>
-			<div class="absolute right-8 bottom-8 left-8">
-				<div
-					class="h-36 rounded-[1.25rem] border border-accent/30 bg-gradient-to-r from-accent/22 via-surface-2 to-accent-2/18 p-5"
-				>
-					<p class="font-display text-2xl font-bold text-ink">LAYLA · MALefic Gun</p>
-					<p class="mt-2 max-w-sm text-sm leading-6 text-ink-muted">
-						Preview damage output, item spikes, dan versus result dalam satu tactical canvas.
-					</p>
-				</div>
-			</div>
-		</div>
 	</div>
 </section>
 
 <section class="mx-auto max-w-7xl px-4 pb-16 sm:px-6">
-	<div class="mb-7 space-y-2">
+	<div class="mb-7 space-y-2 pt-16">
 		<h2 class="font-display text-2xl font-bold text-ink">Jelajahi Fitur</h2>
 		<p class="text-sm text-ink-muted">Pintasan menuju seluruh tools dan database yang tersedia.</p>
 	</div>
