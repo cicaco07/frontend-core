@@ -159,7 +159,7 @@
 			{collapsed ? 'ML' : 'ML THEORYCRAFT'}
 		</a>
 	</div>
-	<nav class="flex-1 space-y-4 overflow-y-auto p-2">
+	<nav class="mt-4 flex-1 space-y-4 overflow-y-auto p-2">
 		{#each nav as category (category.label)}
 			<div>
 				{#if !collapsed}

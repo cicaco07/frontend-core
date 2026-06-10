@@ -2,8 +2,26 @@
 	import { resolve } from '$app/paths';
 	import type { Hero } from '$lib/types';
 	import { roleColor, titleCase } from '$lib/utils/labels';
+	import goldlane from '$lib/../assets/roles/goldlane.png';
+	import midlane from '$lib/../assets/roles/midlane.png';
+	import exp from '$lib/../assets/roles/exp.png';
+	import jungle from '$lib/../assets/roles/jungle.png';
+	import roam from '$lib/../assets/roles/roam.png';
 
 	let { hero }: { hero: Hero } = $props();
+
+	const LANE_ICONS: Record<string, string> = {
+		'Gold Lane': goldlane,
+		'Mid Lane': midlane,
+		'Exp Lane': exp,
+		Jungle: jungle,
+		Roam: roam,
+		Roaming: roam
+	};
+
+	const laneIcons = $derived(
+		(hero.lanes ?? []).map((lane) => ({ lane, icon: LANE_ICONS[lane] })).filter((l) => l.icon)
+	);
 </script>
 
 <div class="group relative">
@@ -11,7 +29,7 @@
 		href={resolve('/heroes/[slug]', { slug: hero.slug })}
 		class="block overflow-hidden border border-line bg-surface-3 transition hover:border-line-strong"
 	>
-		<div class="relative aspect-[2/3] overflow-hidden">
+		<div class="relative aspect-2/3 overflow-hidden">
 			{#if hero.imageUrl}
 				<img
 					src={hero.imageUrl}
@@ -20,17 +38,20 @@
 				/>
 			{/if}
 
-			<div
-				class="absolute top-0 left-0 px-2 py-1 text-[10px] font-bold tracking-wider text-white uppercase"
-				style="background:{roleColor(hero.role)}"
-			>
-				{titleCase(hero.role)}
-			</div>
+			{#if laneIcons.length}
+				<div class="absolute top-0 left-0 flex">
+					{#each laneIcons as li (li.lane)}
+						<div class="flex size-7 items-center justify-center bg-black opacity-80">
+							<img src={li.icon} alt={li.lane} class="h-4 w-4" />
+						</div>
+					{/each}
+				</div>
+			{/if}
 
 			<div
-				class="absolute inset-x-0 bottom-0 flex items-end justify-center bg-linear-to-t from-black/70 via-black/30 to-transparent pt-16 pb-2"
+				class="absolute inset-x-0 bottom-0 flex items-end justify-center bg-linear-to-t from-black via-black/50 to-transparent pt-32 pb-3"
 			>
-				<p class="text-center text-sm font-bold text-white drop-shadow-md">{hero.name}</p>
+				<p class="text-md text-center font-bold text-white drop-shadow-md">{hero.name}</p>
 			</div>
 		</div>
 	</a>

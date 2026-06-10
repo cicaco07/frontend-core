@@ -22,13 +22,14 @@
 </script>
 
 <div class="mx-auto max-w-7xl space-y-6 px-4 py-10 sm:px-6">
-	<div class="flex flex-wrap items-end justify-between gap-4">
-		<div>
-			<h1 class="font-display text-3xl font-bold text-ink">Heroes</h1>
-			<p class="mt-1 text-sm text-ink-muted">
-				{filtered.length} of {data.heroes.length} heroes
-			</p>
-		</div>
+	<div>
+		<h1 class="font-display text-3xl font-bold text-ink">Daftar List Hero</h1>
+		<p class="mt-1 text-sm text-ink-muted">
+			{filtered.length} of {data.heroes.length} heroes
+		</p>
+	</div>
+	<div class="flex items-center gap-3">
+		<RoleFilter bind:selectedRole={role} bind:selectedLane={lane} />
 		<input
 			type="search"
 			placeholder="Search hero…"
@@ -36,8 +37,6 @@
 			class="w-full max-w-xs rounded-full border border-line bg-surface px-4 py-2 text-sm text-ink placeholder:text-ink-faint focus:border-accent focus:outline-none"
 		/>
 	</div>
-
-	<RoleFilter bind:selectedRole={role} bind:selectedLane={lane} />
 
 	{#if data.heroes.length === 0}
 		<p class="rounded-2xl border border-line bg-surface p-6 text-ink-muted">
