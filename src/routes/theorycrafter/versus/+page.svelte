@@ -25,7 +25,7 @@
 	<div class="flex flex-wrap items-center justify-between gap-4">
 		<div>
 			<a href={resolve('/theorycrafter')} class="text-sm text-slate-400 hover:text-white"
-				>&larr; Theorycrafter</a
+				>&larr; Kalkulator Damage</a
 			>
 			<h1 class="mt-1 text-2xl font-bold">Versus</h1>
 			<p class="text-sm text-slate-400">

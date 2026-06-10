@@ -72,7 +72,7 @@
 				href={resolve('/theorycrafter')}
 				class="inline-block rounded-full bg-accent px-4 py-2 text-sm font-bold text-bg hover:bg-gold"
 			>
-				Use in Theorycrafter
+				Gunakan di Kalkulator Damage
 			</a>
 		</div>
 

@@ -14,7 +14,7 @@
 <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6">
 	<div class="mb-6 flex flex-wrap items-center justify-between gap-3">
 		<div>
-			<h1 class="font-display text-3xl font-bold text-ink">Theorycrafter</h1>
+			<h1 class="font-display text-3xl font-bold text-ink">Kalkulator Damage</h1>
 			<p class="mt-1 text-sm text-ink-muted">
 				Hitung damage, DPS, dan output build secara real-time.
 			</p>

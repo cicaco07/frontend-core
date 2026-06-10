@@ -12,7 +12,7 @@
 		{ href: '/heroes', label: 'Heroes' },
 		{ href: '/builds', label: 'Builds' },
 		{ href: '/tournaments', label: 'Tournaments' },
-		{ href: '/theorycrafter', label: 'Theorycrafter' }
+		{ href: '/theorycrafter', label: 'Kalkulator Damage' }
 	] as const;
 
 	let theme = $state<'dark' | 'light'>('dark');
@@ -52,19 +52,35 @@
 	});
 
 	const isLanding = $derived($page.url.pathname === '/');
+
+	let scrolled = $state(false);
+
+	$effect(() => {
+		if (!browser || !isLanding) return;
+		function onScroll() {
+			scrolled = window.scrollY > window.innerHeight * 0.1;
+		}
+		onScroll();
+		window.addEventListener('scroll', onScroll, { passive: true });
+		return () => window.removeEventListener('scroll', onScroll);
+	});
 </script>
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
 {#if isLanding}
 	<div class="relative min-h-screen bg-bg text-ink">
-		<header class="absolute inset-x-0 top-0 z-50">
+		<header
+			class="fixed inset-x-0 top-0 z-50 transition-all duration-300 {scrolled
+				? 'border-b border-line/50 bg-bg/80 backdrop-blur-lg'
+				: ''}"
+		>
 			<nav class="mx-auto flex h-14 max-w-7xl items-center justify-between gap-6 px-4 sm:px-6">
 				<a
 					href={resolve('/')}
 					class="font-display text-lg font-bold tracking-[0.18em] text-ink uppercase"
 				>
-					ML THEORYCRAFT
+					ML KALKULATOR
 				</a>
 				<ul class="hidden items-center gap-7 text-[13px] font-medium text-ink-muted md:flex">
 					{#each nav as item (item.href)}

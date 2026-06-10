@@ -65,8 +65,26 @@ function slugify(value: string): string {
 
 function normalizeRole(role: string[] | string | undefined): HeroRole {
 	const raw = Array.isArray(role) ? role[0] : role;
-	const normalized = raw?.toLowerCase();
-	return ROLES.find((item) => item === normalized) ?? 'fighter';
+	if (!raw) return 'fighter';
+	const slug = raw
+		.toLowerCase()
+		.trim()
+		.replace(/[^a-z]/g, '');
+	const ROLE_ALIASES: Record<string, HeroRole> = {
+		tank: 'tank',
+		fighter: 'fighter',
+		warrior: 'fighter',
+		assassin: 'assassin',
+		mage: 'mage',
+		magician: 'mage',
+		marksman: 'marksman',
+		marks: 'marksman',
+		mm: 'marksman',
+		adc: 'marksman',
+		support: 'support',
+		healer: 'support'
+	};
+	return ROLE_ALIASES[slug] ?? ROLE_ALIASES[raw.toLowerCase().trim()] ?? 'fighter';
 }
 
 function normalizeCategory(type: string | undefined, tag?: string | null): ItemCategory {
@@ -130,7 +148,8 @@ export function mapHero(hero: BackendHero): Hero {
 		id: hero._id,
 		slug: slugify(hero.name),
 		name: hero.name,
-		role: normalizeRole(hero.role),
+		role: normalizeRole(hero.type),
+		lanes: Array.isArray(hero.role) ? hero.role : hero.role ? [hero.role] : [],
 		imageUrl: hero.image || hero.avatar,
 		baseStats: mapBaseStat(base),
 		statsPerLevel: {},

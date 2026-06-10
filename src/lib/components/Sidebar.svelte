@@ -57,7 +57,7 @@
 			label: 'Build',
 			items: [
 				{ href: '/builds', label: 'Builds', icon: Wrench },
-				{ href: '/theorycrafter', label: 'Theorycrafter', icon: Calculator },
+				{ href: '/theorycrafter', label: 'Kalkulator Damage', icon: Calculator },
 				{ href: '/stats', label: 'Stats', icon: BarChart3 }
 			]
 		},

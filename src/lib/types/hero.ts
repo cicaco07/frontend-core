@@ -48,6 +48,7 @@ export interface Hero {
 	slug: string;
 	name: string;
 	role: HeroRole;
+	lanes?: string[];
 	imageUrl: string;
 	baseStats: StatBlock;
 	statsPerLevel: Partial<StatBlock>;
