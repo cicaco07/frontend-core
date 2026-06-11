@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import type { ItemCategory } from '$lib/types/equipment';
+	import type { Item, ItemCategory } from '$lib/types/equipment';
 	import { ITEM_CATEGORIES, categoryColor, titleCase } from '$lib/utils/labels';
 	import { statEntries } from '$lib/utils/stats';
 
@@ -10,14 +10,25 @@
 	let query = $state('');
 
 	const filtered = $derived(
-		data.items
-			.filter((item) => {
-				const matchesCat = category === null || item.category === category;
-				const matchesQuery =
-					query.trim() === '' || item.name.toLowerCase().includes(query.trim().toLowerCase());
-				return matchesCat && matchesQuery;
-			})
-			.sort((a, b) => a.cost - b.cost)
+		data.items.filter((item) => {
+			const matchesCat = category === null || item.category === category;
+			const matchesQuery =
+				query.trim() === '' || item.name.toLowerCase().includes(query.trim().toLowerCase());
+			return matchesCat && matchesQuery;
+		})
+	);
+
+	const tier1 = $derived(
+		filtered.filter((i) => i.tier === 'TIER_1').sort((a, b) => a.cost - b.cost)
+	);
+	const tier2 = $derived(
+		filtered.filter((i) => i.tier === 'TIER_2').sort((a, b) => a.cost - b.cost)
+	);
+	const tier3 = $derived(
+		filtered.filter((i) => i.tier === 'TIER_3').sort((a, b) => a.cost - b.cost)
+	);
+	const tierEtc = $derived(
+		filtered.filter((i) => i.tier === 'ETC').sort((a, b) => a.cost - b.cost)
 	);
 </script>
 
@@ -73,50 +84,88 @@
 			No items match your filters.
 		</p>
 	{:else}
-		<ul class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-			{#each filtered as item (item.id)}
-				<li
-					class="rounded-2xl border border-line bg-surface/82 p-4 transition hover:-translate-y-1 hover:border-line-strong hover:bg-surface-2"
-					style="border-left:3px solid {categoryColor(item.category)}"
-				>
-					<div class="flex items-start justify-between gap-2">
-						<div class="flex items-center gap-3">
-							<span class="h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-surface-3">
-								{#if item.imageUrl}
-									<img src={item.imageUrl} alt={item.name} class="h-full w-full object-cover" />
-								{/if}
-							</span>
-							<div>
-								<p class="font-display font-bold text-ink">{item.name}</p>
-								<p class="text-xs text-ink-muted capitalize">{titleCase(item.category)}</p>
-							</div>
-						</div>
-						<span class="font-mono-stat text-sm text-gold tabular-nums">{item.cost}</span>
-					</div>
-
-					{#if statEntries(item.stats).length}
-						<ul class="mt-3 space-y-1 text-sm">
-							{#each statEntries(item.stats) as entry (entry.key)}
-								<li class="flex justify-between">
-									<span class="text-ink-muted">{entry.label}</span>
-									<span class="font-mono-stat text-ink tabular-nums">+{entry.display}</span>
-								</li>
-							{/each}
-						</ul>
-					{/if}
-
-					{#if item.passiveName}
-						<div class="mt-3 border-t border-line pt-2">
-							<p class="text-xs font-semibold text-accent-2">{item.passiveName}</p>
-							{#if item.passiveDescription}
-								<p class="mt-0.5 text-xs leading-relaxed text-ink-muted">
-									{item.passiveDescription}
-								</p>
+		{#snippet itemCard(item: Item)}
+			<li
+				class="rounded-2xl border border-line bg-surface/82 p-4 transition hover:-translate-y-1 hover:border-line-strong hover:bg-surface-2"
+				style="border-left:3px solid {categoryColor(item.category)}"
+			>
+				<div class="flex items-start justify-between gap-2">
+					<div class="flex items-center gap-3">
+						<span class="h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-surface-3">
+							{#if item.imageUrl}
+								<img src={item.imageUrl} alt={item.name} class="h-full w-full object-cover" />
 							{/if}
+						</span>
+						<div>
+							<p class="font-display font-bold text-ink">{item.name}</p>
+							<p class="text-xs text-ink-muted capitalize">
+								{item.type || titleCase(item.category)}
+							</p>
 						</div>
-					{/if}
-				</li>
-			{/each}
-		</ul>
+					</div>
+					<span class="font-mono-stat text-sm text-gold tabular-nums">{item.cost}</span>
+				</div>
+
+				{#if statEntries(item.stats).length}
+					<ul class="mt-3 space-y-1 text-sm">
+						{#each statEntries(item.stats) as entry (entry.key)}
+							<li class="flex justify-between">
+								<span class="text-ink-muted">{entry.label}</span>
+								<span class="font-mono-stat text-ink tabular-nums">+{entry.display}</span>
+							</li>
+						{/each}
+					</ul>
+				{/if}
+
+				{#if item.passiveName}
+					<div class="mt-3 border-t border-line pt-2">
+						<p class="text-xs font-semibold text-accent-2">{item.passiveName}</p>
+						{#if item.passiveDescription}
+							<p class="mt-0.5 text-xs leading-relaxed text-ink-muted">
+								{item.passiveDescription}
+							</p>
+						{/if}
+					</div>
+				{/if}
+			</li>
+		{/snippet}
+
+		<div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+			<div>
+				<h2 class="font-display mb-3 text-lg font-bold text-ink">Tier 1</h2>
+				<ul class="space-y-4">
+					{#each tier1 as item (item.id)}
+						{@render itemCard(item)}
+					{/each}
+				</ul>
+			</div>
+			<div>
+				<h2 class="font-display mb-3 text-lg font-bold text-ink">Tier 2</h2>
+				<ul class="space-y-4">
+					{#each tier2 as item (item.id)}
+						{@render itemCard(item)}
+					{/each}
+				</ul>
+			</div>
+			<div>
+				<h2 class="font-display mb-3 text-lg font-bold text-ink">Tier 3</h2>
+				<ul class="space-y-4">
+					{#each tier3 as item (item.id)}
+						{@render itemCard(item)}
+					{/each}
+				</ul>
+			</div>
+		</div>
+
+		{#if tierEtc.length > 0}
+			<div class="mt-8">
+				<h2 class="font-display mb-3 text-lg font-bold text-ink">Other</h2>
+				<ul class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+					{#each tierEtc as item (item.id)}
+						{@render itemCard(item)}
+					{/each}
+				</ul>
+			</div>
+		{/if}
 	{/if}
 </div>

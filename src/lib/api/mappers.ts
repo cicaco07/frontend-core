@@ -1,5 +1,5 @@
 import { emptyStatBlock, type Hero, type HeroRole, type StatBlock } from '$lib/types';
-import type { Emblem, Item, ItemCategory } from '$lib/types/equipment';
+import type { Emblem, Item, ItemCategory, ItemTier } from '$lib/types/equipment';
 
 type BackendBaseStat = Partial<Record<string, number>>;
 
@@ -33,6 +33,7 @@ export interface BackendItem {
 	name: string;
 	type: string;
 	tag?: string | null;
+	tier?: string | null;
 	price: number;
 	image: string;
 	attributes: string[];
@@ -53,6 +54,7 @@ export interface BackendEmblem {
 }
 
 const CATEGORIES = ['attack', 'magic', 'defense', 'movement', 'jungle', 'roam'] as const;
+const TIERS: ItemTier[] = ['TIER_1', 'TIER_2', 'TIER_3'];
 
 function slugify(value: string): string {
 	return value
@@ -87,8 +89,11 @@ function normalizeRole(role: string[] | string | undefined): HeroRole {
 }
 
 function normalizeCategory(type: string | undefined, tag?: string | null): ItemCategory {
-	const raw = `${type ?? ''} ${tag ?? ''}`.toLowerCase();
-	return CATEGORIES.find((category) => raw.includes(category)) ?? 'attack';
+	const tagLower = (tag ?? '').toLowerCase();
+	const tagMatch = CATEGORIES.find((c) => tagLower.includes(c));
+	if (tagMatch) return tagMatch;
+	const typeLower = (type ?? '').toLowerCase();
+	return CATEGORIES.find((c) => typeLower.includes(c)) ?? 'attack';
 }
 
 export function mapBaseStat(input?: BackendBaseStat | null): StatBlock {
@@ -175,7 +180,9 @@ export function mapItem(item: BackendItem): Item {
 		id: item._id,
 		slug: slugify(item.name),
 		name: item.name,
+		type: item.type ?? '',
 		category: normalizeCategory(item.type, item.tag),
+		tier: TIERS.find((t) => t === item.tier) ?? 'ETC',
 		cost: item.price,
 		imageUrl: item.image,
 		stats: parseStatStrings(item.attributes),

@@ -46,6 +46,7 @@ export const ITEMS_QUERY = `
 			name
 			type
 			tag
+			tier
 			price
 			image
 			attributes
@@ -98,6 +99,7 @@ export const THEORYCRAFTER_QUERY = `
 			name
 			type
 			tag
+			tier
 			price
 			image
 			attributes
