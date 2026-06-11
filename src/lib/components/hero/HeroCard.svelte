@@ -51,7 +51,7 @@
 			<div
 				class="absolute inset-x-0 bottom-0 flex items-end justify-center bg-linear-to-t from-black via-black/50 to-transparent pt-32 pb-3"
 			>
-				<p class="text-md text-center font-bold text-white drop-shadow-md">{hero.name}</p>
+				<p class="text-sm text-center font-bold text-white drop-shadow-md tracking-wide">{hero.name}</p>
 			</div>
 		</div>
 	</a>
