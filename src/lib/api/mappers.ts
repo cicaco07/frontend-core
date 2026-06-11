@@ -52,7 +52,6 @@ export interface BackendEmblem {
 	attributes?: unknown;
 }
 
-const ROLES = ['tank', 'fighter', 'assassin', 'mage', 'marksman', 'support'] as const;
 const CATEGORIES = ['attack', 'magic', 'defense', 'movement', 'jungle', 'roam'] as const;
 
 function slugify(value: string): string {
@@ -152,6 +151,7 @@ export function mapHero(hero: BackendHero): Hero {
 		role: normalizeRole(hero.type),
 		lanes: Array.isArray(hero.role) ? hero.role : hero.role ? [hero.role] : [],
 		imageUrl: hero.image || hero.avatar,
+		avatarUrl: hero.avatar || hero.image,
 		baseStats: mapBaseStat(base),
 		statsPerLevel: {},
 		skills: (hero.skills ?? []).map((skill) => ({
@@ -206,6 +206,7 @@ export function mapEmblem(emblem: BackendEmblem): Emblem {
 		slug: slugify(emblem.name),
 		name: emblem.name,
 		type: emblem.type,
+		icon: emblem.icon || '',
 		baseStats: stats,
 		talents: [
 			{

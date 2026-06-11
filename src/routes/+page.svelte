@@ -30,7 +30,7 @@
 			</div>
 			<div class="flex flex-wrap gap-3">
 				<a
-					href={resolve('/theorycrafter')}
+					href={resolve('/calculator')}
 					class="rounded-full bg-accent px-6 py-3 text-sm font-bold text-bg shadow-[0_16px_44px_rgb(255_134_91/0.24)] transition hover:-translate-y-0.5 hover:bg-gold"
 				>
 					Mulai Kalkulator
@@ -147,7 +147,7 @@
 				untuk menemukan counter yang tepat.
 			</p>
 			<a
-				href={resolve('/theorycrafter')}
+				href={resolve('/calculator')}
 				class="inline-block rounded-full bg-accent px-5 py-2.5 text-sm font-bold text-bg shadow-[0_8px_24px_rgb(255_134_91/0.2)] transition hover:-translate-y-0.5 hover:bg-gold"
 			>
 				Buka Kalkulator →

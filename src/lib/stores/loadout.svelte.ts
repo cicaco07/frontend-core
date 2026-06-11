@@ -12,7 +12,10 @@ export class Loadout {
 	hero = $state<Hero | null>(null);
 	level = $state(1);
 	items = $state<Item[]>([]);
-	emblem = $state<Emblem | null>(null);
+	mainEmblem = $state<Emblem | null>(null);
+	primaryTalent = $state<Emblem | null>(null);
+	tier1Talent = $state<Emblem | null>(null);
+	tier2Talent = $state<Emblem | null>(null);
 	target = $state<StatBlock>(emptyStatBlock());
 
 	heroStats = $derived(
@@ -24,9 +27,12 @@ export class Loadout {
 	itemStats = $derived(sumStats(this.items.map((i) => i.stats)));
 
 	emblemStats = $derived(
-		this.emblem
-			? sumStats([this.emblem.baseStats, ...this.emblem.talents.map((t) => t.stats)])
-			: emptyStatBlock()
+		sumStats([
+			this.mainEmblem?.baseStats ?? {},
+			this.primaryTalent?.baseStats ?? {},
+			this.tier1Talent?.baseStats ?? {},
+			this.tier2Talent?.baseStats ?? {}
+		])
 	);
 
 	finalStats = $derived(sumStats([this.heroStats, this.itemStats, this.emblemStats]));
@@ -55,7 +61,10 @@ export class Loadout {
 		this.hero = null;
 		this.level = 1;
 		this.items = [];
-		this.emblem = null;
+		this.mainEmblem = null;
+		this.primaryTalent = null;
+		this.tier1Talent = null;
+		this.tier2Talent = null;
 		this.target = emptyStatBlock();
 	}
 }

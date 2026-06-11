@@ -79,7 +79,7 @@
 				<p class="text-sm leading-relaxed text-ink-muted">{hero.lore}</p>
 			{/if}
 			<a
-				href={resolve('/theorycrafter')}
+				href={resolve('/calculator')}
 				class="inline-block rounded-full bg-accent px-4 py-2 text-sm font-bold text-bg hover:bg-gold"
 			>
 				Gunakan di Kalkulator Damage

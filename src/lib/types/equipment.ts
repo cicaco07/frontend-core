@@ -26,6 +26,7 @@ export interface Emblem {
 	slug: string;
 	name: string;
 	type: string;
+	icon: string;
 	baseStats: Partial<StatBlock>;
 	talents: EmblemTalent[];
 }

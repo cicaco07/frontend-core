@@ -31,14 +31,7 @@
 	} = $props();
 
 	type NavItem = {
-		href:
-			| '/heroes'
-			| '/items'
-			| '/emblems'
-			| '/builds'
-			| '/theorycrafter'
-			| '/stats'
-			| '/tournaments';
+		href: '/heroes' | '/items' | '/emblems' | '/builds' | '/calculator' | '/stats' | '/tournaments';
 		label: string;
 		icon: typeof Swords;
 	};
@@ -57,7 +50,7 @@
 			label: 'Build',
 			items: [
 				{ href: '/builds', label: 'Builds', icon: Wrench },
-				{ href: '/theorycrafter', label: 'Kalkulator Damage', icon: Calculator },
+				{ href: '/calculator', label: 'Kalkulator Damage', icon: Calculator },
 				{ href: '/stats', label: 'Stats', icon: BarChart3 }
 			]
 		},

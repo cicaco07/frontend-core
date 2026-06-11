@@ -33,7 +33,15 @@
 						<li
 							class="rounded-2xl border border-line bg-surface/82 p-5 transition hover:-translate-y-1 hover:border-line-strong hover:bg-surface-2"
 						>
-							<h3 class="font-display text-lg font-bold text-ink">{emblem.name}</h3>
+							{#if emblem.icon}
+								<img
+									src={emblem.icon}
+									alt={emblem.name}
+									class="mx-auto mb-3 size-16 object-contain"
+									loading="lazy"
+								/>
+							{/if}
+							<h3 class="font-display text-center text-lg font-bold text-ink">{emblem.name}</h3>
 
 							{#if statEntries(emblem.baseStats).length}
 								<div class="mt-3">
@@ -64,12 +72,24 @@
 						<li
 							class="rounded-xl border border-accent/20 bg-accent/5 p-4 transition hover:border-accent/40"
 						>
-							<h3 class="font-display text-sm font-bold text-accent">{emblem.name}</h3>
-							{#if emblem.talents[0]?.description}
-								<p class="mt-1 text-xs leading-relaxed text-ink-muted">
-									{emblem.talents[0].description}
-								</p>
-							{/if}
+							<div class="flex items-start gap-3">
+								{#if emblem.icon}
+									<img
+										src={emblem.icon}
+										alt={emblem.name}
+										class="size-8 shrink-0 object-contain"
+										loading="lazy"
+									/>
+								{/if}
+								<div class="min-w-0">
+									<h3 class="font-display text-sm font-bold text-accent">{emblem.name}</h3>
+									{#if emblem.talents[0]?.description}
+										<p class="mt-1 text-xs leading-relaxed text-ink-muted">
+											{emblem.talents[0].description}
+										</p>
+									{/if}
+								</div>
+							</div>
 						</li>
 					{/each}
 				</ul>
@@ -84,12 +104,24 @@
 						<li
 							class="rounded-xl border border-line bg-surface/82 p-4 transition hover:border-line-strong"
 						>
-							<h3 class="text-sm font-semibold text-ink">{emblem.name}</h3>
-							{#if emblem.talents[0]?.description}
-								<p class="mt-1 text-xs leading-relaxed text-ink-muted">
-									{emblem.talents[0].description}
-								</p>
-							{/if}
+							<div class="flex items-start gap-3">
+								{#if emblem.icon}
+									<img
+										src={emblem.icon}
+										alt={emblem.name}
+										class="size-7 shrink-0 object-contain"
+										loading="lazy"
+									/>
+								{/if}
+								<div class="min-w-0">
+									<h3 class="text-sm font-semibold text-ink">{emblem.name}</h3>
+									{#if emblem.talents[0]?.description}
+										<p class="mt-1 text-xs leading-relaxed text-ink-muted">
+											{emblem.talents[0].description}
+										</p>
+									{/if}
+								</div>
+							</div>
 						</li>
 					{/each}
 				</ul>
@@ -104,12 +136,24 @@
 						<li
 							class="rounded-xl border border-line bg-surface/82 p-4 transition hover:border-line-strong"
 						>
-							<h3 class="text-sm font-semibold text-ink">{emblem.name}</h3>
-							{#if emblem.talents[0]?.description}
-								<p class="mt-1 text-xs leading-relaxed text-ink-muted">
-									{emblem.talents[0].description}
-								</p>
-							{/if}
+							<div class="flex items-start gap-3">
+								{#if emblem.icon}
+									<img
+										src={emblem.icon}
+										alt={emblem.name}
+										class="size-7 shrink-0 object-contain"
+										loading="lazy"
+									/>
+								{/if}
+								<div class="min-w-0">
+									<h3 class="text-sm font-semibold text-ink">{emblem.name}</h3>
+									{#if emblem.talents[0]?.description}
+										<p class="mt-1 text-xs leading-relaxed text-ink-muted">
+											{emblem.talents[0].description}
+										</p>
+									{/if}
+								</div>
+							</div>
 						</li>
 					{/each}
 				</ul>

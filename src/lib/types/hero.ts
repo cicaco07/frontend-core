@@ -50,6 +50,7 @@ export interface Hero {
 	role: HeroRole;
 	lanes?: string[];
 	imageUrl: string;
+	avatarUrl: string;
 	baseStats: StatBlock;
 	statsPerLevel: Partial<StatBlock>;
 	skills: HeroSkill[];

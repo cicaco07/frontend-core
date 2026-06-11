@@ -12,7 +12,7 @@
 		{ href: '/heroes', label: 'Heroes' },
 		{ href: '/builds', label: 'Builds' },
 		{ href: '/tournaments', label: 'Tournaments' },
-		{ href: '/theorycrafter', label: 'Kalkulator Damage' }
+		{ href: '/calculator', label: 'Kalkulator Damage' }
 	] as const;
 
 	let theme = $state<'dark' | 'light'>('dark');
