@@ -1,7 +1,32 @@
 import { emptyStatBlock, type Hero, type HeroRole, type StatBlock } from '$lib/types';
-import type { Emblem, Item, ItemCategory, ItemTier } from '$lib/types/equipment';
+import type { Emblem, EmblemAttribute, Item, ItemCategory, ItemTier } from '$lib/types/equipment';
 
-type BackendBaseStat = Partial<Record<string, number>>;
+export interface BackendBaseStat {
+	hp?: number;
+	hp_growth?: number;
+	hp_regen?: number;
+	hp_regen_growth?: number;
+	mana?: number;
+	mana_growth?: number;
+	mana_regen?: number;
+	mana_regen_growth?: number;
+	physical_attack?: number;
+	physical_attack_growth?: number;
+	magic_power?: number;
+	magic_power_growth?: number;
+	physical_defense?: number;
+	physical_defense_growth?: number;
+	magic_defense?: number;
+	magic_defense_growth?: number;
+	movement_speed?: number;
+	attack_speed?: number;
+	spell_vamp_ratio?: number;
+	lifesteal?: number;
+	crit_rate?: number;
+	crit_damage?: number;
+	physical_pen?: number;
+	magical_pen?: number;
+}
 
 export interface BackendHero {
 	_id: string;
@@ -13,7 +38,7 @@ export interface BackendHero {
 	type: string[];
 	difficulty: number;
 	short_description: string;
-	base_stats?: BackendBaseStat[] | null;
+	baseStat?: BackendBaseStat | null;
 	skills?: BackendSkill[] | null;
 }
 
@@ -109,8 +134,34 @@ export function mapBaseStat(input?: BackendBaseStat | null): StatBlock {
 	stats.physicalDefense = input.physical_defense ?? 0;
 	stats.magicDefense = input.magic_defense ?? 0;
 	stats.movementSpeed = input.movement_speed ?? 0;
-	stats.attackSpeedPct = (input.attack_speed_ratio ?? input.attack_speed ?? 0) / 100;
+	stats.attackSpeedPct = (input.attack_speed ?? 0) / 100;
 	stats.spellVampPct = (input.spell_vamp_ratio ?? 0) / 100;
+	stats.lifestealPct = (input.lifesteal ?? 0) / 100;
+	stats.critChancePct = (input.crit_rate ?? 0) / 100;
+	stats.critDamagePct = (input.crit_damage ?? 0) / 100;
+	stats.physicalPenFlat = input.physical_pen ?? 0;
+	stats.magicPenFlat = input.magical_pen ?? 0;
+	return stats;
+}
+
+const GROWTH_FIELDS: Array<[keyof StatBlock, keyof BackendBaseStat]> = [
+	['hp', 'hp_growth'],
+	['hpRegen', 'hp_regen_growth'],
+	['mana', 'mana_growth'],
+	['manaRegen', 'mana_regen_growth'],
+	['physicalAttack', 'physical_attack_growth'],
+	['magicPower', 'magic_power_growth'],
+	['physicalDefense', 'physical_defense_growth'],
+	['magicDefense', 'magic_defense_growth']
+];
+
+export function mapBaseStatGrowth(input?: BackendBaseStat | null): Partial<StatBlock> {
+	const stats: Partial<StatBlock> = {};
+	if (!input) return stats;
+	for (const [statKey, apiKey] of GROWTH_FIELDS) {
+		const value = input[apiKey];
+		if (value != null) stats[statKey] = value;
+	}
 	return stats;
 }
 
@@ -148,7 +199,6 @@ export function parseStatStrings(attributes: string[] = []): Partial<StatBlock> 
 }
 
 export function mapHero(hero: BackendHero): Hero {
-	const base = hero.base_stats?.[0] ?? null;
 	return {
 		id: hero._id,
 		slug: slugify(hero.name),
@@ -157,8 +207,8 @@ export function mapHero(hero: BackendHero): Hero {
 		lanes: Array.isArray(hero.role) ? hero.role : hero.role ? [hero.role] : [],
 		imageUrl: hero.image || hero.avatar,
 		avatarUrl: hero.avatar || hero.image,
-		baseStats: mapBaseStat(base),
-		statsPerLevel: {},
+		baseStats: mapBaseStat(hero.baseStat),
+		statsPerLevel: mapBaseStatGrowth(hero.baseStat),
 		skills: (hero.skills ?? []).map((skill) => ({
 			id: skill._id,
 			name: skill.name,
@@ -191,30 +241,83 @@ export function mapItem(item: BackendItem): Item {
 	};
 }
 
-export function mapEmblem(emblem: BackendEmblem): Emblem {
-	let stats: Partial<StatBlock> = {};
-	if (Array.isArray(emblem.attributes)) {
-		const strings: string[] = [];
-		for (const entry of emblem.attributes) {
-			if (typeof entry === 'string') {
-				strings.push(entry);
-			} else if (typeof entry === 'object' && entry !== null) {
-				for (const [key, val] of Object.entries(entry)) {
-					if (key !== 'icon' && typeof val === 'string') {
-						strings.push(`${key} ${val}`);
+function humanize(key: string): string {
+	return key
+		.replace(/[_-]+/g, ' ')
+		.replace(/([a-z])([A-Z])/g, '$1 $2')
+		.replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function extractAttributes(raw: unknown): EmblemAttribute[] {
+	const result: EmblemAttribute[] = [];
+	if (!raw) return result;
+
+	let entries: unknown[];
+	if (typeof raw === 'string') {
+		try {
+			const parsed = JSON.parse(raw);
+			entries = Array.isArray(parsed) ? parsed : [parsed];
+		} catch {
+			result.push({ label: raw, value: '' });
+			return result;
+		}
+	} else {
+		entries = Array.isArray(raw) ? raw : [raw];
+	}
+
+	for (const entry of entries) {
+		if (typeof entry === 'string') {
+			result.push({ label: entry, value: '' });
+		} else if (typeof entry === 'number') {
+			result.push({ label: '', value: `+${entry}` });
+		} else if (typeof entry === 'object' && entry !== null) {
+			for (const [key, val] of Object.entries(entry)) {
+				if (key === 'icon') continue;
+				const label = humanize(key);
+				if (typeof val === 'number') {
+					result.push({ label, value: `+${val}` });
+				} else if (typeof val === 'string') {
+					result.push({ label, value: val });
+				} else if (typeof val === 'boolean') {
+					result.push({ label, value: String(val) });
+				} else if (Array.isArray(val)) {
+					for (const item of val) {
+						if (typeof item === 'string') result.push({ label, value: item });
+						else if (typeof item === 'number') result.push({ label, value: `+${item}` });
+						else if (typeof item === 'object' && item !== null) {
+							for (const [k2, v2] of Object.entries(item)) {
+								if (typeof v2 === 'number') result.push({ label: humanize(k2), value: `+${v2}` });
+								else if (typeof v2 === 'string') result.push({ label: humanize(k2), value: v2 });
+							}
+						}
+					}
+				} else if (typeof val === 'object' && val !== null) {
+					for (const [k2, v2] of Object.entries(val)) {
+						if (typeof v2 === 'number') result.push({ label: humanize(k2), value: `+${v2}` });
+						else if (typeof v2 === 'string') result.push({ label: humanize(k2), value: v2 });
 					}
 				}
 			}
 		}
-		stats = parseStatStrings(strings);
 	}
+	return result;
+}
+
+export function mapEmblem(emblem: BackendEmblem): Emblem {
+	const attrs = extractAttributes(emblem.attributes);
+	const parseable = attrs.filter((a) => /\d/.test(a.value)).map((a) => `${a.label} ${a.value}`);
+	const stats = parseStatStrings(parseable);
 	return {
 		id: emblem._id,
 		slug: slugify(emblem.name),
 		name: emblem.name,
 		type: emblem.type,
 		icon: emblem.icon || '',
+		benefit: emblem.benefit ?? undefined,
+		description: emblem.description ?? undefined,
+		cooldown: emblem.cooldown ?? undefined,
 		baseStats: stats,
+		attributes: attrs,
 		talents: [
 			{
 				id: `${emblem._id}-benefit`,

@@ -189,7 +189,7 @@
 						onclick={() => (heroDropdownOpen = !heroDropdownOpen)}
 						class="flex w-full items-center justify-between rounded-lg border border-line bg-bg px-3 py-2 text-sm text-ink"
 					>
-						<span>{loadout.hero?.name ?? 'Select hero�'}</span>
+						<span>{loadout.hero?.name ?? 'Select hero'}</span>
 						<ChevronDown class="size-4 text-ink-faint" />
 					</button>
 					{#if heroDropdownOpen}
@@ -322,7 +322,7 @@
 						value=""
 						class="mt-1 w-full rounded border border-line bg-bg px-3 py-2 text-sm"
 					>
-						<option value="">Add item�</option>
+						<option value="">Add item</option>
 						{#each data.items as item (item.id)}
 							<option value={item.id}>{item.name}</option>
 						{/each}
@@ -410,10 +410,7 @@
 		</section>
 
 		<!-- RIGHT WIDGET: Target -->
-		<section
-			class="space-y-4 rounded-2xl border border-line bg-surface/82 p-4"
-			style="border-top:3px solid var(--color-accent, #fb6a6a)"
-		>
+		<section class="space-y-4 rounded-2xl border border-line bg-surface/82 p-4">
 			<span class="font-display text-xs font-bold tracking-wide text-ink-faint uppercase"
 				>Target</span
 			>
@@ -428,7 +425,7 @@
 						onclick={() => (targetHeroDropdownOpen = !targetHeroDropdownOpen)}
 						class="flex w-full items-center justify-between rounded-lg border border-line bg-bg px-3 py-2 text-sm text-ink"
 					>
-						<span>{targetLoadout.hero?.name ?? 'Select target�'}</span>
+						<span>{targetLoadout.hero?.name ?? 'Select target'}</span>
 						<ChevronDown class="size-4 text-ink-faint" />
 					</button>
 					{#if targetHeroDropdownOpen}
@@ -565,7 +562,7 @@
 						value=""
 						class="mt-1 w-full rounded border border-line bg-bg px-3 py-2 text-sm"
 					>
-						<option value="">Add item�</option>
+						<option value="">Add item</option>
 						{#each data.items as item (item.id)}
 							<option value={item.id}>{item.name}</option>
 						{/each}
@@ -584,7 +581,7 @@
 				>
 				<input
 					type="search"
-					placeholder="Search item�"
+					placeholder="Search item"
 					bind:value={searchQuery}
 					class="w-48 rounded-full border border-line bg-bg px-3 py-1 text-xs text-ink placeholder:text-ink-faint focus:border-accent focus:outline-none"
 				/>

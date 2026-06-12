@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import { statEntries } from '$lib/utils/stats';
 
 	let { data }: { data: PageData } = $props();
 
@@ -43,16 +42,18 @@
 							{/if}
 							<h3 class="font-display text-center text-lg font-bold text-ink">{emblem.name}</h3>
 
-							{#if statEntries(emblem.baseStats).length}
+							{#if emblem.attributes.length}
 								<div class="mt-3">
 									<p class="font-display text-xs font-bold tracking-wide text-ink-faint uppercase">
-										Base Stats
+										Attributes
 									</p>
 									<ul class="mt-1 space-y-1 text-sm">
-										{#each statEntries(emblem.baseStats) as entry (entry.key)}
-											<li class="flex justify-between">
-												<span class="text-ink-muted">{entry.label}</span>
-												<span class="font-mono-stat text-ink tabular-nums">+{entry.display}</span>
+										{#each emblem.attributes as attr, i (i)}
+											<li class="flex justify-between gap-2">
+												<span class="text-ink-muted">{attr.label}</span>
+												{#if attr.value}
+													<span class="font-mono-stat text-ink tabular-nums">{attr.value}</span>
+												{/if}
 											</li>
 										{/each}
 									</ul>
@@ -81,12 +82,34 @@
 										loading="lazy"
 									/>
 								{/if}
-								<div class="min-w-0">
+								<div class="min-w-0 flex-1">
 									<h3 class="font-display text-sm font-bold text-accent">{emblem.name}</h3>
-									{#if emblem.talents[0]?.description}
-										<p class="mt-1 text-xs leading-relaxed text-ink-muted">
-											{emblem.talents[0].description}
+									{#if emblem.benefit}
+										<p class="mt-1 text-xs font-semibold text-ink">{emblem.benefit}</p>
+									{/if}
+									{#if emblem.description}
+										<p class="mt-0.5 text-xs leading-relaxed text-ink-muted">
+											<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+											{@html emblem.description
+												.replace(/&amp;lt;br\s*\/?&amp;gt;/gi, '<br/>')
+												.replace(/&lt;br\s*\/?&gt;/gi, '<br/>')
+												.replace(/<br\s*\/?>/gi, '<br/>')}
 										</p>
+									{/if}
+									{#if emblem.cooldown}
+										<p class="mt-1 text-xs text-ink-faint">{emblem.cooldown}</p>
+									{/if}
+									{#if emblem.attributes.length}
+										<ul class="mt-2 space-y-0.5 text-xs">
+											{#each emblem.attributes as attr, i (i)}
+												<li class="flex justify-between gap-2">
+													<span class="text-ink-muted">{attr.label}</span>
+													{#if attr.value}
+														<span class="font-mono-stat text-ink tabular-nums">{attr.value}</span>
+													{/if}
+												</li>
+											{/each}
+										</ul>
 									{/if}
 								</div>
 							</div>
@@ -113,12 +136,31 @@
 										loading="lazy"
 									/>
 								{/if}
-								<div class="min-w-0">
+								<div class="min-w-0 flex-1">
 									<h3 class="text-sm font-semibold text-ink">{emblem.name}</h3>
-									{#if emblem.talents[0]?.description}
-										<p class="mt-1 text-xs leading-relaxed text-ink-muted">
-											{emblem.talents[0].description}
+									{#if emblem.benefit}
+										<p class="mt-1 text-xs font-semibold text-ink">{emblem.benefit}</p>
+									{/if}
+									{#if emblem.description}
+										<p class="mt-0.5 text-xs leading-relaxed text-ink-muted">
+											<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+											{@html emblem.description
+												.replace(/&amp;lt;br\s*\/?&amp;gt;/gi, '<br/>')
+												.replace(/&lt;br\s*\/?&gt;/gi, '<br/>')
+												.replace(/<br\s*\/?>/gi, '<br/>')}
 										</p>
+									{/if}
+									{#if emblem.attributes.length}
+										<ul class="mt-2 space-y-0.5 text-xs">
+											{#each emblem.attributes as attr, i (i)}
+												<li class="flex justify-between gap-2">
+													<span class="text-ink-muted">{attr.label}</span>
+													{#if attr.value}
+														<span class="font-mono-stat text-ink tabular-nums">{attr.value}</span>
+													{/if}
+												</li>
+											{/each}
+										</ul>
 									{/if}
 								</div>
 							</div>
@@ -145,12 +187,31 @@
 										loading="lazy"
 									/>
 								{/if}
-								<div class="min-w-0">
+								<div class="min-w-0 flex-1">
 									<h3 class="text-sm font-semibold text-ink">{emblem.name}</h3>
-									{#if emblem.talents[0]?.description}
-										<p class="mt-1 text-xs leading-relaxed text-ink-muted">
-											{emblem.talents[0].description}
+									{#if emblem.benefit}
+										<p class="mt-1 text-xs font-semibold text-ink">{emblem.benefit}</p>
+									{/if}
+									{#if emblem.description}
+										<p class="mt-0.5 text-xs leading-relaxed text-ink-muted">
+											<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+											{@html emblem.description
+												.replace(/&amp;lt;br\s*\/?&amp;gt;/gi, '<br/>')
+												.replace(/&lt;br\s*\/?&gt;/gi, '<br/>')
+												.replace(/<br\s*\/?>/gi, '<br/>')}
 										</p>
+									{/if}
+									{#if emblem.attributes.length}
+										<ul class="mt-2 space-y-0.5 text-xs">
+											{#each emblem.attributes as attr, i (i)}
+												<li class="flex justify-between gap-2">
+													<span class="text-ink-muted">{attr.label}</span>
+													{#if attr.value}
+														<span class="font-mono-stat text-ink tabular-nums">{attr.value}</span>
+													{/if}
+												</li>
+											{/each}
+										</ul>
 									{/if}
 								</div>
 							</div>

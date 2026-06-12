@@ -24,12 +24,21 @@ export interface EmblemTalent {
 	stats: Partial<StatBlock>;
 }
 
+export interface EmblemAttribute {
+	label: string;
+	value: string;
+}
+
 export interface Emblem {
 	id: string;
 	slug: string;
 	name: string;
 	type: string;
 	icon: string;
+	benefit?: string;
+	description?: string;
+	cooldown?: string;
 	baseStats: Partial<StatBlock>;
+	attributes: EmblemAttribute[];
 	talents: EmblemTalent[];
 }

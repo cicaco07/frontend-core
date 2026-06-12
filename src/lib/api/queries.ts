@@ -26,6 +26,32 @@ export const HERO_DETAIL_QUERY = `
 			type
 			difficulty
 			short_description
+			baseStat {
+				hp
+				hp_growth
+				hp_regen
+				hp_regen_growth
+				mana
+				mana_growth
+				mana_regen
+				mana_regen_growth
+				physical_attack
+				physical_attack_growth
+				magic_power
+				magic_power_growth
+				physical_defense
+				physical_defense_growth
+				magic_defense
+				magic_defense_growth
+				movement_speed
+				attack_speed
+				spell_vamp_ratio
+				lifesteal
+				crit_rate
+				crit_damage
+				physical_pen
+				magical_pen
+			}
 			skills {
 				_id
 				name
@@ -84,6 +110,32 @@ export const THEORYCRAFTER_QUERY = `
 			type
 			difficulty
 			short_description
+			baseStat {
+				hp
+				hp_growth
+				hp_regen
+				hp_regen_growth
+				mana
+				mana_growth
+				mana_regen
+				mana_regen_growth
+				physical_attack
+				physical_attack_growth
+				magic_power
+				magic_power_growth
+				physical_defense
+				physical_defense_growth
+				magic_defense
+				magic_defense_growth
+				movement_speed
+				attack_speed
+				spell_vamp_ratio
+				lifesteal
+				crit_rate
+				crit_damage
+				physical_pen
+				magical_pen
+			}
 			skills {
 				_id
 				name
