@@ -114,11 +114,27 @@ function normalizeRole(role: string[] | string | undefined): HeroRole {
 }
 
 function normalizeCategory(type: string | undefined, tag?: string | null): ItemCategory {
-	const tagLower = (tag ?? '').toLowerCase();
-	const tagMatch = CATEGORIES.find((c) => tagLower.includes(c));
-	if (tagMatch) return tagMatch;
-	const typeLower = (type ?? '').toLowerCase();
-	return CATEGORIES.find((c) => typeLower.includes(c)) ?? 'attack';
+	const typeLower = (type ?? '').toLowerCase().trim();
+	const tagLower = (tag ?? '').toLowerCase().trim();
+
+	// Pertama, cek kecocokan eksak dengan type
+	const exactTypeMatch = CATEGORIES.find((c) => c === typeLower);
+	if (exactTypeMatch) return exactTypeMatch;
+
+	// Kedua, cek kecocokan eksak dengan tag
+	const exactTagMatch = CATEGORIES.find((c) => c === tagLower);
+	if (exactTagMatch) return exactTagMatch;
+
+	// Ketiga, cek apakah type mengandung kata kunci kategori
+	const typeContainsMatch = CATEGORIES.find((c) => typeLower.includes(c));
+	if (typeContainsMatch) return typeContainsMatch;
+
+	// Keempat, cek apakah tag mengandung kata kunci kategori
+	const tagContainsMatch = CATEGORIES.find((c) => tagLower.includes(c));
+	if (tagContainsMatch) return tagContainsMatch;
+
+	// Default ke 'attack' jika tidak ada kecocokan
+	return 'attack';
 }
 
 export function mapBaseStat(input?: BackendBaseStat | null): StatBlock {
