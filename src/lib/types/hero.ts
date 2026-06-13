@@ -1,5 +1,15 @@
 import type { HeroRole, StatBlock } from './stats';
 
+export interface SkillLevelAttributes {
+	label: string;
+	value: string;
+}
+
+export interface SkillLevelData {
+	level: number;
+	attributes: SkillLevelAttributes[];
+}
+
 export interface HeroSkillScaling {
 	stat: 'physicalAttack' | 'magicPower' | 'hp' | 'physicalDefense' | 'magicDefense';
 	ratio: number;
@@ -13,6 +23,8 @@ export interface HeroSkill {
 	scaling: HeroSkillScaling[];
 	skillType?: 'passive' | 'skill1' | 'skill2' | 'ultimate';
 	description?: string;
+	imageUrl?: string;
+	levelData?: SkillLevelData[];
 }
 
 export type HeroSpeciality =

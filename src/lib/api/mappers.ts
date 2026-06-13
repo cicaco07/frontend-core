@@ -42,6 +42,12 @@ export interface BackendHero {
 	skills?: BackendSkill[] | null;
 }
 
+interface BackendSkillDetail {
+	_id?: string;
+	level?: number | null;
+	attributes?: Record<string, number> | string[];
+}
+
 interface BackendSkill {
 	_id: string;
 	name: string;
@@ -50,7 +56,8 @@ interface BackendSkill {
 	lite_description: string;
 	full_description: string;
 	attack_effect?: number | null;
-	skills_detail?: Array<{ attributes?: unknown; level?: number | null }> | null;
+	skill_icon?: string | null;
+	skills_detail?: BackendSkillDetail[] | null;
 }
 
 export interface BackendItem {
@@ -197,7 +204,7 @@ const STAT_PATTERNS: Array<[keyof StatBlock, RegExp, boolean]> = [
 	['lifestealPct', /lifesteal/i, true],
 	['spellVampPct', /spell\s+vamp/i, true],
 	['physicalPenFlat', /physical\s+pen|adaptive\s+pen/i, false],
-	['magicPenFlat', /magic\s+pen|adaptive\s+pen/i, false]
+	['magicPenFlat', /magic\s+pen/i, false]
 ];
 
 export function parseStatStrings(attributes: string[] = []): Partial<StatBlock> {
@@ -206,12 +213,51 @@ export function parseStatStrings(attributes: string[] = []): Partial<StatBlock> 
 		const valueMatch = attribute.match(/[-+]?\d+(?:\.\d+)?/);
 		if (!valueMatch) continue;
 		const numeric = Number(valueMatch[0]);
+		if (Number.isNaN(numeric)) continue;
+
+		const isPctValue = attribute.includes('%');
+
+		if (/physical\s+pen|adaptive\s+pen/i.test(attribute)) {
+			if (isPctValue) {
+				stats.physicalPenPct = numeric / 100;
+			} else {
+				stats.physicalPenFlat = numeric;
+			}
+			continue;
+		}
+		if (/magic\s+pen/i.test(attribute)) {
+			if (isPctValue) {
+				stats.magicPenPct = numeric / 100;
+			} else {
+				stats.magicPenFlat = numeric;
+			}
+			continue;
+		}
+
 		const pattern = STAT_PATTERNS.find(([, regex]) => regex.test(attribute));
-		if (!pattern || Number.isNaN(numeric)) continue;
+		if (!pattern) continue;
 		const [key, , pct] = pattern;
-		stats[key] = pct || attribute.includes('%') ? numeric / 100 : numeric;
+		stats[key] = pct || isPctValue ? numeric / 100 : numeric;
 	}
 	return stats;
+}
+
+function parseSkillDetailAttributes(
+	attrs: Record<string, number> | string[] | undefined
+): { label: string; value: string }[] {
+	if (!attrs) return [];
+	if (Array.isArray(attrs)) {
+		return attrs.map((attr) => {
+			const parts = attr.split(/\s+/);
+			const value = parts.pop() || '';
+			const label = parts.join(' ');
+			return { label, value };
+		});
+	}
+	return Object.entries(attrs).map(([key, val]) => ({
+		label: key,
+		value: String(val)
+	}));
 }
 
 export function mapHero(hero: BackendHero): Hero {
@@ -232,7 +278,12 @@ export function mapHero(hero: BackendHero): Hero {
 			baseDamage: [skill.attack_effect ?? 0],
 			scaling: [],
 			skillType: skill.tag?.includes('ultimate') ? 'ultimate' : undefined,
-			description: skill.full_description || skill.lite_description
+			description: skill.full_description || skill.lite_description,
+			imageUrl: skill.skill_icon || undefined,
+			levelData: (skill.skills_detail ?? []).map((detail) => ({
+				level: detail.level ?? 0,
+				attributes: parseSkillDetailAttributes(detail.attributes)
+			}))
 		})),
 		title: hero.alias,
 		lore: hero.short_description,

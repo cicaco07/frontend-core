@@ -60,6 +60,35 @@ export const HERO_DETAIL_QUERY = `
 				lite_description
 				full_description
 				attack_effect
+				skill_icon
+				skills_detail {
+					_id
+					level
+					attributes
+				}
+			}
+		}
+	}
+`;
+
+export const HERO_SKILLS_QUERY = `
+	query HeroSkills($id: ID!) {
+		hero(id: $id) {
+			_id
+			skills {
+				_id
+				name
+				type
+				tag
+				lite_description
+				full_description
+				attack_effect
+				skill_icon
+				skills_detail {
+					_id
+					level
+					attributes
+				}
 			}
 		}
 	}
@@ -136,15 +165,16 @@ export const THEORYCRAFTER_QUERY = `
 				physical_pen
 				magical_pen
 			}
-			skills {
-				_id
-				name
-				type
-				tag
-				lite_description
-				full_description
-				attack_effect
-			}
+		skills {
+			_id
+			name
+			type
+			tag
+			lite_description
+			full_description
+			attack_effect
+			skill_icon
+		}
 		}
 		items {
 			_id

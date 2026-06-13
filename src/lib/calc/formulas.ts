@@ -29,17 +29,27 @@ export function scaleStatsByLevel(
 	return result;
 }
 
-// Effective resistance after flat pen is subtracted, then percentage pen applied.
-// Order matters: ML applies flat reduction before percentage reduction.
-export function effectiveResistance(resistance: number, penFlat: number, penPct: number): number {
-	const afterPct = resistance * (1 - clamp01(penPct));
-	return Math.max(0, afterPct - penFlat);
+export interface DefReduction {
+	flatDefReduction: number;
+	pctDefReduction: number;
 }
 
-// MLBB mitigation curve: damage multiplier = 120 / (120 + effectiveResistance).
-// True damage ignores resistance entirely.
+const NO_DEF_REDUCTION: DefReduction = { flatDefReduction: 0, pctDefReduction: 0 };
+
+export function effectiveResistance(
+	defense: number,
+	penFlat: number,
+	penPct: number,
+	defReduction: DefReduction = NO_DEF_REDUCTION
+): number {
+	const afterFlatReduction = defense - defReduction.flatDefReduction;
+	const afterPctReduction = afterFlatReduction * (1 - clamp01(defReduction.pctDefReduction));
+	const afterPen = afterPctReduction * (1 - clamp01(penPct));
+	return afterPen - penFlat;
+}
+
 export function mitigationMultiplier(effRes: number): number {
-	return 120 / (120 + Math.max(0, effRes));
+	return 120 / (120 + effRes);
 }
 
 export interface DamageInput {
@@ -47,29 +57,37 @@ export interface DamageInput {
 	damageType: DamageType;
 	attacker: StatBlock;
 	target: StatBlock;
+	bonusDmgPct?: number;
+	defReduction?: DefReduction;
 }
 
 export function computeDamage(input: DamageInput): number {
-	const { rawDamage, damageType, attacker, target } = input;
-	if (damageType === 'true') return Math.max(0, rawDamage);
+	const { rawDamage, damageType, attacker, target, bonusDmgPct = 0, defReduction } = input;
+	if (damageType === 'true') return Math.max(0, rawDamage * (1 + bonusDmgPct));
 
 	const isPhysical = damageType === 'physical';
-	const resistance = isPhysical ? target.physicalDefense : target.magicDefense;
+	const defense = isPhysical ? target.physicalDefense : target.magicDefense;
 	const penFlat = isPhysical ? attacker.physicalPenFlat : attacker.magicPenFlat;
 	const penPct = isPhysical ? attacker.physicalPenPct : attacker.magicPenPct;
 
-	const effRes = effectiveResistance(resistance, penFlat, penPct);
-	return Math.max(0, rawDamage * mitigationMultiplier(effRes));
+	const effRes = effectiveResistance(defense, penFlat, penPct, defReduction);
+	const mitigation = mitigationMultiplier(effRes);
+	return Math.max(0, rawDamage * (1 + bonusDmgPct) * mitigation);
 }
 
-// Average basic-attack damage accounting for crit chance and crit damage bonus.
-// Default crit multiplier in MLBB is 2.0x, increased by critDamagePct.
-export function averageBasicAttack(attacker: StatBlock, target: StatBlock): number {
+export function averageBasicAttack(
+	attacker: StatBlock,
+	target: StatBlock,
+	bonusDmgPct = 0,
+	defReduction?: DefReduction
+): number {
 	const hit = computeDamage({
 		rawDamage: attacker.physicalAttack,
 		damageType: 'physical',
 		attacker,
-		target
+		target,
+		bonusDmgPct,
+		defReduction
 	});
 	const critMultiplier = 2 + attacker.critDamagePct;
 	const chance = clamp01(attacker.critChancePct);
@@ -88,12 +106,13 @@ export function basicAttackDps(
 	return averageBasicAttack(attacker, target) * attacksPerSecond(attacker, baseAttackSpeed);
 }
 
-// Raw = base damage at the skill's rank (capped to its array) + stat scaling.
 export function heroSkillDamage(
 	skill: HeroSkill,
 	attacker: StatBlock,
 	target: StatBlock,
-	level: number
+	level: number,
+	bonusDmgPct = 0,
+	defReduction?: DefReduction
 ): number {
 	if (skill.damageType === 'none') return 0;
 
@@ -103,20 +122,31 @@ export function heroSkillDamage(
 		raw += attacker[s.stat] * s.ratio;
 	}
 
-	return computeDamage({ rawDamage: raw, damageType: skill.damageType, attacker, target });
+	return computeDamage({
+		rawDamage: raw,
+		damageType: skill.damageType,
+		attacker,
+		target,
+		bonusDmgPct,
+		defReduction
+	});
 }
 
 export function skillBurst(
 	skills: HeroSkill[],
 	attacker: StatBlock,
 	target: StatBlock,
-	level: number
+	level: number,
+	bonusDmgPct = 0,
+	defReduction?: DefReduction
 ): number {
-	return skills.reduce((sum, skill) => sum + heroSkillDamage(skill, attacker, target, level), 0);
+	return skills.reduce(
+		(sum, skill) =>
+			sum + heroSkillDamage(skill, attacker, target, level, bonusDmgPct, defReduction),
+		0
+	);
 }
 
-// Effective HP against a damage type: hp / mitigationMultiplier(resistance).
-// True damage bypasses mitigation, so EHP = raw hp.
 export function effectiveHp(target: StatBlock, against: DamageType): number {
 	if (against === 'true') return target.hp;
 	const res = against === 'physical' ? target.physicalDefense : target.magicDefense;

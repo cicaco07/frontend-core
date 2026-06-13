@@ -12,6 +12,7 @@ export class Loadout {
 	hero = $state<Hero | null>(null);
 	level = $state(1);
 	items = $state<Item[]>([]);
+	secondaryItems = $state<Item[]>([]);
 	mainEmblem = $state<Emblem | null>(null);
 	primaryTalent = $state<Emblem | null>(null);
 	tier1Talent = $state<Emblem | null>(null);
@@ -24,7 +25,9 @@ export class Loadout {
 			: emptyStatBlock()
 	);
 
-	itemStats = $derived(sumStats(this.items.map((i) => i.stats)));
+	baseBonus: Partial<StatBlock> = { physicalAttack: 8 };
+
+	itemStats = $derived(sumStats([...this.items, ...this.secondaryItems].map((i) => i.stats)));
 
 	emblemStats = $derived(
 		sumStats([
@@ -35,7 +38,9 @@ export class Loadout {
 		])
 	);
 
-	finalStats = $derived(sumStats([this.heroStats, this.itemStats, this.emblemStats]));
+	finalStats = $derived(
+		sumStats([this.heroStats, this.baseBonus, this.itemStats, this.emblemStats])
+	);
 
 	basicAttackDamage = $derived(averageBasicAttack(this.finalStats, this.target));
 
@@ -53,14 +58,24 @@ export class Loadout {
 		this.items = [...this.items, item];
 	}
 
+	addSecondaryItem(item: Item) {
+		if (this.secondaryItems.length >= 3) return;
+		this.secondaryItems = [...this.secondaryItems, item];
+	}
+
 	removeItem(index: number) {
 		this.items = this.items.filter((_, i) => i !== index);
+	}
+
+	removeSecondaryItem(index: number) {
+		this.secondaryItems = this.secondaryItems.filter((_, i) => i !== index);
 	}
 
 	reset() {
 		this.hero = null;
 		this.level = 1;
 		this.items = [];
+		this.secondaryItems = [];
 		this.mainEmblem = null;
 		this.primaryTalent = null;
 		this.tier1Talent = null;
