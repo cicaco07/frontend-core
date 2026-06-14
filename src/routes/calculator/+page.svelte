@@ -7,6 +7,7 @@
 	import { ChevronDown, Swords, Shield, X } from 'lucide-svelte';
 	import { gqlRequest } from '$lib/api/graphql';
 	import { HERO_SKILLS_QUERY } from '$lib/api/queries';
+	import SearchSelect from '$lib/components/SearchSelect.svelte';
 
 	import { SvelteSet } from 'svelte/reactivity';
 	import { computeDamage } from '$lib/calc/formulas';
@@ -190,14 +191,12 @@
 
 	function selectHero(hero: Hero) {
 		loadout.hero = hero;
-		heroDropdownOpen = false;
 		skillLevels = {};
 		enrichHeroSkills(hero, false);
 	}
 
 	function selectTargetHero(hero: Hero) {
 		targetLoadout.hero = hero;
-		targetHeroDropdownOpen = false;
 		enrichHeroSkills(hero, true);
 	}
 
@@ -207,12 +206,48 @@
 	let targetSearchQuery = $state('');
 	let categoryFilter = $state<ItemCategory | null>(null);
 	let targetCategoryFilter = $state<ItemCategory | null>(null);
-	let heroDropdownOpen = $state(false);
-	let targetHeroDropdownOpen = $state(false);
-	let openEmblem = $state<string | null>(null);
-	let openTargetEmblem = $state<string | null>(null);
 
 	const sortedHeroes = $derived([...data.heroes].sort((a, b) => a.name.localeCompare(b.name)));
+
+	const heroSelectItems = $derived(
+		sortedHeroes.map((h) => ({ id: h.id, label: h.name, imageUrl: h.avatarUrl }))
+	);
+	const selectedHeroItem = $derived(
+		loadout.hero
+			? { id: loadout.hero.id, label: loadout.hero.name, imageUrl: loadout.hero.avatarUrl }
+			: null
+	);
+	const selectedTargetHeroItem = $derived(
+		targetLoadout.hero
+			? {
+					id: targetLoadout.hero.id,
+					label: targetLoadout.hero.name,
+					imageUrl: targetLoadout.hero.avatarUrl
+				}
+			: null
+	);
+
+	function onHeroSelect(item: { id: string; label: string; imageUrl?: string } | null) {
+		if (!item) {
+			loadout.hero = null;
+			return;
+		}
+		const hero = data.heroes.find((h) => h.id === item.id);
+		if (hero) selectHero(hero);
+	}
+
+	function onTargetHeroSelect(item: { id: string; label: string; imageUrl?: string } | null) {
+		if (!item) {
+			targetLoadout.hero = null;
+			return;
+		}
+		const hero = data.heroes.find((h) => h.id === item.id);
+		if (hero) selectTargetHero(hero);
+	}
+
+	function emblemSelectItems(emblems: Emblem[]) {
+		return emblems.map((e) => ({ id: e.slug, label: e.name, imageUrl: e.icon || undefined }));
+	}
 
 	const filteredItems = $derived(
 		data.items.filter((i) => {
@@ -436,42 +471,34 @@
 
 	function selectMainEmblem(slug: string) {
 		loadout.mainEmblem = data.emblems.find((e) => e.slug === slug) ?? null;
-		openEmblem = null;
 	}
 
 	function selectPrimaryTalent(slug: string) {
 		loadout.primaryTalent = data.emblems.find((e) => e.slug === slug) ?? null;
-		openEmblem = null;
 	}
 
 	function selectTier1Talent(slug: string) {
 		loadout.tier1Talent = data.emblems.find((e) => e.slug === slug) ?? null;
-		openEmblem = null;
 	}
 
 	function selectTier2Talent(slug: string) {
 		loadout.tier2Talent = data.emblems.find((e) => e.slug === slug) ?? null;
-		openEmblem = null;
 	}
 
 	function selectTargetMainEmblem(slug: string) {
 		targetLoadout.mainEmblem = data.emblems.find((e) => e.slug === slug) ?? null;
-		openTargetEmblem = null;
 	}
 
 	function selectTargetPrimaryTalent(slug: string) {
 		targetLoadout.primaryTalent = data.emblems.find((e) => e.slug === slug) ?? null;
-		openTargetEmblem = null;
 	}
 
 	function selectTargetTier1Talent(slug: string) {
 		targetLoadout.tier1Talent = data.emblems.find((e) => e.slug === slug) ?? null;
-		openTargetEmblem = null;
 	}
 
 	function selectTargetTier2Talent(slug: string) {
 		targetLoadout.tier2Talent = data.emblems.find((e) => e.slug === slug) ?? null;
-		openTargetEmblem = null;
 	}
 
 	const emblemSelector: Record<string, (slug: string) => void> = {
@@ -501,23 +528,8 @@
 
 	function handleEmblemSelect(slug: string, groupKey: string) {
 		emblemSelector[groupKey]?.(slug);
-		if (groupKey.startsWith('t')) {
-			openTargetEmblem = null;
-		} else {
-			openEmblem = null;
-		}
-	}
-
-	function handleWindowClick(e: MouseEvent) {
-		const target = e.target as HTMLElement;
-		if (!target.closest('[data-emblem-dropdown]')) {
-			openEmblem = null;
-			openTargetEmblem = null;
-		}
 	}
 </script>
-
-<svelte:window onclick={handleWindowClick} />
 
 <div class="mx-auto max-w-[1400px] space-y-6 px-4 py-10 sm:px-6">
 	<div>
@@ -530,41 +542,19 @@
 	<div class="grid gap-6 xl:grid-cols-[300px_1fr_300px]">
 		<!-- LEFT WIDGET: Loadout -->
 		<section class="space-y-4 rounded-2xl border border-line bg-surface/82 p-4">
-			<label class="block">
+			<div>
 				<span class="font-display text-xs font-bold tracking-wide text-ink-faint uppercase"
 					>Hero</span
 				>
-				<div class="relative mt-1">
-					<button
-						type="button"
-						onclick={() => (heroDropdownOpen = !heroDropdownOpen)}
-						class="flex w-full items-center justify-between rounded-lg border border-line bg-bg px-3 py-2 text-sm text-ink"
-					>
-						<span>{loadout.hero?.name ?? 'Select hero'}</span>
-						<ChevronDown class="size-4 text-ink-faint" />
-					</button>
-					{#if heroDropdownOpen}
-						<div
-							class="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-line bg-bg shadow-lg"
-						>
-							{#each sortedHeroes as hero (hero.id)}
-								<button
-									type="button"
-									onclick={() => selectHero(hero)}
-									class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-ink hover:bg-surface-2"
-								>
-									<span class="size-6 shrink-0 overflow-hidden rounded bg-surface-3">
-										{#if hero.avatarUrl}
-											<img src={hero.avatarUrl} alt="" class="h-full w-full object-cover" />
-										{/if}
-									</span>
-									<span>{hero.name}</span>
-								</button>
-							{/each}
-						</div>
-					{/if}
+				<div class="mt-1">
+					<SearchSelect
+						items={heroSelectItems}
+						value={selectedHeroItem}
+						placeholder="Select hero"
+						onchange={onHeroSelect}
+					/>
 				</div>
-			</label>
+			</div>
 
 			{#if loadout.hero}
 				<p class="flex items-center gap-2 text-sm" style="color:{roleColor(loadout.hero.role)}">
@@ -601,45 +591,14 @@
 						{@const selected = group.items.find(
 							(e) => e.slug === getSelectedEmblem(group.key)?.slug
 						)}
-						<div class="relative" data-emblem-dropdown>
-							<button
-								type="button"
-								onclick={() => (openEmblem = openEmblem === group.key ? null : group.key)}
-								class="flex w-full items-center gap-2 rounded-lg border border-line bg-bg px-3 py-2 text-sm text-ink"
-							>
-								{#if selected}
-									{#if selected.icon}
-										<span class="size-5 shrink-0 overflow-hidden rounded">
-											<img src={selected.icon} alt="" class="h-full w-full object-contain" />
-										</span>
-									{/if}
-									<span class="flex-1 text-left">{selected.name}</span>
-								{:else}
-									<span class="flex-1 text-left">{group.label}…</span>
-								{/if}
-								<ChevronDown class="size-4 shrink-0 text-ink-faint" />
-							</button>
-							{#if openEmblem === group.key}
-								<div
-									class="absolute z-20 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-line bg-bg shadow-lg"
-								>
-									{#each group.items as em (em.id)}
-										<button
-											type="button"
-											onclick={() => handleEmblemSelect(em.slug, group.key)}
-											class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-ink hover:bg-surface-2"
-										>
-											{#if em.icon}
-												<span class="size-5 shrink-0 overflow-hidden rounded">
-													<img src={em.icon} alt="" class="h-full w-full object-contain" />
-												</span>
-											{/if}
-											<span>{em.name}</span>
-										</button>
-									{/each}
-								</div>
-							{/if}
-						</div>
+						<SearchSelect
+							items={emblemSelectItems(group.items)}
+							value={selected
+								? { id: selected.slug, label: selected.name, imageUrl: selected.icon || undefined }
+								: null}
+							placeholder={group.label + '…'}
+							onchange={(item) => handleEmblemSelect(item?.id ?? '', group.key)}
+						/>
 					{/each}
 				</div>
 			</div>
@@ -1026,41 +985,19 @@
 				>Target</span
 			>
 
-			<label class="block">
+			<div>
 				<span class="font-display text-xs font-bold tracking-wide text-ink-faint uppercase"
 					>Hero</span
 				>
-				<div class="relative mt-1">
-					<button
-						type="button"
-						onclick={() => (targetHeroDropdownOpen = !targetHeroDropdownOpen)}
-						class="flex w-full items-center justify-between rounded-lg border border-line bg-bg px-3 py-2 text-sm text-ink"
-					>
-						<span>{targetLoadout.hero?.name ?? 'Select target'}</span>
-						<ChevronDown class="size-4 text-ink-faint" />
-					</button>
-					{#if targetHeroDropdownOpen}
-						<div
-							class="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-line bg-bg shadow-lg"
-						>
-							{#each sortedHeroes as hero (hero.id)}
-								<button
-									type="button"
-									onclick={() => selectTargetHero(hero)}
-									class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-ink hover:bg-surface-2"
-								>
-									<span class="size-6 shrink-0 overflow-hidden rounded bg-surface-3">
-										{#if hero.avatarUrl}
-											<img src={hero.avatarUrl} alt="" class="h-full w-full object-cover" />
-										{/if}
-									</span>
-									<span>{hero.name}</span>
-								</button>
-							{/each}
-						</div>
-					{/if}
+				<div class="mt-1">
+					<SearchSelect
+						items={heroSelectItems}
+						value={selectedTargetHeroItem}
+						placeholder="Select target"
+						onchange={onTargetHeroSelect}
+					/>
 				</div>
-			</label>
+			</div>
 
 			{#if targetLoadout.hero}
 				<p
@@ -1100,46 +1037,14 @@
 						{@const selected = group.items.find(
 							(e) => e.slug === getSelectedEmblem(group.key)?.slug
 						)}
-						<div class="relative" data-emblem-dropdown>
-							<button
-								type="button"
-								onclick={() =>
-									(openTargetEmblem = openTargetEmblem === group.key ? null : group.key)}
-								class="flex w-full items-center gap-2 rounded-lg border border-line bg-bg px-3 py-2 text-sm text-ink"
-							>
-								{#if selected}
-									{#if selected.icon}
-										<span class="size-5 shrink-0 overflow-hidden rounded">
-											<img src={selected.icon} alt="" class="h-full w-full object-contain" />
-										</span>
-									{/if}
-									<span class="flex-1 text-left">{selected.name}</span>
-								{:else}
-									<span class="flex-1 text-left">{group.label}…</span>
-								{/if}
-								<ChevronDown class="size-4 shrink-0 text-ink-faint" />
-							</button>
-							{#if openTargetEmblem === group.key}
-								<div
-									class="absolute z-20 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-line bg-bg shadow-lg"
-								>
-									{#each group.items as em (em.id)}
-										<button
-											type="button"
-											onclick={() => handleEmblemSelect(em.slug, group.key)}
-											class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-ink hover:bg-surface-2"
-										>
-											{#if em.icon}
-												<span class="size-5 shrink-0 overflow-hidden rounded">
-													<img src={em.icon} alt="" class="h-full w-full object-contain" />
-												</span>
-											{/if}
-											<span>{em.name}</span>
-										</button>
-									{/each}
-								</div>
-							{/if}
-						</div>
+						<SearchSelect
+							items={emblemSelectItems(group.items)}
+							value={selected
+								? { id: selected.slug, label: selected.name, imageUrl: selected.icon || undefined }
+								: null}
+							placeholder={group.label + '…'}
+							onchange={(item) => handleEmblemSelect(item?.id ?? '', group.key)}
+						/>
 					{/each}
 				</div>
 			</div>
