@@ -7,17 +7,21 @@ import {
 	heroSkillDamage
 } from '$lib/calc/formulas';
 import { emptyStatBlock } from '$lib/types';
+import { getHeroMod, type HeroModConfig } from '$lib/calc/hero-modifiers';
+import { applyPassiveAmp, emptyModifierState, type ModifierState } from '$lib/calc/apply-modifiers';
 
 export class Loadout {
 	hero = $state<Hero | null>(null);
 	level = $state(1);
 	items = $state<Item[]>([]);
-	secondaryItems = $state<Item[]>([]);
 	mainEmblem = $state<Emblem | null>(null);
 	primaryTalent = $state<Emblem | null>(null);
 	tier1Talent = $state<Emblem | null>(null);
 	tier2Talent = $state<Emblem | null>(null);
 	target = $state<StatBlock>(emptyStatBlock());
+	modifierState = $state<ModifierState>(emptyModifierState());
+
+	heroMod = $derived<HeroModConfig | null>(this.hero ? getHeroMod(this.hero.slug) : null);
 
 	heroStats = $derived(
 		this.hero
@@ -27,7 +31,7 @@ export class Loadout {
 
 	baseBonus: Partial<StatBlock> = { physicalAttack: 8 };
 
-	itemStats = $derived(sumStats([...this.items, ...this.secondaryItems].map((i) => i.stats)));
+	itemStats = $derived(sumStats(this.items.map((i) => i.stats)));
 
 	emblemStats = $derived(
 		sumStats([
@@ -42,9 +46,19 @@ export class Loadout {
 		sumStats([this.heroStats, this.baseBonus, this.itemStats, this.emblemStats])
 	);
 
-	basicAttackDamage = $derived(averageBasicAttack(this.finalStats, this.target));
+	totalCost = $derived(this.items.reduce((sum, i) => sum + i.cost, 0));
 
-	dps = $derived(basicAttackDps(this.finalStats, this.target));
+	basicAttackDamage = $derived(
+		applyPassiveAmp(
+			averageBasicAttack(this.finalStats, this.target),
+			this.heroMod,
+			this.modifierState
+		)
+	);
+
+	dps = $derived(
+		applyPassiveAmp(basicAttackDps(this.finalStats, this.target), this.heroMod, this.modifierState)
+	);
 
 	skillDamage(skillId: string): number {
 		if (!this.hero) return 0;
@@ -55,32 +69,39 @@ export class Loadout {
 
 	addItem(item: Item) {
 		if (this.items.length >= 6) return;
+		if (item.tier === 'ETC') return;
 		this.items = [...this.items, item];
 	}
 
-	addSecondaryItem(item: Item) {
-		if (this.secondaryItems.length >= 3) return;
-		this.secondaryItems = [...this.secondaryItems, item];
+	addEtcItem(item: Item) {
+		if (this.items.length >= 6) return;
+		this.items = [...this.items, item];
 	}
 
 	removeItem(index: number) {
 		this.items = this.items.filter((_, i) => i !== index);
 	}
 
-	removeSecondaryItem(index: number) {
-		this.secondaryItems = this.secondaryItems.filter((_, i) => i !== index);
+	moveItem(from: number, to: number) {
+		if (from === to) return;
+		if (from < 0 || from >= this.items.length) return;
+		if (to < 0 || to >= this.items.length) return;
+		const arr = [...this.items];
+		const [moved] = arr.splice(from, 1);
+		arr.splice(to, 0, moved);
+		this.items = arr;
 	}
 
 	reset() {
 		this.hero = null;
 		this.level = 1;
 		this.items = [];
-		this.secondaryItems = [];
 		this.mainEmblem = null;
 		this.primaryTalent = null;
 		this.tier1Talent = null;
 		this.tier2Talent = null;
 		this.target = emptyStatBlock();
+		this.modifierState = emptyModifierState();
 	}
 }
 

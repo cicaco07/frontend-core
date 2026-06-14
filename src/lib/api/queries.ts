@@ -25,6 +25,12 @@ export const HERO_DETAIL_QUERY = `
 			role
 			type
 			difficulty
+			offense
+			durability
+			control_effect
+			speciality
+			region
+			release_date
 			short_description
 			baseStat {
 				hp
@@ -195,6 +201,50 @@ export const THEORYCRAFTER_QUERY = `
 			description
 			benefit
 			attributes
+		}
+	}
+`;
+
+export const OFFICIAL_BUILDS_QUERY = `
+	query OfficialBuilds($limit: Int!, $offset: Int!) {
+		officialBuilds(limit: $limit, offset: $offset) {
+			_id
+			name
+			description
+			role
+			is_official
+			hero {
+				_id
+				name
+				avatar
+				image
+			}
+			items {
+				order
+				item {
+					_id
+					name
+					image
+					price
+				}
+			}
+			emblems {
+				_id
+				name
+				icon
+			}
+			battle_spells {
+				_id
+				name
+				icon
+				description
+				cooldown
+				tag
+			}
+			user {
+				_id
+				name
+			}
 		}
 	}
 `;

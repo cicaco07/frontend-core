@@ -12,6 +12,11 @@
 	import { SvelteSet } from 'svelte/reactivity';
 	import { computeDamage } from '$lib/calc/formulas';
 	import type { StatBlock } from '$lib/types/stats';
+	import {
+		applyPassiveAmp,
+		getSkillAreas,
+		computeMultiAreaDamage
+	} from '$lib/calc/apply-modifiers';
 
 	let { data }: { data: PageData } = $props();
 
@@ -149,7 +154,8 @@
 			target: targetStats
 		});
 
-		return dmgPerHit * hits;
+		const totalDmg = dmgPerHit * hits;
+		return applyPassiveAmp(totalDmg, loadout.heroMod, loadout.modifierState);
 	}
 
 	async function enrichHeroSkills(hero: Hero, isTarget: boolean = false): Promise<void> {
@@ -192,6 +198,7 @@
 	function selectHero(hero: Hero) {
 		loadout.hero = hero;
 		skillLevels = {};
+		loadout.modifierState = { passiveStacks: 0 };
 		enrichHeroSkills(hero, false);
 	}
 
@@ -202,6 +209,8 @@
 
 	let dragItem = $state<Item | null>(null);
 	let dragTargetItem = $state<Item | null>(null);
+	let dragSlotIndex = $state<number | null>(null);
+	let dragTargetSlotIndex = $state<number | null>(null);
 	let searchQuery = $state('');
 	let targetSearchQuery = $state('');
 	let categoryFilter = $state<ItemCategory | null>(null);
@@ -250,24 +259,55 @@
 	}
 
 	const filteredItems = $derived(
-		data.items.filter((i) => {
-			if (categoryFilter && i.category !== categoryFilter) return false;
-			if (searchQuery.trim() && !i.name.toLowerCase().includes(searchQuery.toLowerCase()))
-				return false;
-			return true;
-		})
+		data.items
+			.filter((i) => {
+				if (i.tier === 'ETC') return false;
+				if (categoryFilter && i.category !== categoryFilter) return false;
+				if (searchQuery.trim() && !i.name.toLowerCase().includes(searchQuery.toLowerCase()))
+					return false;
+				return true;
+			})
+			.sort((a, b) => a.cost - b.cost)
+	);
+
+	const etcItems = $derived(
+		data.items
+			.filter((i) => {
+				if (i.tier !== 'ETC') return false;
+				if (searchQuery.trim() && !i.name.toLowerCase().includes(searchQuery.toLowerCase()))
+					return false;
+				return true;
+			})
+			.sort((a, b) => a.cost - b.cost)
 	);
 
 	const filteredTargetItems = $derived(
-		data.items.filter((i) => {
-			if (targetCategoryFilter && i.category !== targetCategoryFilter) return false;
-			if (
-				targetSearchQuery.trim() &&
-				!i.name.toLowerCase().includes(targetSearchQuery.toLowerCase())
-			)
-				return false;
-			return true;
-		})
+		data.items
+			.filter((i) => {
+				if (i.tier === 'ETC') return false;
+				if (targetCategoryFilter && i.category !== targetCategoryFilter) return false;
+				if (
+					targetSearchQuery.trim() &&
+					!i.name.toLowerCase().includes(targetSearchQuery.toLowerCase())
+				)
+					return false;
+				return true;
+			})
+			.sort((a, b) => a.cost - b.cost)
+	);
+
+	const targetEtcItems = $derived(
+		data.items
+			.filter((i) => {
+				if (i.tier !== 'ETC') return false;
+				if (
+					targetSearchQuery.trim() &&
+					!i.name.toLowerCase().includes(targetSearchQuery.toLowerCase())
+				)
+					return false;
+				return true;
+			})
+			.sort((a, b) => a.cost - b.cost)
 	);
 
 	const mainEmblems = $derived(data.emblems.filter((e) => e.type === 'Main Emblem'));
@@ -281,42 +321,48 @@
 
 	function onDragStart(item: Item) {
 		dragItem = item;
+		dragSlotIndex = null;
+	}
+
+	function onSlotDragStart(index: number) {
+		dragSlotIndex = index;
+		dragItem = null;
 	}
 
 	function onTargetDragStart(item: Item) {
 		dragTargetItem = item;
+		dragTargetSlotIndex = null;
+	}
+
+	function onTargetSlotDragStart(index: number) {
+		dragTargetSlotIndex = index;
+		dragTargetItem = null;
 	}
 
 	function onDragOver(e: DragEvent) {
 		e.preventDefault();
 	}
 
-	function onDropPrimary(_e: DragEvent) {
-		_e.preventDefault();
-		if (!dragItem) return;
-		loadout.addItem(dragItem);
-		dragItem = null;
-	}
-
-	function onDropSecondary(_e: DragEvent) {
-		_e.preventDefault();
-		if (!dragItem) return;
-		loadout.addSecondaryItem(dragItem);
-		dragItem = null;
-	}
-
-	function onTargetDropPrimary(e: DragEvent) {
+	function onDropSlot(e: DragEvent, targetIndex: number) {
 		e.preventDefault();
-		if (!dragTargetItem) return;
-		targetLoadout.addItem(dragTargetItem);
-		dragTargetItem = null;
+		if (dragSlotIndex !== null) {
+			loadout.moveItem(dragSlotIndex, targetIndex);
+			dragSlotIndex = null;
+		} else if (dragItem) {
+			loadout.addItem(dragItem);
+			dragItem = null;
+		}
 	}
 
-	function onTargetDropSecondary(e: DragEvent) {
+	function onTargetDropSlot(e: DragEvent, targetIndex: number) {
 		e.preventDefault();
-		if (!dragTargetItem) return;
-		targetLoadout.addSecondaryItem(dragTargetItem);
-		dragTargetItem = null;
+		if (dragTargetSlotIndex !== null) {
+			targetLoadout.moveItem(dragTargetSlotIndex, targetIndex);
+			dragTargetSlotIndex = null;
+		} else if (dragTargetItem) {
+			targetLoadout.addItem(dragTargetItem);
+			dragTargetItem = null;
+		}
 	}
 
 	function round(n: number): number {
@@ -582,6 +628,48 @@
 				</div>
 			</label>
 
+			{#if loadout.heroMod?.passive}
+				{@const passive = loadout.heroMod.passive}
+				{@const passiveSkill = loadout.hero?.skills.find((s) => s.skillType === 'passive')}
+				<div class="rounded-lg border border-accent/30 bg-accent/5 p-3">
+					<div class="flex items-start gap-2.5">
+						{#if passiveSkill?.imageUrl}
+							<span class="size-10 shrink-0 overflow-hidden rounded-lg bg-surface-3">
+								<img
+									src={passiveSkill.imageUrl}
+									alt={passive.label}
+									class="h-full w-full object-cover"
+								/>
+							</span>
+						{/if}
+						<div class="min-w-0 flex-1">
+							<div class="flex items-center justify-between">
+								<span class="text-xs font-semibold text-ink">{passive.label}</span>
+								<span class="font-mono-stat text-xs text-accent"
+									>+{round(loadout.modifierState.passiveStacks * passive.perStack * 100)}%</span
+								>
+							</div>
+							<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
+								Setiap dash menambah damage output {passive.perStack * 100}% selama {passive.duration}
+								detik.
+							</p>
+						</div>
+					</div>
+					<input
+						type="range"
+						min="0"
+						max={passive.maxStacks}
+						bind:value={loadout.modifierState.passiveStacks}
+						class="mt-2 w-full accent-accent"
+					/>
+					<div class="mt-1 flex justify-between text-[10px] text-ink-faint">
+						{#each Array.from({ length: passive.maxStacks + 1 }, (_, i) => i) as s (s)}
+							<span>{s}</span>
+						{/each}
+					</div>
+				</div>
+			{/if}
+
 			<div class="border-t border-line pt-4">
 				<span class="font-display text-xs font-bold tracking-wide text-ink-faint uppercase"
 					>Emblem Set</span
@@ -604,9 +692,14 @@
 			</div>
 
 			<div>
-				<span class="text-xs tracking-wide text-ink-faint uppercase"
-					>Primary Items ({loadout.items.length}/6)</span
-				>
+				<div class="flex items-center justify-between">
+					<span class="text-xs tracking-wide text-ink-faint uppercase"
+						>Items ({loadout.items.length}/6)</span
+					>
+					<span class="font-mono-stat text-xs text-accent"
+						>{loadout.totalCost.toLocaleString()} gold</span
+					>
+				</div>
 				<div class="mt-2 grid grid-cols-3 gap-1.5" role="list">
 					{#each [0, 1, 2, 3, 4, 5] as i (i)}
 						{@const item = loadout.items[i]}
@@ -616,8 +709,10 @@
 							class:border-line={!item}
 							class:bg-surface-3={item}
 							role="listitem"
+							draggable={item ? 'true' : 'false'}
+							ondragstart={() => item && onSlotDragStart(i)}
 							ondragover={onDragOver}
-							ondrop={onDropPrimary}
+							ondrop={(e) => onDropSlot(e, i)}
 						>
 							{#if item}
 								{#if item.imageUrl}
@@ -628,42 +723,6 @@
 								<button
 									type="button"
 									onclick={() => loadout.removeItem(i)}
-									class="absolute top-0 right-0 flex size-4 items-center justify-center rounded-bl bg-red-500/80 text-xs text-white hover:bg-red-500"
-								>
-									<X class="size-3" />
-								</button>
-							{:else}
-								<span class="text-xs text-ink-faint">+</span>
-							{/if}
-						</div>
-					{/each}
-				</div>
-			</div>
-
-			<div>
-				<span class="text-xs tracking-wide text-ink-faint uppercase"
-					>Secondary Items ({loadout.secondaryItems.length}/3)</span
-				>
-				<div class="mt-2 grid grid-cols-3 gap-1.5" role="list">
-					{#each [0, 1, 2] as i (i)}
-						{@const item = loadout.secondaryItems[i]}
-						<div
-							class="relative flex aspect-square items-center justify-center overflow-hidden rounded-lg border-2 border-dashed transition {item
-								? 'border-amber-400 bg-surface-3'
-								: 'border-line'}"
-							role="listitem"
-							ondragover={onDragOver}
-							ondrop={onDropSecondary}
-						>
-							{#if item}
-								{#if item.imageUrl}
-									<img src={item.imageUrl} alt={item.name} class="h-full w-full object-cover" />
-								{:else}
-									<span class="px-1 text-center text-[10px] text-ink-muted">{item.name}</span>
-								{/if}
-								<button
-									type="button"
-									onclick={() => loadout.removeSecondaryItem(i)}
 									class="absolute top-0 right-0 flex size-4 items-center justify-center rounded-bl bg-red-500/80 text-xs text-white hover:bg-red-500"
 								>
 									<X class="size-3" />
@@ -708,26 +767,55 @@
 						>
 					{/each}
 				</div>
-				<div class="max-h-48 overflow-y-auto">
-					<div class="grid grid-cols-2 gap-1">
+				<div class="max-h-52 overflow-y-auto">
+					<div class="grid grid-cols-3 gap-1.5">
 						{#each filteredItems as item (item.id)}
 							<button
 								type="button"
 								draggable="true"
 								ondragstart={() => onDragStart(item)}
 								onclick={() => loadout.addItem(item)}
-								class="flex items-center gap-1.5 rounded-lg border border-line bg-bg/50 px-1.5 py-1 text-left text-[11px] transition hover:border-accent/40 hover:bg-surface-2"
+								class="flex flex-col items-center gap-1 rounded-lg border border-line bg-bg/50 p-1.5 text-center text-[10px] transition hover:border-accent/40 hover:bg-surface-2"
 							>
-								<span class="size-6 shrink-0 overflow-hidden rounded bg-surface-3">
+								<span class="size-10 shrink-0 overflow-hidden rounded bg-surface-3">
 									{#if item.imageUrl}
 										<img src={item.imageUrl} alt={item.name} class="h-full w-full object-cover" />
 									{/if}
 								</span>
-								<span class="truncate text-ink">{item.name}</span>
+								<span class="w-full truncate text-ink">{item.name}</span>
 							</button>
 						{/each}
 					</div>
 				</div>
+				{#if etcItems.length > 0}
+					<div class="mt-3 border-t border-line pt-3">
+						<span class="text-xs tracking-wide text-ink-faint uppercase">Optional (ETC)</span>
+						<div class="mt-2 max-h-36 overflow-y-auto">
+							<div class="grid grid-cols-3 gap-1.5">
+								{#each etcItems as item (item.id)}
+									<button
+										type="button"
+										draggable="true"
+										ondragstart={() => onDragStart(item)}
+										onclick={() => loadout.addEtcItem(item)}
+										class="flex flex-col items-center gap-1 rounded-lg border border-amber-400/40 bg-bg/50 p-1.5 text-center text-[10px] transition hover:border-amber-400 hover:bg-surface-2"
+									>
+										<span class="size-10 shrink-0 overflow-hidden rounded bg-surface-3">
+											{#if item.imageUrl}
+												<img
+													src={item.imageUrl}
+													alt={item.name}
+													class="h-full w-full object-cover"
+												/>
+											{/if}
+										</span>
+										<span class="w-full truncate text-ink">{item.name}</span>
+									</button>
+								{/each}
+							</div>
+						</div>
+					</div>
+				{/if}
 			</div>
 		</section>
 
@@ -875,6 +963,8 @@
 							{@const maxLevel = skill.levelData?.length ?? 0}
 							{@const currentLevel = getSkillLevel(skill.id, maxLevel)}
 							{@const currentLevelData = skill.levelData?.find((l) => l.level === currentLevel)}
+							{@const skillAreas = getSkillAreas(loadout.heroMod, skill.name)}
+							{@const baseDmg = calculateSkillDamage(skill, currentLevel, stats, targetStats)}
 							<div class="rounded-lg border border-line bg-bg/50 p-3">
 								<div class="flex items-start gap-3">
 									{#if skill.imageUrl}
@@ -901,13 +991,30 @@
 														{/each}
 													</select>
 												{/if}
-												<span class="font-mono-stat shrink-0 text-xs text-accent"
-													>{round(
-														calculateSkillDamage(skill, currentLevel, stats, targetStats)
-													)}</span
-												>
+												{#if !skillAreas}
+													<span class="font-mono-stat shrink-0 text-xs text-accent"
+														>{round(baseDmg)}</span
+													>
+												{/if}
 											</div>
 										</div>
+										{#if skillAreas}
+											<div class="mt-1.5 flex items-center gap-2">
+												{#each computeMultiAreaDamage(baseDmg, skillAreas) as area (area.label)}
+													<div
+														class="rounded border border-accent/20 bg-accent/5 px-2 py-0.5 text-center"
+													>
+														<span class="block text-[9px] text-ink-faint">{area.label}</span>
+														<span class="font-mono-stat text-xs text-accent"
+															>{round(area.damage)}</span
+														>
+													</div>
+												{/each}
+												<span class="text-[9px] text-ink-faint italic"
+													>*berlaku untuk satu musuh</span
+												>
+											</div>
+										{/if}
 										{#if skill.description}
 											<p class="mt-1 text-xs leading-relaxed text-ink-muted">
 												{replaceAttributePlaceholders(
@@ -1050,9 +1157,14 @@
 			</div>
 
 			<div class="border-t border-line pt-4">
-				<span class="text-xs tracking-wide text-ink-faint uppercase"
-					>Primary Items ({targetLoadout.items.length}/6)</span
-				>
+				<div class="flex items-center justify-between">
+					<span class="text-xs tracking-wide text-ink-faint uppercase"
+						>Items ({targetLoadout.items.length}/6)</span
+					>
+					<span class="font-mono-stat text-xs text-accent"
+						>{targetLoadout.totalCost.toLocaleString()} gold</span
+					>
+				</div>
 				<div class="mt-2 grid grid-cols-3 gap-1.5" role="list">
 					{#each [0, 1, 2, 3, 4, 5] as i (i)}
 						{@const item = targetLoadout.items[i]}
@@ -1062,8 +1174,10 @@
 							class:border-line={!item}
 							class:bg-surface-3={item}
 							role="listitem"
+							draggable={item ? 'true' : 'false'}
+							ondragstart={() => item && onTargetSlotDragStart(i)}
 							ondragover={onDragOver}
-							ondrop={onTargetDropPrimary}
+							ondrop={(e) => onTargetDropSlot(e, i)}
 						>
 							{#if item}
 								{#if item.imageUrl}
@@ -1074,42 +1188,6 @@
 								<button
 									type="button"
 									onclick={() => targetLoadout.removeItem(i)}
-									class="absolute top-0 right-0 flex size-4 items-center justify-center rounded-bl bg-red-500/80 text-xs text-white hover:bg-red-500"
-								>
-									<X class="size-3" />
-								</button>
-							{:else}
-								<span class="text-xs text-ink-faint">+</span>
-							{/if}
-						</div>
-					{/each}
-				</div>
-			</div>
-
-			<div>
-				<span class="text-xs tracking-wide text-ink-faint uppercase"
-					>Secondary Items ({targetLoadout.secondaryItems.length}/3)</span
-				>
-				<div class="mt-2 grid grid-cols-3 gap-1.5" role="list">
-					{#each [0, 1, 2] as i (i)}
-						{@const item = targetLoadout.secondaryItems[i]}
-						<div
-							class="relative flex aspect-square items-center justify-center overflow-hidden rounded-lg border-2 border-dashed transition {item
-								? 'border-amber-400 bg-surface-3'
-								: 'border-line'}"
-							role="listitem"
-							ondragover={onDragOver}
-							ondrop={onTargetDropSecondary}
-						>
-							{#if item}
-								{#if item.imageUrl}
-									<img src={item.imageUrl} alt={item.name} class="h-full w-full object-cover" />
-								{:else}
-									<span class="px-1 text-center text-[10px] text-ink-muted">{item.name}</span>
-								{/if}
-								<button
-									type="button"
-									onclick={() => targetLoadout.removeSecondaryItem(i)}
 									class="absolute top-0 right-0 flex size-4 items-center justify-center rounded-bl bg-red-500/80 text-xs text-white hover:bg-red-500"
 								>
 									<X class="size-3" />
@@ -1154,26 +1232,55 @@
 						>
 					{/each}
 				</div>
-				<div class="max-h-48 overflow-y-auto">
-					<div class="grid grid-cols-2 gap-1">
+				<div class="max-h-52 overflow-y-auto">
+					<div class="grid grid-cols-3 gap-1.5">
 						{#each filteredTargetItems as item (item.id)}
 							<button
 								type="button"
 								draggable="true"
 								ondragstart={() => onTargetDragStart(item)}
 								onclick={() => targetLoadout.addItem(item)}
-								class="flex items-center gap-1.5 rounded-lg border border-line bg-bg/50 px-1.5 py-1 text-left text-[11px] transition hover:border-accent/40 hover:bg-surface-2"
+								class="flex flex-col items-center gap-1 rounded-lg border border-line bg-bg/50 p-1.5 text-center text-[10px] transition hover:border-accent/40 hover:bg-surface-2"
 							>
-								<span class="size-6 shrink-0 overflow-hidden rounded bg-surface-3">
+								<span class="size-10 shrink-0 overflow-hidden rounded bg-surface-3">
 									{#if item.imageUrl}
 										<img src={item.imageUrl} alt={item.name} class="h-full w-full object-cover" />
 									{/if}
 								</span>
-								<span class="truncate text-ink">{item.name}</span>
+								<span class="w-full truncate text-ink">{item.name}</span>
 							</button>
 						{/each}
 					</div>
 				</div>
+				{#if targetEtcItems.length > 0}
+					<div class="mt-3 border-t border-line pt-3">
+						<span class="text-xs tracking-wide text-ink-faint uppercase">Optional (ETC)</span>
+						<div class="mt-2 max-h-36 overflow-y-auto">
+							<div class="grid grid-cols-3 gap-1.5">
+								{#each targetEtcItems as item (item.id)}
+									<button
+										type="button"
+										draggable="true"
+										ondragstart={() => onTargetDragStart(item)}
+										onclick={() => targetLoadout.addEtcItem(item)}
+										class="flex flex-col items-center gap-1 rounded-lg border border-amber-400/40 bg-bg/50 p-1.5 text-center text-[10px] transition hover:border-amber-400 hover:bg-surface-2"
+									>
+										<span class="size-10 shrink-0 overflow-hidden rounded bg-surface-3">
+											{#if item.imageUrl}
+												<img
+													src={item.imageUrl}
+													alt={item.name}
+													class="h-full w-full object-cover"
+												/>
+											{/if}
+										</span>
+										<span class="w-full truncate text-ink">{item.name}</span>
+									</button>
+								{/each}
+							</div>
+						</div>
+					</div>
+				{/if}
 			</div>
 
 			<div class="border-t border-line pt-4">

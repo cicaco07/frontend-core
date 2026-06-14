@@ -22,6 +22,8 @@ export interface HeroSkill {
 	baseDamage: number[];
 	scaling: HeroSkillScaling[];
 	skillType?: 'passive' | 'skill1' | 'skill2' | 'ultimate';
+	tags?: string[];
+	rawType?: string;
 	description?: string;
 	imageUrl?: string;
 	levelData?: SkillLevelData[];
@@ -55,6 +57,13 @@ export interface HeroRelations {
 	synergy: HeroRelation[];
 }
 
+export interface HeroAbilityScores {
+	offense: number;
+	durability: number;
+	controlEffect: number;
+	difficulty: number;
+}
+
 export interface Hero {
 	id: string;
 	slug: string;
@@ -70,6 +79,9 @@ export interface Hero {
 	lore?: string;
 	specialities?: HeroSpeciality[];
 	difficulty?: 1 | 2 | 3;
+	abilityScores?: HeroAbilityScores;
+	region?: string;
+	releaseDate?: string;
 	releaseYear?: number;
 	relations?: HeroRelations;
 }

@@ -1,5 +1,6 @@
 import { emptyStatBlock, type Hero, type HeroRole, type StatBlock } from '$lib/types';
 import type { Emblem, EmblemAttribute, Item, ItemCategory, ItemTier } from '$lib/types/equipment';
+import type { Build } from '$lib/types/build';
 
 export interface BackendBaseStat {
 	hp?: number;
@@ -37,6 +38,12 @@ export interface BackendHero {
 	role: string[];
 	type: string[];
 	difficulty: number;
+	offense?: number;
+	durability?: number;
+	control_effect?: number;
+	speciality?: string;
+	region?: string;
+	release_date?: string;
 	short_description: string;
 	baseStat?: BackendBaseStat | null;
 	skills?: BackendSkill[] | null;
@@ -271,24 +278,43 @@ export function mapHero(hero: BackendHero): Hero {
 		avatarUrl: hero.avatar || hero.image,
 		baseStats: mapBaseStat(hero.baseStat),
 		statsPerLevel: mapBaseStatGrowth(hero.baseStat),
-		skills: (hero.skills ?? []).map((skill) => ({
-			id: skill._id,
-			name: skill.name,
-			damageType: skill.type.toLowerCase().includes('magic') ? 'magic' : 'physical',
-			baseDamage: [skill.attack_effect ?? 0],
-			scaling: [],
-			skillType: skill.tag?.includes('ultimate') ? 'ultimate' : undefined,
-			description: skill.full_description || skill.lite_description,
-			imageUrl: skill.skill_icon || undefined,
-			levelData: (skill.skills_detail ?? []).map((detail) => ({
-				level: detail.level ?? 0,
-				attributes: parseSkillDetailAttributes(detail.attributes)
-			}))
-		})),
+		skills: (hero.skills ?? []).map((skill) => {
+			const tagLower = (skill.tag ?? []).map((t) => t.toLowerCase());
+			let skillType: 'passive' | 'skill1' | 'skill2' | 'ultimate' | undefined;
+			if (tagLower.includes('ultimate')) skillType = 'ultimate';
+			else if (tagLower.includes('passive')) skillType = 'passive';
+			else if (tagLower.includes('skill 2') || tagLower.includes('skill2')) skillType = 'skill2';
+			else if (tagLower.includes('skill 1') || tagLower.includes('skill1')) skillType = 'skill1';
+
+			return {
+				id: skill._id,
+				name: skill.name,
+				damageType: skill.type.toLowerCase().includes('magic') ? 'magic' : 'physical',
+				baseDamage: [skill.attack_effect ?? 0],
+				scaling: [],
+				skillType,
+				tags: skill.tag ?? [],
+				rawType: skill.type,
+				description: skill.full_description || skill.lite_description,
+				imageUrl: skill.skill_icon || undefined,
+				levelData: (skill.skills_detail ?? []).map((detail) => ({
+					level: detail.level ?? 0,
+					attributes: parseSkillDetailAttributes(detail.attributes)
+				}))
+			};
+		}),
 		title: hero.alias,
 		lore: hero.short_description,
 		specialities: hero.type.map((value) => slugify(value)).filter(Boolean) as Hero['specialities'],
-		difficulty: Math.min(3, Math.max(1, Math.round(hero.difficulty))) as Hero['difficulty']
+		difficulty: Math.min(3, Math.max(1, Math.round(hero.difficulty))) as Hero['difficulty'],
+		abilityScores: {
+			offense: hero.offense ?? 0,
+			durability: hero.durability ?? 0,
+			controlEffect: hero.control_effect ?? 0,
+			difficulty: hero.difficulty ?? 0
+		},
+		region: hero.region,
+		releaseDate: hero.release_date
 	};
 }
 
@@ -393,5 +419,64 @@ export function mapEmblem(emblem: BackendEmblem): Emblem {
 				stats: {}
 			}
 		]
+	};
+}
+
+export interface BackendBuild {
+	_id: string;
+	name: string;
+	description?: string;
+	role: string;
+	is_official: boolean;
+	hero: { _id: string; name: string; avatar: string; image: string };
+	items: { order: number; item: { _id: string; name: string; image: string; price: number } }[];
+	emblems: { _id: string; name: string; icon: string }[];
+	battle_spells: {
+		_id: string;
+		name: string;
+		icon: string;
+		description: string;
+		cooldown: number;
+		tag: string;
+	}[];
+	user: { _id: string; name: string };
+}
+
+export function mapBuild(build: BackendBuild): Build {
+	return {
+		id: build._id,
+		name: build.name,
+		description: build.description || undefined,
+		role: build.role,
+		isOfficial: build.is_official,
+		hero: {
+			id: build.hero._id,
+			name: build.hero.name,
+			avatarUrl: build.hero.avatar || build.hero.image,
+			imageUrl: build.hero.image || build.hero.avatar
+		},
+		items: build.items
+			.sort((a, b) => a.order - b.order)
+			.map((bi) => ({
+				order: bi.order,
+				id: bi.item._id,
+				name: bi.item.name,
+				imageUrl: bi.item.image,
+				cost: bi.item.price
+			})),
+		emblems: build.emblems.map((e) => ({
+			id: e._id,
+			name: e.name,
+			icon: e.icon
+		})),
+		battleSpells: build.battle_spells.map((bs) => ({
+			id: bs._id,
+			name: bs.name,
+			icon: bs.icon,
+			description: bs.description,
+			cooldown: bs.cooldown,
+			tag: bs.tag
+		})),
+		author: build.user.name
 	};
 }
