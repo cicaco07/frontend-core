@@ -52,6 +52,7 @@
 	});
 
 	const isLanding = $derived($page.url.pathname === '/');
+	const isError = $derived($page.error != null);
 
 	let scrolled = $state(false);
 
@@ -68,7 +69,11 @@
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
-{#if isLanding}
+{#if isError}
+	<div class="min-h-screen bg-bg text-ink">
+		{@render children()}
+	</div>
+{:else if isLanding}
 	<div class="relative min-h-screen bg-bg text-ink">
 		<header
 			class="fixed inset-x-0 top-0 z-50 transition-all duration-300 {scrolled
