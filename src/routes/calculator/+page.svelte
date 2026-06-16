@@ -204,6 +204,7 @@
 
 	function selectTargetHero(hero: Hero) {
 		targetLoadout.hero = hero;
+		targetLoadout.modifierState = { passiveStacks: 0 };
 		enrichHeroSkills(hero, true);
 	}
 
@@ -376,6 +377,8 @@
 
 	const heroStats = $derived(loadout.heroStats);
 	const emblemStatsData = $derived(loadout.emblemStats);
+	const targetHeroStats = $derived(targetLoadout.heroStats);
+	const targetEmblemStatsData = $derived(targetLoadout.emblemStats);
 
 	type StatKey =
 		| 'physicalAttack'
@@ -398,9 +401,24 @@
 		const sources: { source: string; value: number }[] = [];
 		const hv = heroStats[key];
 		if (hv) sources.push({ source: 'Hero', value: hv });
+		const bv = loadout.baseBonus[key];
+		if (bv) sources.push({ source: 'Base Bonus', value: bv });
 		const iv = mainItemStats[key];
 		if (iv) sources.push({ source: 'Items', value: iv });
 		const ev = emblemStatsData[key];
+		if (ev) sources.push({ source: 'Emblem', value: ev });
+		return sources;
+	}
+
+	function getTargetStatBreakdown(key: StatKey): { source: string; value: number }[] {
+		const sources: { source: string; value: number }[] = [];
+		const hv = targetHeroStats[key];
+		if (hv) sources.push({ source: 'Hero', value: hv });
+		const bv = targetLoadout.baseBonus[key];
+		if (bv) sources.push({ source: 'Base Bonus', value: bv });
+		const iv = targetItemStats[key];
+		if (iv) sources.push({ source: 'Items', value: iv });
+		const ev = targetEmblemStatsData[key];
 		if (ev) sources.push({ source: 'Emblem', value: ev });
 		return sources;
 	}
@@ -498,22 +516,83 @@
 		{ label: 'Move SPD', value: stats.movementSpeed, color: '#c9a24a', key: 'movementSpeed' }
 	]);
 
-	const targetOffenseStats = $derived([
-		{ label: 'Physical ATK', value: targetStats.physicalAttack, color: '#ffb86b' },
-		{ label: 'Magic Power', value: targetStats.magicPower, color: '#89e0eb' },
-		{ label: 'ATK SPD', value: targetStats.attackSpeedPct * 100, color: '#ffb86b', suffix: '%' },
-		{ label: 'Crit Chance', value: targetStats.critChancePct * 100, color: '#f4f7ff', suffix: '%' },
-		{ label: 'Lifesteal', value: targetStats.lifestealPct * 100, color: '#ff7a7c', suffix: '%' },
-		{ label: 'Spell Vamp', value: targetStats.spellVampPct * 100, color: '#a78bfa', suffix: '%' }
-	] as Array<{ label: string; value: number; color: string; suffix?: string }>);
+	const targetOffenseStats = $derived<StatRow[]>([
+		{
+			label: 'Physical ATK',
+			value: targetStats.physicalAttack,
+			color: '#ffb86b',
+			key: 'physicalAttack'
+		},
+		{ label: 'Magic Power', value: targetStats.magicPower, color: '#89e0eb', key: 'magicPower' },
+		{
+			label: 'ATK SPD',
+			value: targetStats.attackSpeedPct * 100,
+			color: '#ffb86b',
+			suffix: '%',
+			key: 'attackSpeedPct',
+			isPct: true
+		},
+		{
+			label: 'Crit Chance',
+			value: targetStats.critChancePct * 100,
+			color: '#f4f7ff',
+			suffix: '%',
+			key: 'critChancePct',
+			isPct: true
+		},
+		{
+			label: 'Lifesteal',
+			value: targetStats.lifestealPct * 100,
+			color: '#ff7a7c',
+			suffix: '%',
+			key: 'lifestealPct',
+			isPct: true
+		},
+		{
+			label: 'Spell Vamp',
+			value: targetStats.spellVampPct * 100,
+			color: '#a78bfa',
+			suffix: '%',
+			key: 'spellVampPct',
+			isPct: true
+		},
+		{
+			label: 'Phys PEN',
+			value: targetStats.physicalPenFlat,
+			color: '#e07a5f',
+			key: 'physicalPenFlat'
+		},
+		{
+			label: 'Phys PEN %',
+			value: targetStats.physicalPenPct * 100,
+			color: '#e07a5f',
+			suffix: '%',
+			key: 'physicalPenPct',
+			isPct: true
+		},
+		{ label: 'Magic PEN', value: targetStats.magicPenFlat, color: '#7b68ee', key: 'magicPenFlat' },
+		{
+			label: 'Magic PEN %',
+			value: targetStats.magicPenPct * 100,
+			color: '#7b68ee',
+			suffix: '%',
+			key: 'magicPenPct',
+			isPct: true
+		}
+	]);
 
-	const targetDefenseStats = $derived([
-		{ label: 'HP', value: targetStats.hp, color: '#5fb38a' },
-		{ label: 'Mana', value: targetStats.mana, color: '#5aa6c4' },
-		{ label: 'Phys DEF', value: targetStats.physicalDefense, color: '#c2724a' },
-		{ label: 'Magic DEF', value: targetStats.magicDefense, color: '#b25c8f' },
-		{ label: 'Move SPD', value: targetStats.movementSpeed, color: '#c9a24a' }
-	] as Array<{ label: string; value: number; color: string; suffix?: string }>);
+	const targetDefenseStats = $derived<StatRow[]>([
+		{ label: 'HP', value: targetStats.hp, color: '#5fb38a', key: 'hp' },
+		{ label: 'Mana', value: targetStats.mana, color: '#5aa6c4', key: 'mana' },
+		{
+			label: 'Phys DEF',
+			value: targetStats.physicalDefense,
+			color: '#c2724a',
+			key: 'physicalDefense'
+		},
+		{ label: 'Magic DEF', value: targetStats.magicDefense, color: '#b25c8f', key: 'magicDefense' },
+		{ label: 'Move SPD', value: targetStats.movementSpeed, color: '#c9a24a', key: 'movementSpeed' }
+	]);
 
 	function selectMainEmblem(slug: string) {
 		loadout.mainEmblem = data.emblems.find((e) => e.slug === slug) ?? null;
@@ -823,131 +902,195 @@
 		<section
 			class="flex flex-col items-center justify-start rounded-2xl border border-line bg-surface/60 p-6"
 		>
-			<div class="mb-4 size-36 overflow-hidden rounded-full border-2 border-accent/40 bg-accent/10">
-				{#if loadout.hero?.avatarUrl}
-					<img
-						src={loadout.hero.avatarUrl}
-						alt={loadout.hero.name}
-						class="h-full w-full object-cover"
-					/>
-				{/if}
+			<div class="grid w-full grid-cols-1 gap-6 lg:grid-cols-2">
+				<div class="flex flex-col items-center">
+					<div
+						class="mb-3 size-24 overflow-hidden rounded-full border-2 border-accent/40 bg-accent/10"
+					>
+						{#if loadout.hero?.avatarUrl}
+							<img
+								src={loadout.hero.avatarUrl}
+								alt={loadout.hero.name}
+								class="h-full w-full object-cover"
+							/>
+						{/if}
+					</div>
+					<h2 class="font-display text-lg font-bold text-ink">
+						{loadout.hero?.name ?? 'Pilih Hero'}
+					</h2>
+					<p class="text-xs text-ink-muted">Level {loadout.level}</p>
+				</div>
+
+				<div class="flex flex-col items-center">
+					<div
+						class="mb-3 size-24 overflow-hidden rounded-full border-2 border-red-400/40 bg-red-400/10"
+					>
+						{#if targetLoadout.hero?.avatarUrl}
+							<img
+								src={targetLoadout.hero.avatarUrl}
+								alt={targetLoadout.hero.name}
+								class="h-full w-full object-cover"
+							/>
+						{/if}
+					</div>
+					<h2 class="font-display text-lg font-bold text-ink">
+						{targetLoadout.hero?.name ?? 'Pilih Target'}
+					</h2>
+					<p class="text-xs text-ink-muted">Level {targetLoadout.level}</p>
+				</div>
 			</div>
-			<h2 class="font-display text-2xl font-bold text-ink">{loadout.hero?.name ?? 'Pilih Hero'}</h2>
-			<p class="mt-1 text-xs text-ink-muted">Level {loadout.level}</p>
 
 			<div class="mt-6 w-full">
-				<div class="grid grid-cols-2 gap-x-8 gap-y-1.5 text-sm">
-					<div class="space-y-1.5">
-						<div class="mb-2 flex items-center gap-1 text-xs font-semibold text-ink-faint">
-							<Swords class="size-3.5" /> Offense
-						</div>
-						{#each offenseStats as row (row.label)}
-							<div class="relative">
-								<button
-									type="button"
-									onclick={() => toggleBreakdown(row.label)}
-									class="-mx-1 flex w-full items-center justify-between rounded px-1 py-0.5 text-sm hover:bg-surface-2/50"
+				<div class="mb-2 flex items-center gap-1 text-xs font-semibold text-ink-faint">
+					<Swords class="size-3.5" /> Offense
+				</div>
+				<div class="space-y-1">
+					{#each offenseStats as row, i (row.label)}
+						{@const targetRow = targetOffenseStats[i]}
+						<div class="relative">
+							<button
+								type="button"
+								onclick={() => toggleBreakdown(row.label)}
+								class="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-2 rounded px-1 py-0.5 text-sm hover:bg-surface-2/50"
+							>
+								<span class="font-mono-stat text-left text-ink tabular-nums"
+									>{round(row.value)}{row.suffix ?? ''}</span
 								>
-									<span class="text-ink-muted">{row.label}</span>
-									<div class="flex items-center gap-2">
-										<div class="h-1.5 w-16 overflow-hidden rounded bg-surface-3">
-											<div
-												class="h-full rounded"
-												style="width:{Math.min(
-													100,
-													Math.max(2, (row.value / 10000) * 100)
-												)}%;background:{row.color}"
-											></div>
-										</div>
-										<span class="font-mono-stat w-14 text-right text-ink tabular-nums"
-											>{round(row.value)}{row.suffix ?? ''}</span
-										>
-									</div>
-								</button>
-								{#if openBreakdown === row.label}
-									<div
-										class="absolute left-0 z-30 mt-0.5 w-full rounded-lg border border-line bg-bg p-2 shadow-lg"
-									>
-										{#each getStatBreakdown(row.key) as src (src.source)}
-											<div class="flex justify-between text-[11px]">
-												<span class="text-ink-faint">{src.source}</span>
-												<span class="font-mono-stat text-ink tabular-nums"
-													>{row.isPct ? round(src.value * 100) + '%' : round(src.value)}</span
-												>
-											</div>
-										{/each}
-										{#if getStatBreakdown(row.key).length === 0}
-											<span class="text-[11px] text-ink-faint">No sources</span>
-										{/if}
-									</div>
-								{/if}
-							</div>
-						{/each}
-					</div>
-					<div class="space-y-1.5">
-						<div class="mb-2 flex items-center gap-1 text-xs font-semibold text-ink-faint">
-							<Shield class="size-3.5" /> Defense
-						</div>
-						{#each defenseStats as row (row.label)}
-							<div class="relative">
-								<button
-									type="button"
-									onclick={() => toggleBreakdown(row.label)}
-									class="-mx-1 flex w-full items-center justify-between rounded px-1 py-0.5 text-sm hover:bg-surface-2/50"
+								<span class="text-center text-ink-muted">{row.label}</span>
+								<span class="font-mono-stat text-right text-ink tabular-nums"
+									>{round(targetRow.value)}{targetRow.suffix ?? ''}</span
 								>
-									<span class="text-ink-muted">{row.label}</span>
-									<div class="flex items-center gap-2">
-										<div class="h-1.5 w-16 overflow-hidden rounded bg-surface-3">
-											<div
-												class="h-full rounded"
-												style="width:{Math.min(
-													100,
-													Math.max(2, (row.value / 10000) * 100)
-												)}%;background:{row.color}"
-											></div>
+							</button>
+							{#if openBreakdown === row.label}
+								<div
+									class="absolute left-0 z-30 mt-0.5 w-full rounded-lg border border-line bg-bg p-2 shadow-lg"
+								>
+									<div class="grid grid-cols-2 gap-4">
+										<div>
+											<span class="text-[10px] font-semibold text-ink-faint">Hero</span>
+											{#each getStatBreakdown(row.key) as src (src.source)}
+												<div class="flex justify-between text-[11px]">
+													<span class="text-ink-faint">{src.source}</span>
+													<span class="font-mono-stat text-ink tabular-nums"
+														>{row.isPct ? round(src.value * 100) + '%' : round(src.value)}</span
+													>
+												</div>
+											{/each}
+											{#if getStatBreakdown(row.key).length === 0}
+												<span class="text-[11px] text-ink-faint">No sources</span>
+											{/if}
 										</div>
-										<span class="font-mono-stat w-14 text-right text-ink tabular-nums"
-											>{round(row.value)}{row.suffix ?? ''}</span
-										>
+										<div>
+											<span class="text-[10px] font-semibold text-ink-faint">Target</span>
+											{#each getTargetStatBreakdown(row.key) as src (src.source)}
+												<div class="flex justify-between text-[11px]">
+													<span class="text-ink-faint">{src.source}</span>
+													<span class="font-mono-stat text-ink tabular-nums"
+														>{row.isPct ? round(src.value * 100) + '%' : round(src.value)}</span
+													>
+												</div>
+											{/each}
+											{#if getTargetStatBreakdown(row.key).length === 0}
+												<span class="text-[11px] text-ink-faint">No sources</span>
+											{/if}
+										</div>
 									</div>
-								</button>
-								{#if openBreakdown === row.label}
-									<div
-										class="absolute left-0 z-30 mt-0.5 w-full rounded-lg border border-line bg-bg p-2 shadow-lg"
-									>
-										{#each getStatBreakdown(row.key) as src (src.source)}
-											<div class="flex justify-between text-[11px]">
-												<span class="text-ink-faint">{src.source}</span>
-												<span class="font-mono-stat text-ink tabular-nums"
-													>{row.isPct ? round(src.value * 100) + '%' : round(src.value)}</span
-												>
-											</div>
-										{/each}
-										{#if getStatBreakdown(row.key).length === 0}
-											<span class="text-[11px] text-ink-faint">No sources</span>
-										{/if}
+								</div>
+							{/if}
+						</div>
+					{/each}
+				</div>
+
+				<div class="mt-4 mb-2 flex items-center gap-1 text-xs font-semibold text-ink-faint">
+					<Shield class="size-3.5" /> Defense
+				</div>
+				<div class="space-y-1">
+					{#each defenseStats as row, i (row.label)}
+						{@const targetRow = targetDefenseStats[i]}
+						<div class="relative">
+							<button
+								type="button"
+								onclick={() => toggleBreakdown(row.label)}
+								class="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-2 rounded px-1 py-0.5 text-sm hover:bg-surface-2/50"
+							>
+								<span class="font-mono-stat text-left text-ink tabular-nums"
+									>{round(row.value)}{row.suffix ?? ''}</span
+								>
+								<span class="text-center text-ink-muted">{row.label}</span>
+								<span class="font-mono-stat text-right text-ink tabular-nums"
+									>{round(targetRow.value)}{targetRow.suffix ?? ''}</span
+								>
+							</button>
+							{#if openBreakdown === row.label}
+								<div
+									class="absolute left-0 z-30 mt-0.5 w-full rounded-lg border border-line bg-bg p-2 shadow-lg"
+								>
+									<div class="grid grid-cols-2 gap-4">
+										<div>
+											<span class="text-[10px] font-semibold text-ink-faint">Hero</span>
+											{#each getStatBreakdown(row.key) as src (src.source)}
+												<div class="flex justify-between text-[11px]">
+													<span class="text-ink-faint">{src.source}</span>
+													<span class="font-mono-stat text-ink tabular-nums"
+														>{row.isPct ? round(src.value * 100) + '%' : round(src.value)}</span
+													>
+												</div>
+											{/each}
+											{#if getStatBreakdown(row.key).length === 0}
+												<span class="text-[11px] text-ink-faint">No sources</span>
+											{/if}
+										</div>
+										<div>
+											<span class="text-[10px] font-semibold text-ink-faint">Target</span>
+											{#each getTargetStatBreakdown(row.key) as src (src.source)}
+												<div class="flex justify-between text-[11px]">
+													<span class="text-ink-faint">{src.source}</span>
+													<span class="font-mono-stat text-ink tabular-nums"
+														>{row.isPct ? round(src.value * 100) + '%' : round(src.value)}</span
+													>
+												</div>
+											{/each}
+											{#if getTargetStatBreakdown(row.key).length === 0}
+												<span class="text-[11px] text-ink-faint">No sources</span>
+											{/if}
+										</div>
 									</div>
-								{/if}
-							</div>
-						{/each}
-					</div>
+								</div>
+							{/if}
+						</div>
+					{/each}
 				</div>
 			</div>
 
 			<div class="mt-6 w-full border-t border-line pt-4">
-				<div class="grid grid-cols-3 gap-2 text-center">
+				<div class="grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-center text-sm">
 					<div>
-						<p class="text-xs text-ink-muted">Avg BA</p>
-						<p class="font-mono-stat text-sm text-ink">{round(loadout.basicAttackDamage)}</p>
+						<p class="font-mono-stat text-ink">{round(loadout.basicAttackDamage)}</p>
 					</div>
+					<p class="text-xs text-ink-muted">Avg BA</p>
 					<div>
-						<p class="text-xs text-ink-muted">DPS</p>
-						<p class="font-mono-stat text-sm text-accent">{round(loadout.dps)}</p>
+						<p class="font-mono-stat text-ink">—</p>
 					</div>
+				</div>
+				<div class="mt-1 grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-center text-sm">
 					<div>
-						<p class="text-xs text-ink-muted">EHP Phys</p>
-						<p class="font-mono-stat text-sm text-ink">
+						<p class="font-mono-stat text-accent">{round(loadout.dps)}</p>
+					</div>
+					<p class="text-xs text-ink-muted">DPS</p>
+					<div>
+						<p class="font-mono-stat text-ink">—</p>
+					</div>
+				</div>
+				<div class="mt-1 grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-center text-sm">
+					<div>
+						<p class="font-mono-stat text-ink">
 							{round(stats.hp / (120 / (120 + Math.max(0, stats.physicalDefense))))}
+						</p>
+					</div>
+					<p class="text-xs text-ink-muted">EHP Phys</p>
+					<div>
+						<p class="font-mono-stat text-ink">
+							{round(targetStats.hp / (120 / (120 + Math.max(0, targetStats.physicalDefense))))}
 						</p>
 					</div>
 				</div>
@@ -1135,6 +1278,50 @@
 				</div>
 			</label>
 
+			{#if targetLoadout.heroMod?.passive}
+				{@const passive = targetLoadout.heroMod.passive}
+				{@const passiveSkill = targetLoadout.hero?.skills.find((s) => s.skillType === 'passive')}
+				<div class="rounded-lg border border-accent/30 bg-accent/5 p-3">
+					<div class="flex items-start gap-2.5">
+						{#if passiveSkill?.imageUrl}
+							<span class="size-10 shrink-0 overflow-hidden rounded-lg bg-surface-3">
+								<img
+									src={passiveSkill.imageUrl}
+									alt={passive.label}
+									class="h-full w-full object-cover"
+								/>
+							</span>
+						{/if}
+						<div class="min-w-0 flex-1">
+							<div class="flex items-center justify-between">
+								<span class="text-xs font-semibold text-ink">{passive.label}</span>
+								<span class="font-mono-stat text-xs text-accent"
+									>+{round(
+										targetLoadout.modifierState.passiveStacks * passive.perStack * 100
+									)}%</span
+								>
+							</div>
+							<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
+								Setiap dash menambah damage output {passive.perStack * 100}% selama {passive.duration}
+								detik.
+							</p>
+						</div>
+					</div>
+					<input
+						type="range"
+						min="0"
+						max={passive.maxStacks}
+						bind:value={targetLoadout.modifierState.passiveStacks}
+						class="mt-2 w-full accent-accent"
+					/>
+					<div class="mt-1 flex justify-between text-[10px] text-ink-faint">
+						{#each Array.from({ length: passive.maxStacks + 1 }, (_, i) => i) as s (s)}
+							<span>{s}</span>
+						{/each}
+					</div>
+				</div>
+			{/if}
+
 			<div class="border-t border-line pt-4">
 				<span class="font-display text-xs font-bold tracking-wide text-ink-faint uppercase"
 					>Emblem Set</span
@@ -1281,38 +1468,6 @@
 						</div>
 					</div>
 				{/if}
-			</div>
-
-			<div class="border-t border-line pt-4">
-				<span class="font-display text-xs font-bold tracking-wide text-ink-faint uppercase"
-					>Target Stats</span
-				>
-				<div class="mt-3 space-y-1.5">
-					<div class="mb-2 flex items-center gap-1 text-xs font-semibold text-ink-faint">
-						<Swords class="size-3.5" /> Offense
-					</div>
-					{#each targetOffenseStats as row (row.label)}
-						<div class="flex items-center justify-between text-sm">
-							<span class="text-ink-muted">{row.label}</span>
-							<span class="font-mono-stat text-ink tabular-nums">
-								{round(row.value)}{row.suffix ?? ''}
-							</span>
-						</div>
-					{/each}
-				</div>
-				<div class="mt-3 space-y-1.5 border-t border-line pt-3">
-					<div class="mb-2 flex items-center gap-1 text-xs font-semibold text-ink-faint">
-						<Shield class="size-3.5" /> Defense
-					</div>
-					{#each targetDefenseStats as row (row.label)}
-						<div class="flex items-center justify-between text-sm">
-							<span class="text-ink-muted">{row.label}</span>
-							<span class="font-mono-stat text-ink tabular-nums">
-								{round(row.value)}{row.suffix ?? ''}
-							</span>
-						</div>
-					{/each}
-				</div>
 			</div>
 		</section>
 	</div>
