@@ -148,18 +148,20 @@
 
 	function parseScalingFromDescription(description: string | undefined): {
 		type: 'total' | 'extra';
-		stat: 'physicalAttack' | 'magicPower';
+		stat: 'physicalAttack' | 'magicPower' | 'hp';
 		ratio: number;
 	}[] {
 		if (!description) return [];
 		const scalings: {
 			type: 'total' | 'extra';
-			stat: 'physicalAttack' | 'magicPower';
+			stat: 'physicalAttack' | 'magicPower' | 'hp';
 			ratio: number;
 		}[] = [];
-		const pattern = /\+(\d+)%\s+(Total|Extra)?\s*(Physical Attack|Magic Power)/gi;
+
+		// Match Physical Attack or Magic Power: e.g. (+120% Total Physical Attack) or (+150% Magic Power)
+		const pattern1 = /\+\s*(\d+)%\s*(Total|Extra)?\s*(Physical Attack|Magic Power)/gi;
 		let match: RegExpExecArray | null;
-		while ((match = pattern.exec(description)) !== null) {
+		while ((match = pattern1.exec(description)) !== null) {
 			const ratio = Number(match[1]) / 100;
 			const type = (match[2] ?? 'Total').toLowerCase() === 'extra' ? 'extra' : 'total';
 			const stat: 'physicalAttack' | 'magicPower' = match[3].toLowerCase().includes('magic')
@@ -167,6 +169,15 @@
 				: 'physicalAttack';
 			scalings.push({ type, stat, ratio });
 		}
+
+		// Match HP scaling: e.g. (+6% Total HP) or +6% Total HP or +6% Max HP or +6% HP
+		const pattern2 = /\+\s*(\d+)%\s*(Total|Extra|Max)?\s*HP/gi;
+		while ((match = pattern2.exec(description)) !== null) {
+			const ratio = Number(match[1]) / 100;
+			const type = (match[2] ?? 'Total').toLowerCase() === 'extra' ? 'extra' : 'total';
+			scalings.push({ type, stat: 'hp', ratio });
+		}
+
 		return scalings;
 	}
 
@@ -749,6 +760,23 @@
 				</p>
 			{/if}
 
+			<div class="flex items-center gap-2">
+				<input
+					id="main-hero-skin"
+					type="checkbox"
+					bind:checked={loadout.hasSkin}
+					disabled={!loadout.hero}
+					class="size-4 cursor-pointer rounded border-line bg-surface-3 text-accent accent-accent focus:ring-accent disabled:cursor-not-allowed disabled:opacity-50"
+				/>
+				<label
+					for="main-hero-skin"
+					class="cursor-pointer text-xs font-bold tracking-wide text-ink-faint uppercase select-none"
+					class:opacity-50={!loadout.hero}
+				>
+					Skin
+				</label>
+			</div>
+
 			<label class="block">
 				<span class="font-display text-xs font-bold tracking-wide text-ink-faint uppercase"
 					>Level: {loadout.level}</span
@@ -1120,36 +1148,23 @@
 				</div>
 			</div>
 
-			<div class="mt-6 w-full border-t border-line pt-4">
+			<div class="mt-6 w-full space-y-1 border-t border-line pt-4">
 				<div class="grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-center text-sm">
 					<div>
 						<p class="font-mono-stat text-ink">{round(loadout.basicAttackDamage)}</p>
 					</div>
-					<p class="text-xs text-ink-muted">Avg BA</p>
+					<p class="text-xs text-ink-muted">Damage Basic Attack</p>
 					<div>
 						<p class="font-mono-stat text-ink">—</p>
 					</div>
 				</div>
-				<div class="mt-1 grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-center text-sm">
+				<div class="grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-center text-sm">
 					<div>
-						<p class="font-mono-stat text-accent">{round(loadout.dps)}</p>
+						<p class="font-mono-stat text-ink">{round(loadout.basicAttackCritDamage)}</p>
 					</div>
-					<p class="text-xs text-ink-muted">DPS</p>
+					<p class="text-xs text-ink-muted">Damage Basic Attack ketika Crit</p>
 					<div>
 						<p class="font-mono-stat text-ink">—</p>
-					</div>
-				</div>
-				<div class="mt-1 grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-center text-sm">
-					<div>
-						<p class="font-mono-stat text-ink">
-							{round(stats.hp / (120 / (120 + Math.max(0, stats.physicalDefense))))}
-						</p>
-					</div>
-					<p class="text-xs text-ink-muted">EHP Phys</p>
-					<div>
-						<p class="font-mono-stat text-ink">
-							{round(targetStats.hp / (120 / (120 + Math.max(0, targetStats.physicalDefense))))}
-						</p>
 					</div>
 				</div>
 			</div>
@@ -1320,6 +1335,23 @@
 					{titleCase(targetLoadout.hero.role)}
 				</p>
 			{/if}
+
+			<div class="flex items-center gap-2">
+				<input
+					id="target-hero-skin"
+					type="checkbox"
+					bind:checked={targetLoadout.hasSkin}
+					disabled={!targetLoadout.hero}
+					class="size-4 cursor-pointer rounded border-line bg-surface-3 text-accent accent-accent focus:ring-accent disabled:cursor-not-allowed disabled:opacity-50"
+				/>
+				<label
+					for="target-hero-skin"
+					class="cursor-pointer text-xs font-bold tracking-wide text-ink-faint uppercase select-none"
+					class:opacity-50={!targetLoadout.hero}
+				>
+					Skin
+				</label>
+			</div>
 
 			<label class="block">
 				<span class="font-display text-xs font-bold tracking-wide text-ink-faint uppercase"

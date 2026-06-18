@@ -4,7 +4,8 @@ import {
 	scaleStatsByLevel,
 	basicAttackDps,
 	averageBasicAttack,
-	heroSkillDamage
+	heroSkillDamage,
+	computeDamage
 } from '$lib/calc/formulas';
 import { emptyStatBlock } from '$lib/types';
 import { getHeroMod, type HeroModConfig } from '$lib/calc/hero-modifiers';
@@ -20,6 +21,7 @@ export class Loadout {
 	tier2Talent = $state<Emblem | null>(null);
 	target = $state<StatBlock>(emptyStatBlock());
 	modifierState = $state<ModifierState>(emptyModifierState());
+	hasSkin = $state(false);
 
 	heroMod = $derived<HeroModConfig | null>(this.hero ? getHeroMod(this.hero.slug) : null);
 
@@ -29,7 +31,47 @@ export class Loadout {
 			: emptyStatBlock()
 	);
 
-	baseBonus: Partial<StatBlock> = { physicalAttack: 8 };
+	baseBonus = $derived.by<Partial<StatBlock>>(() => {
+		if (!this.hasSkin || !this.hero) return {};
+		const slug = this.hero.slug.toLowerCase();
+		const exceptions: Record<string, Partial<StatBlock>> = {
+			alice: { magicPower: 8 },
+			chip: { hp: 100 },
+			esme: { magicPower: 8 },
+			esmeralda: { magicPower: 8 },
+			freddrin: { hp: 100 },
+			fredrinn: { hp: 100 },
+			silvanna: { magicPower: 8 },
+			selena: { magicPower: 8 },
+			natan: { magicPower: 8 },
+			kimmy: { magicPower: 8 },
+			joy: { magicPower: 8 },
+			gusion: { magicPower: 8 },
+			guin: { magicPower: 8 },
+			guinevere: { magicPower: 8 },
+			julian: { magicPower: 8 },
+			kaja: { magicPower: 8 },
+			karina: { magicPower: 8 },
+			lolita: { hp: 100 },
+			marcel: { hp: 100 }
+		};
+
+		if (slug in exceptions) {
+			return exceptions[slug];
+		}
+
+		const role = this.hero.role.toLowerCase();
+		if (role === 'marksman' || role === 'fighter' || role === 'assassin') {
+			return { physicalAttack: 8 };
+		}
+		if (role === 'tank') {
+			return { hp: 100 };
+		}
+		if (role === 'mage' || role === 'support') {
+			return { magicPower: 8 };
+		}
+		return {};
+	});
 
 	itemStats = $derived(sumStats(this.items.map((i) => i.stats)));
 
@@ -51,6 +93,20 @@ export class Loadout {
 	basicAttackDamage = $derived(
 		applyPassiveAmp(
 			averageBasicAttack(this.finalStats, this.target),
+			this.heroMod,
+			this.modifierState
+		)
+	);
+
+	basicAttackCritDamage = $derived(
+		applyPassiveAmp(
+			computeDamage({
+				rawDamage: this.finalStats.physicalAttack,
+				damageType: 'physical',
+				attacker: this.finalStats,
+				target: this.target
+			}) *
+				(2 + this.finalStats.critDamagePct),
 			this.heroMod,
 			this.modifierState
 		)
@@ -102,6 +158,7 @@ export class Loadout {
 		this.tier2Talent = null;
 		this.target = emptyStatBlock();
 		this.modifierState = emptyModifierState();
+		this.hasSkin = false;
 	}
 }
 
