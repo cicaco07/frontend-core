@@ -58,21 +58,79 @@
 		}));
 	}
 
+	function attrValueColor(label: string): string {
+		const l = label.toLowerCase().replace(/_/g, ' ');
+		if (l.includes('physical') || l.includes('attack') || l.includes('base damage'))
+			return '#ffb86b';
+		if (l.includes('magic') || l.includes('mana')) return '#a78bfa';
+		if (l.includes('true') || l.includes('pure')) return '#f4f7ff';
+		if (l.includes('hp') || l.includes('health') || l.includes('regen')) return '#5fb38a';
+		if (l.includes('defense') || l.includes('armour') || l.includes('armor')) return '#c2724a';
+		if (l.includes('speed') || l.includes('movement')) return '#c9a24a';
+		if (l.includes('cooldown') || l.includes('cd')) return '#89e0eb';
+		return '#e2e8f0';
+	}
+
+	function colorizeValue(value: string, label: string): string {
+		const color = attrValueColor(label);
+		const escaped = value.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+		return `<span style="color:${color};font-weight:700">${escaped}</span>`;
+	}
+
+	function processOutsideTags(text: string, fn: (segment: string) => string): string {
+		return text.replace(/(<[^>]*>)|([^<]+)/g, (full, tag: string, content: string) => {
+			if (tag) return tag;
+			return fn(content);
+		});
+	}
+
+	function highlightNumbers(text: string): string {
+		return processOutsideTags(text, (segment) =>
+			segment.replace(
+				/(\+?\d+\.?\d*%?)/g,
+				(match) => `<span style="color:#ffb86b;font-weight:700">${match}</span>`
+			)
+		);
+	}
+
+	function colorizeKeywords(text: string): string {
+		const keywords: { pattern: RegExp; color: string }[] = [
+			{ pattern: /Physical Attack|Physical Damage/gi, color: '#ffb86b' },
+			{ pattern: /Magic Power|Magic Damage|Magical Damage/gi, color: '#a78bfa' },
+			{ pattern: /True Damage/gi, color: '#f4f7ff' },
+			{ pattern: /HP|Health Points/gi, color: '#5fb38a' },
+			{ pattern: /Physical Defense|Magic Defense|Armor/gi, color: '#c2724a' },
+			{ pattern: /Movement Speed/gi, color: '#c9a24a' },
+			{ pattern: /Cooldown/gi, color: '#89e0eb' }
+		];
+		return processOutsideTags(text, (segment) => {
+			let result = segment;
+			for (const kw of keywords) {
+				result = result.replace(
+					kw.pattern,
+					(match) => `<span style="color:${kw.color};font-weight:600">${match}</span>`
+				);
+			}
+			return result;
+		});
+	}
+
 	function replaceAttributePlaceholders(
 		text: string,
 		levelData: SkillLevelData[] | undefined,
 		level: number
 	): string {
-		if (!levelData || levelData.length === 0) return text;
+		if (!levelData || levelData.length === 0) return colorizeKeywords(highlightNumbers(text));
 		const targetLevel = levelData.find((l) => l.level === level) ?? levelData[0];
-		if (!targetLevel) return text;
-		return text.replace(/\{\{(\w+)\}\}/g, (_match, attrName: string) => {
+		if (!targetLevel) return colorizeKeywords(highlightNumbers(text));
+		const replaced = text.replace(/\{\{(\w+)\}\}/g, (_match, attrName: string) => {
 			const normalized = attrName.toLowerCase().replace(/_/g, ' ');
 			const entry = targetLevel.attributes.find(
 				(a) => a.label.toLowerCase().replace(/_/g, ' ') === normalized
 			);
-			return entry ? entry.value : `{{${attrName}}}`;
+			return entry ? colorizeValue(entry.value, entry.label) : `{{${attrName}}}`;
 		});
+		return colorizeKeywords(highlightNumbers(replaced));
 	}
 
 	const enrichedMainIds = new SvelteSet<string>();
@@ -1160,7 +1218,8 @@
 										{/if}
 										{#if skill.description}
 											<p class="mt-1 text-xs leading-relaxed text-ink-muted">
-												{replaceAttributePlaceholders(
+												<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+												{@html replaceAttributePlaceholders(
 													skill.description,
 													skill.levelData,
 													currentLevel
