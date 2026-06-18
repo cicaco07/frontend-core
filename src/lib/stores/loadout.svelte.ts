@@ -9,7 +9,12 @@ import {
 } from '$lib/calc/formulas';
 import { emptyStatBlock } from '$lib/types';
 import { getHeroMod, type HeroModConfig } from '$lib/calc/hero-modifiers';
-import { applyPassiveAmp, emptyModifierState, type ModifierState } from '$lib/calc/apply-modifiers';
+import {
+	applyPassiveAmp,
+	computeManaFromStacks,
+	emptyModifierState,
+	type ModifierState
+} from '$lib/calc/apply-modifiers';
 
 export class Loadout {
 	hero = $state<Hero | null>(null);
@@ -84,8 +89,17 @@ export class Loadout {
 		])
 	);
 
+	modifierBonus = $derived.by<Partial<StatBlock>>(() => {
+		if (!this.heroMod?.passive) return {};
+		const p = this.heroMod.passive;
+		if (p.type === 'mana-stacking') {
+			return { mana: computeManaFromStacks(p, this.modifierState.passiveStacks) };
+		}
+		return {};
+	});
+
 	finalStats = $derived(
-		sumStats([this.heroStats, this.baseBonus, this.itemStats, this.emblemStats])
+		sumStats([this.heroStats, this.baseBonus, this.itemStats, this.emblemStats, this.modifierBonus])
 	);
 
 	totalCost = $derived(this.items.reduce((sum, i) => sum + i.cost, 0));

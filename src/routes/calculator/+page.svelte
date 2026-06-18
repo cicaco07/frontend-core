@@ -14,6 +14,7 @@
 	import type { StatBlock } from '$lib/types/stats';
 	import {
 		applyPassiveAmp,
+		computeStackingFlatDamage,
 		getSkillAreas,
 		computeMultiAreaDamage
 	} from '$lib/calc/apply-modifiers';
@@ -193,6 +194,25 @@
 		attackerStats: StatBlock,
 		targetStats: StatBlock
 	): number {
+		// Aldous: Skill 1 enhanced basic attack with Soul Steal stacks
+		const mod = loadout.heroMod;
+		if (
+			mod?.passive?.type === 'stacking-flat-damage' &&
+			skill.name.toLowerCase().includes(mod.passive.skillName.split(':')[0].trim())
+		) {
+			const raw = computeStackingFlatDamage(
+				mod.passive,
+				loadout.modifierState.passiveStacks,
+				attackerStats
+			);
+			return computeDamage({
+				rawDamage: raw,
+				damageType: 'physical',
+				attacker: attackerStats,
+				target: targetStats
+			});
+		}
+
 		const levelData = skill.levelData;
 		const currentLvl = levelData?.find((l) => l.level === skillLevel) ?? levelData?.[0];
 		const baseDamageAttr = currentLvl?.attributes.find(
@@ -210,6 +230,11 @@
 			} else {
 				raw += attackerStats[s.stat] * s.ratio;
 			}
+		}
+
+		// Cecilion: All skill damage scales with Max Mana (passive stacks add mana)
+		if (mod?.passive?.type === 'mana-stacking') {
+			raw += attackerStats.mana * 0.05;
 		}
 
 		if (raw === 0) return 0;
@@ -796,42 +821,82 @@
 			{#if loadout.heroMod?.passive}
 				{@const passive = loadout.heroMod.passive}
 				{@const passiveSkill = loadout.hero?.skills.find((s) => s.skillType === 'passive')}
+				{@const relatedSkill =
+					passive.type === 'stacking-flat-damage'
+						? loadout.hero?.skills.find((s) =>
+								s.name.toLowerCase().includes(passive.skillName.split(':')[0].trim())
+							)
+						: null}
+				{@const modIcon = relatedSkill?.imageUrl ?? passiveSkill?.imageUrl}
 				<div class="rounded-lg border border-accent/30 bg-accent/5 p-3">
 					<div class="flex items-start gap-2.5">
-						{#if passiveSkill?.imageUrl}
+						{#if modIcon}
 							<span class="size-10 shrink-0 overflow-hidden rounded-lg bg-surface-3">
-								<img
-									src={passiveSkill.imageUrl}
-									alt={passive.label}
-									class="h-full w-full object-cover"
-								/>
+								<img src={modIcon} alt={passive.label} class="h-full w-full object-cover" />
 							</span>
 						{/if}
 						<div class="min-w-0 flex-1">
 							<div class="flex items-center justify-between">
 								<span class="text-xs font-semibold text-ink">{passive.label}</span>
-								<span class="font-mono-stat text-xs text-accent"
-									>+{round(loadout.modifierState.passiveStacks * passive.perStack * 100)}%</span
-								>
+								{#if passive.type === 'stacking-buff'}
+									<span class="font-mono-stat text-xs text-accent"
+										>+{round(loadout.modifierState.passiveStacks * passive.perStack * 100)}%</span
+									>
+								{:else if passive.type === 'stacking-flat-damage'}
+									<span class="font-mono-stat text-xs text-amber-400"
+										>+{round(loadout.modifierState.passiveStacks * passive.perStack)} dmg</span
+									>
+								{:else if passive.type === 'mana-stacking'}
+									<span class="font-mono-stat text-xs text-blue-400"
+										>+{round(loadout.modifierState.passiveStacks * passive.manaPerStack)} mana</span
+									>
+								{/if}
 							</div>
-							<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
-								Setiap dash menambah damage output {passive.perStack * 100}% selama {passive.duration}
-								detik.
-							</p>
+							{#if passive.type === 'stacking-buff'}
+								<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
+									Setiap dash menambah damage output {passive.perStack * 100}% selama {passive.duration}
+									detik.
+								</p>
+							{:else if passive.type === 'stacking-flat-damage'}
+								<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
+									Setiap stack menambah +{passive.perStack} Physical Damage pada Skill 1.
+								</p>
+							{:else if passive.type === 'mana-stacking'}
+								<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
+									Setiap hit skill menambah +{passive.manaPerStack} Max Mana. Damage skill berskala dengan
+									Max Mana.
+								</p>
+							{/if}
 						</div>
 					</div>
-					<input
-						type="range"
-						min="0"
-						max={passive.maxStacks}
-						bind:value={loadout.modifierState.passiveStacks}
-						class="mt-2 w-full accent-accent"
-					/>
-					<div class="mt-1 flex justify-between text-[10px] text-ink-faint">
-						{#each Array.from({ length: passive.maxStacks + 1 }, (_, i) => i) as s (s)}
-							<span>{s}</span>
-						{/each}
-					</div>
+					{#if passive.type === 'stacking-buff'}
+						<input
+							type="range"
+							min="0"
+							max={passive.maxStacks}
+							bind:value={loadout.modifierState.passiveStacks}
+							class="mt-2 w-full accent-accent"
+						/>
+						<div class="mt-1 flex justify-between text-[10px] text-ink-faint">
+							{#each Array.from({ length: passive.maxStacks + 1 }, (_, i) => i) as s (s)}
+								<span>{s}</span>
+							{/each}
+						</div>
+					{:else}
+						<div class="mt-2 flex items-center gap-2">
+							<input
+								type="number"
+								min="0"
+								max={passive.maxStacks}
+								bind:value={loadout.modifierState.passiveStacks}
+								class="w-full rounded-lg border border-line bg-bg px-3 py-1.5 text-sm text-ink tabular-nums placeholder:text-ink-faint focus:border-accent focus:outline-none"
+								placeholder="0"
+							/>
+							<span class="shrink-0 text-[10px] text-ink-faint"
+								>/ {passive.maxStacks.toLocaleString()}</span
+							>
+						</div>
+					{/if}
 				</div>
 			{/if}
 
@@ -1372,44 +1437,84 @@
 			{#if targetLoadout.heroMod?.passive}
 				{@const passive = targetLoadout.heroMod.passive}
 				{@const passiveSkill = targetLoadout.hero?.skills.find((s) => s.skillType === 'passive')}
+				{@const relatedSkill =
+					passive.type === 'stacking-flat-damage'
+						? targetLoadout.hero?.skills.find((s) =>
+								s.name.toLowerCase().includes(passive.skillName.split(':')[0].trim())
+							)
+						: null}
+				{@const modIcon = relatedSkill?.imageUrl ?? passiveSkill?.imageUrl}
 				<div class="rounded-lg border border-accent/30 bg-accent/5 p-3">
 					<div class="flex items-start gap-2.5">
-						{#if passiveSkill?.imageUrl}
+						{#if modIcon}
 							<span class="size-10 shrink-0 overflow-hidden rounded-lg bg-surface-3">
-								<img
-									src={passiveSkill.imageUrl}
-									alt={passive.label}
-									class="h-full w-full object-cover"
-								/>
+								<img src={modIcon} alt={passive.label} class="h-full w-full object-cover" />
 							</span>
 						{/if}
 						<div class="min-w-0 flex-1">
 							<div class="flex items-center justify-between">
 								<span class="text-xs font-semibold text-ink">{passive.label}</span>
-								<span class="font-mono-stat text-xs text-accent"
-									>+{round(
-										targetLoadout.modifierState.passiveStacks * passive.perStack * 100
-									)}%</span
-								>
+								{#if passive.type === 'stacking-buff'}
+									<span class="font-mono-stat text-xs text-accent"
+										>+{round(
+											targetLoadout.modifierState.passiveStacks * passive.perStack * 100
+										)}%</span
+									>
+								{:else if passive.type === 'stacking-flat-damage'}
+									<span class="font-mono-stat text-xs text-amber-400"
+										>+{round(targetLoadout.modifierState.passiveStacks * passive.perStack)} dmg</span
+									>
+								{:else if passive.type === 'mana-stacking'}
+									<span class="font-mono-stat text-xs text-blue-400"
+										>+{round(targetLoadout.modifierState.passiveStacks * passive.manaPerStack)} mana</span
+									>
+								{/if}
 							</div>
-							<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
-								Setiap dash menambah damage output {passive.perStack * 100}% selama {passive.duration}
-								detik.
-							</p>
+							{#if passive.type === 'stacking-buff'}
+								<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
+									Setiap dash menambah damage output {passive.perStack * 100}% selama {passive.duration}
+									detik.
+								</p>
+							{:else if passive.type === 'stacking-flat-damage'}
+								<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
+									Setiap stack menambah +{passive.perStack} Physical Damage pada Skill 1.
+								</p>
+							{:else if passive.type === 'mana-stacking'}
+								<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
+									Setiap hit skill menambah +{passive.manaPerStack} Max Mana. Damage skill berskala dengan
+									Max Mana.
+								</p>
+							{/if}
 						</div>
 					</div>
-					<input
-						type="range"
-						min="0"
-						max={passive.maxStacks}
-						bind:value={targetLoadout.modifierState.passiveStacks}
-						class="mt-2 w-full accent-accent"
-					/>
-					<div class="mt-1 flex justify-between text-[10px] text-ink-faint">
-						{#each Array.from({ length: passive.maxStacks + 1 }, (_, i) => i) as s (s)}
-							<span>{s}</span>
-						{/each}
-					</div>
+					{#if passive.type === 'stacking-buff'}
+						<input
+							type="range"
+							min="0"
+							max={passive.maxStacks}
+							bind:value={targetLoadout.modifierState.passiveStacks}
+							class="mt-2 w-full accent-accent"
+						/>
+						<div class="mt-1 flex justify-between text-[10px] text-ink-faint">
+							{#each Array.from({ length: passive.maxStacks + 1 }, (_, i) => i) as s (s)}
+								<span>{s}</span>
+							{/each}
+						</div>
+					{:else}
+						<div class="mt-2 flex items-center gap-2">
+							<input
+								type="number"
+								min="0"
+								max={passive.maxStacks}
+								bind:value={targetLoadout.modifierState.passiveStacks}
+								class="w-full rounded-lg border border-line bg-bg px-3 py-1.5 text-sm text-ink tabular-nums placeholder:text-ink-faint focus:border-accent focus:outline-none"
+								placeholder="0"
+							/>
+							<span class="shrink-0 text-[10px] text-ink-faint"
+								>/ {passive.maxStacks.toLocaleString()}</span
+							>
+						</div>
+					{/if}
 				</div>
 			{/if}
 

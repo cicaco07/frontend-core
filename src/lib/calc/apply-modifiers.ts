@@ -1,4 +1,11 @@
-import type { HeroModConfig, MultiAreaSkill, StackingBuff } from './hero-modifiers';
+import type {
+	HeroModConfig,
+	MultiAreaSkill,
+	StackingBuff,
+	StackingFlatDamage,
+	ManaStackingPassive
+} from './hero-modifiers';
+import type { StatBlock } from '../types/stats';
 
 export interface ModifierState {
 	passiveStacks: number;
@@ -19,8 +26,29 @@ export function applyPassiveAmp(
 	state: ModifierState
 ): number {
 	if (!mod?.passive) return baseDamage;
+	if (mod.passive.type !== 'stacking-buff') return baseDamage;
 	const amp = passiveDamageAmp(mod.passive, state.passiveStacks);
 	return baseDamage * (1 + amp);
+}
+
+/** Compute Aldous-style enhanced basic attack damage from Soul Steal stacks. */
+export function computeStackingFlatDamage(
+	config: StackingFlatDamage,
+	stacks: number,
+	attackerStats: StatBlock
+): number {
+	const clamped = Math.min(Math.max(0, stacks), config.maxStacks);
+	return (
+		config.baseDamage +
+		config.scalingRatio * attackerStats.physicalAttack +
+		clamped * config.perStack
+	);
+}
+
+/** Extra mana from Cecilion's passive stacking. */
+export function computeManaFromStacks(config: ManaStackingPassive, stacks: number): number {
+	const clamped = Math.min(Math.max(0, stacks), config.maxStacks);
+	return clamped * config.manaPerStack;
 }
 
 export function getSkillAreas(
