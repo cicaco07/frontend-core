@@ -5,7 +5,8 @@ import {
 	basicAttackDps,
 	averageBasicAttack,
 	heroSkillDamage,
-	computeDamage
+	computeDamage,
+	attacksPerSecond
 } from '$lib/calc/formulas';
 import { emptyStatBlock } from '$lib/types';
 import { getHeroMod, type HeroModConfig } from '$lib/calc/hero-modifiers';
@@ -104,31 +105,74 @@ export class Loadout {
 
 	totalCost = $derived(this.items.reduce((sum, i) => sum + i.cost, 0));
 
-	basicAttackDamage = $derived(
-		applyPassiveAmp(
-			averageBasicAttack(this.finalStats, this.target),
-			this.heroMod,
-			this.modifierState
-		)
-	);
+	basicAttackDamage = $derived.by(() => {
+		const baseDmg = averageBasicAttack(this.finalStats, this.target);
+		const ampDmg = applyPassiveAmp(baseDmg, this.heroMod, this.modifierState);
 
-	basicAttackCritDamage = $derived(
-		applyPassiveAmp(
-			computeDamage({
-				rawDamage: this.finalStats.physicalAttack,
-				damageType: 'physical',
-				attacker: this.finalStats,
-				target: this.target
-			}) *
-				(2 + this.finalStats.critDamagePct),
-			this.heroMod,
-			this.modifierState
-		)
-	);
+		if (this.heroMod?.passive?.type === 'basic-attack-hp-scaling') {
+			const p = this.heroMod.passive;
+			const stacks = Math.min(Math.max(0, this.modifierState.passiveStacks), p.maxStacks);
+			if (stacks > 0) {
+				const extraRaw = p.baseDamage + this.finalStats.hp * p.hpScalingRatio;
+				const extraDmg = computeDamage({
+					rawDamage: extraRaw,
+					damageType: 'physical',
+					attacker: this.finalStats,
+					target: this.target
+				});
+				return ampDmg + extraDmg * stacks;
+			}
+		}
+		return ampDmg;
+	});
 
-	dps = $derived(
-		applyPassiveAmp(basicAttackDps(this.finalStats, this.target), this.heroMod, this.modifierState)
-	);
+	basicAttackCritDamage = $derived.by(() => {
+		const baseCrit = computeDamage({
+			rawDamage: this.finalStats.physicalAttack,
+			damageType: 'physical',
+			attacker: this.finalStats,
+			target: this.target
+		}) * (2 + this.finalStats.critDamagePct);
+		const ampCrit = applyPassiveAmp(baseCrit, this.heroMod, this.modifierState);
+
+		if (this.heroMod?.passive?.type === 'basic-attack-hp-scaling') {
+			const p = this.heroMod.passive;
+			const stacks = Math.min(Math.max(0, this.modifierState.passiveStacks), p.maxStacks);
+			if (stacks > 0) {
+				const extraRaw = p.baseDamage + this.finalStats.hp * p.hpScalingRatio;
+				const extraDmg = computeDamage({
+					rawDamage: extraRaw,
+					damageType: 'physical',
+					attacker: this.finalStats,
+					target: this.target
+				});
+				return ampCrit + extraDmg * stacks;
+			}
+		}
+		return ampCrit;
+	});
+
+	dps = $derived.by(() => {
+		const baseDps = basicAttackDps(this.finalStats, this.target);
+		const ampDps = applyPassiveAmp(baseDps, this.heroMod, this.modifierState);
+
+		if (this.heroMod?.passive?.type === 'basic-attack-hp-scaling') {
+			const p = this.heroMod.passive;
+			const stacks = Math.min(Math.max(0, this.modifierState.passiveStacks), p.maxStacks);
+			if (stacks > 0) {
+				const extraRaw = p.baseDamage + this.finalStats.hp * p.hpScalingRatio;
+				const extraDmg = computeDamage({
+					rawDamage: extraRaw,
+					damageType: 'physical',
+					attacker: this.finalStats,
+					target: this.target
+				});
+				const extraDps = extraDmg * stacks * attacksPerSecond(this.finalStats);
+				return ampDps + extraDps;
+			}
+		}
+		return ampDps;
+	});
 
 	skillDamage(skillId: string): number {
 		if (!this.hero) return 0;

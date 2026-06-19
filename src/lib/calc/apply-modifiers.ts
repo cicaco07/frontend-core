@@ -3,7 +3,8 @@ import type {
 	MultiAreaSkill,
 	StackingBuff,
 	StackingFlatDamage,
-	ManaStackingPassive
+	ManaStackingPassive,
+	ShieldModifier
 } from './hero-modifiers';
 import type { StatBlock } from '../types/stats';
 
@@ -35,11 +36,13 @@ export function applyPassiveAmp(
 export function computeStackingFlatDamage(
 	config: StackingFlatDamage,
 	stacks: number,
-	attackerStats: StatBlock
+	attackerStats: StatBlock,
+	customBaseDamage?: number
 ): number {
 	const clamped = Math.min(Math.max(0, stacks), config.maxStacks);
+	const base = customBaseDamage !== undefined ? customBaseDamage : config.baseDamage;
 	return (
-		config.baseDamage +
+		base +
 		config.scalingRatio * attackerStats.physicalAttack +
 		clamped * config.perStack
 	);
@@ -57,7 +60,7 @@ export function getSkillAreas(
 ): MultiAreaSkill['areas'] | null {
 	if (!mod?.skillOverrides || !skillName) return null;
 	const override = mod.skillOverrides[skillName.toLowerCase()];
-	if (!override) return null;
+	if (!override || override.type !== 'multi-area') return null;
 	return override.areas;
 }
 
@@ -69,4 +72,26 @@ export function computeMultiAreaDamage(
 		label: area.label,
 		damage: baseDamage * area.multiplier
 	}));
+}
+
+export function getSkillShield(
+	mod: HeroModConfig | null,
+	skillName: string | undefined
+): ShieldModifier | null {
+	if (!mod?.skillOverrides || !skillName) return null;
+	const override = mod.skillOverrides[skillName.toLowerCase()];
+	if (!override || override.type !== 'shield') return null;
+	return override;
+}
+
+export function computeShieldValue(
+	shieldMod: ShieldModifier,
+	attackerStats: StatBlock,
+	stacks = 0
+): number {
+	return (
+		shieldMod.baseShield +
+		attackerStats.hp * shieldMod.hpScalingRatio +
+		(shieldMod.stackScalingRatio ?? 0) * stacks
+	);
 }

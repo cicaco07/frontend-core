@@ -33,12 +33,49 @@ export interface MultiAreaSkill {
 	areas: { label: string; multiplier: number }[];
 }
 
+export interface ShieldModifier {
+	type: 'shield';
+	label: string;
+	baseShield: number;
+	hpScalingRatio: number;
+	duration: number;
+	stackScalingRatio?: number;
+}
+
+export interface HpScalingPassive {
+	type: 'basic-attack-hp-scaling';
+	label: string;
+	baseDamage: number;
+	hpScalingRatio: number;
+	maxStacks: number;
+}
+
+export type SkillOverride = MultiAreaSkill | ShieldModifier;
+
 export interface HeroModConfig {
-	passive?: StackingBuff | StackingFlatDamage | ManaStackingPassive;
-	skillOverrides?: Record<string, MultiAreaSkill>;
+	passive?: StackingBuff | StackingFlatDamage | ManaStackingPassive | HpScalingPassive;
+	skillOverrides?: Record<string, SkillOverride>;
 }
 
 export const heroModifiers: Record<string, HeroModConfig> = {
+	akai: {
+		passive: {
+			type: 'basic-attack-hp-scaling',
+			label: 'Tai Chi (Marked)',
+			baseDamage: 25,
+			hpScalingRatio: 0.05,
+			maxStacks: 1
+		},
+		skillOverrides: {
+			'tai chi': {
+				type: 'shield',
+				label: 'Tai Chi Shield',
+				baseShield: 25,
+				hpScalingRatio: 0.05,
+				duration: 4
+			}
+		}
+	},
 	lancelot: {
 		passive: {
 			type: 'stacking-buff',
@@ -67,6 +104,16 @@ export const heroModifiers: Record<string, HeroModConfig> = {
 			skillName: 'contract: soul steal',
 			baseDamage: 200,
 			scalingRatio: 1.0
+		},
+		skillOverrides: {
+			'contract: transform': {
+				type: 'shield',
+				label: 'Contract: Transform Shield',
+				baseShield: 500,
+				hpScalingRatio: 0,
+				duration: 3,
+				stackScalingRatio: 3
+			}
 		}
 	},
 	cecilion: {

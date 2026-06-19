@@ -16,7 +16,9 @@
 		applyPassiveAmp,
 		computeStackingFlatDamage,
 		getSkillAreas,
-		computeMultiAreaDamage
+		computeMultiAreaDamage,
+		getSkillShield,
+		computeShieldValue
 	} from '$lib/calc/apply-modifiers';
 
 	let { data }: { data: PageData } = $props();
@@ -193,17 +195,70 @@
 		skillLevel: number,
 		attackerStats: StatBlock,
 		targetStats: StatBlock
-	): number {
+	): any {
+		const levelData = skill.levelData;
+		const currentLvl = levelData?.find((l) => l.level === skillLevel) ?? levelData?.[0];
+
+		const attributeKeys = [
+			'base damage',
+			'base dmg',
+			'damage per hit',
+			'dmg per hit',
+			'damage per second',
+			'dmg per second',
+			'skill damage',
+			'skill dmg',
+			'damage',
+			'dmg'
+		];
+		let baseDamageAttr = null;
+		if (currentLvl?.attributes) {
+			for (const key of attributeKeys) {
+				const attr = currentLvl.attributes.find(
+					(a) => a.label.toLowerCase().replace(/[_-]/g, ' ').trim() === key
+				);
+				if (attr) {
+					baseDamageAttr = attr;
+					break;
+				}
+			}
+		}
+		const rank = Math.min(skill.baseDamage.length - 1, Math.max(0, skillLevel - 1));
+		const baseDmg = baseDamageAttr ? Number(baseDamageAttr.value) : (skill.baseDamage[rank] ?? 0);
+
+		// Find max damage attributes if any
+		const maxAttributeKeys = [
+			'max damage',
+			'max dmg',
+			'damage max',
+			'dmg max',
+			'maximum damage',
+			'maximum dmg'
+		];
+		let maxDamageAttr = null;
+		if (currentLvl?.attributes) {
+			for (const key of maxAttributeKeys) {
+				const attr = currentLvl.attributes.find(
+					(a) => a.label.toLowerCase().replace(/[_-]/g, ' ').trim() === key
+				);
+				if (attr) {
+					maxDamageAttr = attr;
+					break;
+				}
+			}
+		}
+
 		// Aldous: Skill 1 enhanced basic attack with Soul Steal stacks
 		const mod = loadout.heroMod;
 		if (
 			mod?.passive?.type === 'stacking-flat-damage' &&
-			skill.name.toLowerCase().includes(mod.passive.skillName.split(':')[0].trim())
+			skill.name.toLowerCase().includes(mod.passive.skillName.toLowerCase())
 		) {
 			const raw = computeStackingFlatDamage(
 				mod.passive,
 				loadout.modifierState.passiveStacks,
-				attackerStats
+				attackerStats,
+				baseDmg
 			);
 			return computeDamage({
 				rawDamage: raw,
@@ -213,15 +268,85 @@
 			});
 		}
 
-		const levelData = skill.levelData;
-		const currentLvl = levelData?.find((l) => l.level === skillLevel) ?? levelData?.[0];
-		const baseDamageAttr = currentLvl?.attributes.find(
-			(a) => a.label.toLowerCase() === 'base_damage'
-		);
-		const baseDmg = baseDamageAttr ? Number(baseDamageAttr.value) : (skill.baseDamage[0] ?? 0);
+		// Akai / hero dengan basic-attack-hp-scaling passive:
+		// Backend menyimpan atribut "damage" sebagai hasil pre-computed dari HP scaling
+		// (misal: 5% × totalHP). Jika description juga mengandung HP scaling, akan terjadi
+		// double-counting. Fix: pakai formula resmi dari config passive (baseDamage + hp × ratio).
+		if (mod?.passive?.type === 'basic-attack-hp-scaling') {
+			const p = mod.passive;
+			const scalings = parseScalingFromDescription(skill.description);
+			const hasHpScaling = scalings.some((s) => s.stat === 'hp');
+			if (hasHpScaling) {
+				// Hitung ulang dari config, bukan dari baseDmg backend yang sudah computed
+				const raw = p.baseDamage + attackerStats.hp * p.hpScalingRatio;
+				if (raw === 0) return 0;
+				const hits = parseHitCount(skill.description);
+				const dmgPerHit = computeDamage({
+					rawDamage: raw,
+					damageType: skill.damageType === 'none' ? 'physical' : skill.damageType,
+					attacker: attackerStats,
+					target: targetStats
+				});
+				return dmgPerHit * hits;
+			}
+		}
 
 		const scalings = parseScalingFromDescription(skill.description);
 		const heroBase = loadout.heroStats;
+
+		if (maxDamageAttr) {
+			const maxBaseDmg = Number(maxDamageAttr.value);
+			let rawMin = baseDmg;
+			if (scalings.length > 0) {
+				const sMin = scalings[0];
+				if (sMin.type === 'extra') {
+					const extra = attackerStats[sMin.stat] - (heroBase[sMin.stat] ?? 0);
+					rawMin += Math.max(0, extra) * sMin.ratio;
+				} else {
+					rawMin += attackerStats[sMin.stat] * sMin.ratio;
+				}
+			}
+
+			let rawMax = maxBaseDmg;
+			if (scalings.length > 0) {
+				const sMax = scalings.length >= 2 ? scalings[1] : scalings[0];
+				if (sMax.type === 'extra') {
+					const extra = attackerStats[sMax.stat] - (heroBase[sMax.stat] ?? 0);
+					rawMax += Math.max(0, extra) * sMax.ratio;
+				} else {
+					rawMax += attackerStats[sMax.stat] * sMax.ratio;
+				}
+			}
+
+			// Cecilion: All skill damage scales with Max Mana (passive stacks add mana)
+			if (mod?.passive?.type === 'mana-stacking') {
+				rawMin += attackerStats.mana * 0.05;
+				rawMax += attackerStats.mana * 0.05;
+			}
+
+			if (rawMin === 0 && rawMax === 0) return 0;
+
+			const hits = parseHitCount(skill.description);
+
+			const dmgPerHitMin = computeDamage({
+				rawDamage: rawMin,
+				damageType: skill.damageType === 'none' ? 'physical' : skill.damageType,
+				attacker: attackerStats,
+				target: targetStats
+			});
+			const dmgPerHitMax = computeDamage({
+				rawDamage: rawMax,
+				damageType: skill.damageType === 'none' ? 'physical' : skill.damageType,
+				attacker: attackerStats,
+				target: targetStats
+			});
+
+			return {
+				min: applyPassiveAmp(dmgPerHitMin * hits, loadout.heroMod, loadout.modifierState),
+				max: applyPassiveAmp(dmgPerHitMax * hits, loadout.heroMod, loadout.modifierState)
+			};
+		}
+
 		let raw = baseDmg;
 		for (const s of scalings) {
 			if (s.type === 'extra') {
@@ -824,7 +949,7 @@
 				{@const relatedSkill =
 					passive.type === 'stacking-flat-damage'
 						? loadout.hero?.skills.find((s) =>
-								s.name.toLowerCase().includes(passive.skillName.split(':')[0].trim())
+								s.name.toLowerCase().includes(passive.skillName.toLowerCase())
 							)
 						: null}
 				{@const modIcon = relatedSkill?.imageUrl ?? passiveSkill?.imageUrl}
@@ -850,6 +975,10 @@
 									<span class="font-mono-stat text-xs text-blue-400"
 										>+{round(loadout.modifierState.passiveStacks * passive.manaPerStack)} mana</span
 									>
+								{:else if passive.type === 'basic-attack-hp-scaling'}
+									<span class="font-mono-stat text-xs text-amber-400"
+										>{loadout.modifierState.passiveStacks > 0 ? 'Active' : 'Inactive'}</span
+									>
 								{/if}
 							</div>
 							{#if passive.type === 'stacking-buff'}
@@ -866,10 +995,14 @@
 									Setiap hit skill menambah +{passive.manaPerStack} Max Mana. Damage skill berskala dengan
 									Max Mana.
 								</p>
+							{:else if passive.type === 'basic-attack-hp-scaling'}
+								<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
+									Basic Attack memberikan tambahan damage fisik sebesar {passive.baseDamage} (+{passive.hpScalingRatio * 100}% Total HP) ketika target memiliki Mark.
+								</p>
 							{/if}
 						</div>
 					</div>
-					{#if passive.type === 'stacking-buff'}
+					{#if passive.type === 'stacking-buff' || passive.maxStacks === 1}
 						<input
 							type="range"
 							min="0"
@@ -879,7 +1012,7 @@
 						/>
 						<div class="mt-1 flex justify-between text-[10px] text-ink-faint">
 							{#each Array.from({ length: passive.maxStacks + 1 }, (_, i) => i) as s (s)}
-								<span>{s}</span>
+								<span>{passive.maxStacks === 1 ? (s === 0 ? 'Off' : 'On') : s}</span>
 							{/each}
 						</div>
 					{:else}
@@ -1245,6 +1378,7 @@
 							{@const currentLevel = getSkillLevel(skill.id, maxLevel)}
 							{@const currentLevelData = skill.levelData?.find((l) => l.level === currentLevel)}
 							{@const skillAreas = getSkillAreas(loadout.heroMod, skill.name)}
+							{@const shieldMod = getSkillShield(loadout.heroMod, skill.name)}
 							{@const baseDmg = calculateSkillDamage(skill, currentLevel, stats, targetStats)}
 							<div class="rounded-lg border border-line bg-bg/50 p-3">
 								<div class="flex items-start gap-3">
@@ -1272,30 +1406,8 @@
 														{/each}
 													</select>
 												{/if}
-												{#if !skillAreas}
-													<span class="font-mono-stat shrink-0 text-xs text-accent"
-														>{round(baseDmg)}</span
-													>
-												{/if}
 											</div>
 										</div>
-										{#if skillAreas}
-											<div class="mt-1.5 flex items-center gap-2">
-												{#each computeMultiAreaDamage(baseDmg, skillAreas) as area (area.label)}
-													<div
-														class="rounded border border-accent/20 bg-accent/5 px-2 py-0.5 text-center"
-													>
-														<span class="block text-[9px] text-ink-faint">{area.label}</span>
-														<span class="font-mono-stat text-xs text-accent"
-															>{round(area.damage)}</span
-														>
-													</div>
-												{/each}
-												<span class="text-[9px] text-ink-faint italic"
-													>*berlaku untuk satu musuh</span
-												>
-											</div>
-										{/if}
 										{#if skill.description}
 											<p class="mt-1 text-xs leading-relaxed text-ink-muted">
 												<!-- eslint-disable-next-line svelte/no-at-html-tags -->
@@ -1316,6 +1428,72 @@
 												{/each}
 											</div>
 										{/if}
+
+										<!-- Output Widgets (Total Damage, Total Shield, dll.) -->
+										<div class="mt-3.5 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+											{#if skill.damageType !== 'none' || (typeof baseDmg === 'object' ? baseDmg.min > 0 : baseDmg > 0)}
+												{#if skillAreas}
+													{#each computeMultiAreaDamage(typeof baseDmg === 'object' ? baseDmg.min : baseDmg, skillAreas) as area (area.label)}
+														<div
+															class="rounded-xl border border-line bg-surface-2/60 p-3 shadow-sm"
+														>
+															<span
+																class="text-[10px] font-bold tracking-wider text-ink-faint uppercase"
+															>
+																Dmg ({area.label})
+															</span>
+															<div class="font-mono-stat mt-1.5 text-lg font-extrabold text-accent">
+																{round(area.damage)}
+															</div>
+															<p class="mt-1 text-[10px] leading-relaxed text-ink-muted">
+																Damage bersih yang diterima target pada {area.label.toLowerCase()} setelah
+																dikurangi Defense target.
+															</p>
+														</div>
+													{/each}
+												{:else}
+													<div class="rounded-xl border border-line bg-surface-2/60 p-3 shadow-sm">
+														<span
+															class="text-[10px] font-bold tracking-wider text-ink-faint uppercase"
+														>
+															Total Damage
+														</span>
+														<div class="font-mono-stat mt-1.5 text-lg font-extrabold text-accent">
+															{#if typeof baseDmg === 'object'}
+																{round(baseDmg.min)} - {round(baseDmg.max)}
+															{:else}
+																{round(baseDmg)}
+															{/if}
+														</div>
+														<p class="mt-1 text-[10px] leading-relaxed text-ink-muted">
+															Damage bersih akhir yang masuk ke target setelah dikurangi Defense dan
+															reduksi damage target.
+														</p>
+													</div>
+												{/if}
+											{/if}
+
+											{#if shieldMod}
+												<div
+													class="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 shadow-sm"
+												>
+													<span
+														class="text-[10px] font-bold tracking-wider text-emerald-400 uppercase"
+													>
+														Total Shield
+													</span>
+													<div
+														class="font-mono-stat mt-1.5 text-lg font-extrabold text-emerald-400"
+													>
+														{round(computeShieldValue(shieldMod, stats, loadout.modifierState.passiveStacks))}
+													</div>
+													<p class="mt-1 text-[10px] leading-relaxed text-emerald-300/80">
+														Shield penyerap damage selama {shieldMod.duration} detik yang diperoleh ketika
+														menggunakan skill ini.
+													</p>
+												</div>
+											{/if}
+										</div>
 										{#if skill.levelData && skill.levelData.length > 0}
 											<div class="mt-2">
 												<details class="group">
@@ -1440,7 +1618,7 @@
 				{@const relatedSkill =
 					passive.type === 'stacking-flat-damage'
 						? targetLoadout.hero?.skills.find((s) =>
-								s.name.toLowerCase().includes(passive.skillName.split(':')[0].trim())
+								s.name.toLowerCase().includes(passive.skillName.toLowerCase())
 							)
 						: null}
 				{@const modIcon = relatedSkill?.imageUrl ?? passiveSkill?.imageUrl}
@@ -1468,6 +1646,10 @@
 									<span class="font-mono-stat text-xs text-blue-400"
 										>+{round(targetLoadout.modifierState.passiveStacks * passive.manaPerStack)} mana</span
 									>
+								{:else if passive.type === 'basic-attack-hp-scaling'}
+									<span class="font-mono-stat text-xs text-amber-400"
+										>{targetLoadout.modifierState.passiveStacks > 0 ? 'Active' : 'Inactive'}</span
+									>
 								{/if}
 							</div>
 							{#if passive.type === 'stacking-buff'}
@@ -1484,10 +1666,14 @@
 									Setiap hit skill menambah +{passive.manaPerStack} Max Mana. Damage skill berskala dengan
 									Max Mana.
 								</p>
+							{:else if passive.type === 'basic-attack-hp-scaling'}
+								<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
+									Basic Attack memberikan tambahan damage fisik sebesar {passive.baseDamage} (+{passive.hpScalingRatio * 100}% Total HP) ketika target memiliki Mark.
+								</p>
 							{/if}
 						</div>
 					</div>
-					{#if passive.type === 'stacking-buff'}
+					{#if passive.type === 'stacking-buff' || passive.maxStacks === 1}
 						<input
 							type="range"
 							min="0"
@@ -1497,7 +1683,7 @@
 						/>
 						<div class="mt-1 flex justify-between text-[10px] text-ink-faint">
 							{#each Array.from({ length: passive.maxStacks + 1 }, (_, i) => i) as s (s)}
-								<span>{s}</span>
+								<span>{passive.maxStacks === 1 ? (s === 0 ? 'Off' : 'On') : s}</span>
 							{/each}
 						</div>
 					{:else}
