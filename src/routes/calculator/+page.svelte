@@ -27,7 +27,7 @@
 	const targetLoadout = new Loadout();
 
 	$effect(() => {
-		loadout.target = targetLoadout.finalStats;
+		loadout.target = effectiveTargetStats;
 	});
 
 	interface BackendSkillsResponse {
@@ -223,8 +223,12 @@
 				}
 			}
 		}
+		let flatBonus = 0;
+		if (loadout.hero?.slug.toLowerCase() === 'zilong' && loadout.modifierState.targetLowHp) {
+			flatBonus = 30;
+		}
 		const rank = Math.min(skill.baseDamage.length - 1, Math.max(0, skillLevel - 1));
-		const baseDmg = baseDamageAttr ? Number(baseDamageAttr.value) : (skill.baseDamage[rank] ?? 0);
+		const baseDmg = (baseDamageAttr ? Number(baseDamageAttr.value) : (skill.baseDamage[rank] ?? 0)) + flatBonus;
 
 		// Find max damage attributes if any
 		const maxAttributeKeys = [
@@ -272,13 +276,16 @@
 		// Backend menyimpan atribut "damage" sebagai hasil pre-computed dari HP scaling
 		// (misal: 5% × totalHP). Jika description juga mengandung HP scaling, akan terjadi
 		// double-counting. Fix: pakai formula resmi dari config passive (baseDamage + hp × ratio).
-		if (mod?.passive?.type === 'basic-attack-hp-scaling') {
+		if (mod?.passive?.type === 'basic-attack-hp-scaling' && skill.skillType === 'passive') {
 			const p = mod.passive;
 			const scalings = parseScalingFromDescription(skill.description);
 			const hasHpScaling = scalings.some((s) => s.stat === 'hp');
 			if (hasHpScaling) {
 				// Hitung ulang dari config, bukan dari baseDmg backend yang sudah computed
-				const raw = p.baseDamage + attackerStats.hp * p.hpScalingRatio;
+				const raw =
+					attackerStats.physicalAttack +
+					p.baseDamage +
+					attackerStats.hp * p.hpScalingRatio;
 				if (raw === 0) return 0;
 				const hits = parseHitCount(skill.description);
 				const dmgPerHit = computeDamage({
@@ -295,7 +302,7 @@
 		const heroBase = loadout.heroStats;
 
 		if (maxDamageAttr) {
-			const maxBaseDmg = Number(maxDamageAttr.value);
+			const maxBaseDmg = Number(maxDamageAttr.value) + flatBonus;
 			let rawMin = baseDmg;
 			if (scalings.length > 0) {
 				const sMin = scalings[0];
@@ -591,6 +598,31 @@
 
 	const stats = $derived(loadout.finalStats);
 	const targetStats = $derived(targetLoadout.finalStats);
+
+	function getSkill2DeffReduction(): number {
+		const hero = loadout.hero;
+		if (!hero || hero.slug.toLowerCase() !== 'zilong') return 0;
+		if (!loadout.modifierState.skill2DeffActive) return 0;
+		const level = loadout.modifierState.skill2DeffLevel ?? 0;
+		if (level <= 0) return 0;
+		const skill2 = hero.skills[2];
+		if (!skill2?.levelData) return 0;
+		const lvlData = skill2.levelData.find((l) => l.level === level);
+		if (!lvlData) return 0;
+		const attr = lvlData.attributes.find((a) => {
+			const norm = a.label.toLowerCase().replace(/[_-]/g, ' ').trim();
+			return norm === 'physical defense reduction' || norm === 'physical deff reduction';
+		});
+		return attr ? Number(attr.value) : 0;
+	}
+
+	const deffReduction = $derived(getSkill2DeffReduction());
+
+	const effectiveTargetStats = $derived<StatBlock>({
+		...targetStats,
+		physicalDefense: Math.max(-60, targetStats.physicalDefense - deffReduction)
+	});
+
 	const mainItemStats = $derived(loadout.itemStats);
 	const targetItemStats = $derived(targetLoadout.itemStats);
 
@@ -961,74 +993,148 @@
 							</span>
 						{/if}
 						<div class="min-w-0 flex-1">
-							<div class="flex items-center justify-between">
-								<span class="text-xs font-semibold text-ink">{passive.label}</span>
+							{#if passive.type === 'zilong-passive'}
+								<div class="flex items-center justify-between">
+									<span class="text-xs font-semibold text-ink">Target HP &lt; 50%</span>
+									<input
+										id="zilong-target-hp-switch"
+										type="checkbox"
+										bind:checked={loadout.modifierState.targetLowHp}
+										class="size-4 cursor-pointer rounded border-line bg-surface-3 text-accent accent-accent focus:ring-accent"
+									/>
+								</div>
+								<p class="mt-1 text-[10px] leading-relaxed text-ink-muted">
+									Jika diaktifkan, semua damage dari skill dan Basic Attack Zilong akan meningkat sebanyak 30.
+								</p>
+								<div class="mt-2.5 space-y-1.5 border-t border-line/30 pt-2.5">
+									<div class="flex items-center justify-between">
+										<span class="text-xs font-semibold text-ink">Terkena Efek Pengurangan Skill 2</span>
+										<input type="checkbox" bind:checked={loadout.modifierState.skill2DeffActive} class="size-4 cursor-pointer rounded border-line bg-surface-3 text-accent accent-accent focus:ring-accent" />
+									</div>
+									{#if loadout.modifierState.skill2DeffActive}
+										<div class="flex items-center justify-between">
+											<span class="text-xs text-ink-muted">Level Skill 2</span>
+											<span class="font-mono-stat text-xs text-accent">{loadout.modifierState.skill2DeffLevel ?? 0}</span>
+										</div>
+										<input type="range" min="0" max="6" step="1" bind:value={loadout.modifierState.skill2DeffLevel} class="mt-1 w-full accent-accent" />
+										<div class="mt-1 flex justify-between text-[10px] text-ink-faint">
+											<span>0 (None)</span><span>6</span>
+										</div>
+										<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
+											Mengurangi Physical Defense target sebesar {round(deffReduction)}.
+										</p>
+									{/if}
+								</div>
+							{:else if passive.type === 'layla-passive'}
+								<div class="space-y-3">
+									<div>
+										<div class="flex justify-between items-center text-xs font-semibold text-ink">
+											<span>Jarak Target (Unit)</span>
+											<span class="text-accent">{round(loadout.modifierState.distance ?? 0)} Unit</span>
+										</div>
+										<input
+											type="range"
+											min="0"
+											max="6"
+											step="0.1"
+											bind:value={loadout.modifierState.distance}
+											class="mt-1.5 w-full accent-accent"
+										/>
+										<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
+											Meningkatkan seluruh damage Layla sebesar 2.5% per unit jarak (Maks +15% pada jarak 6 unit).
+										</p>
+									</div>
+									<div class="border-t border-line/30 pt-2.5">
+										<div class="flex justify-between items-center text-xs font-semibold text-ink">
+											<span>Upgrade Destruction Rush</span>
+											<span class="text-accent">Lv {loadout.modifierState.ultUpgradeCount ?? 0}</span>
+										</div>
+										<input
+											type="range"
+											min="0"
+											max="3"
+											step="1"
+											bind:value={loadout.modifierState.ultUpgradeCount}
+											class="mt-1.5 w-full accent-accent"
+										/>
+										<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted flex justify-between items-center">
+											<span>Range bonus: +{round((loadout.modifierState.ultUpgradeCount ?? 0) * 0.6)} unit</span>
+											<span class="font-bold text-accent">Total: {round(4.3 + (loadout.modifierState.ultUpgradeCount ?? 0) * 0.6)} Unit</span>
+										</p>
+									</div>
+								</div>
+							{:else}
+								<div class="flex items-center justify-between">
+									<span class="text-xs font-semibold text-ink">{passive.label}</span>
+									{#if passive.type === 'stacking-buff'}
+										<span class="font-mono-stat text-xs text-accent"
+											>+{round(loadout.modifierState.passiveStacks * passive.perStack * 100)}%</span
+										>
+									{:else if passive.type === 'stacking-flat-damage'}
+										<span class="font-mono-stat text-xs text-amber-400"
+											>+{round(loadout.modifierState.passiveStacks * passive.perStack)} dmg</span
+										>
+									{:else if passive.type === 'mana-stacking'}
+										<span class="font-mono-stat text-xs text-blue-400"
+											>+{round(loadout.modifierState.passiveStacks * passive.manaPerStack)} mana</span
+										>
+									{:else if passive.type === 'basic-attack-hp-scaling'}
+										<span class="font-mono-stat text-xs text-amber-400"
+											>{loadout.modifierState.passiveStacks > 0 ? 'Active' : 'Inactive'}</span
+										>
+									{/if}
+								</div>
 								{#if passive.type === 'stacking-buff'}
-									<span class="font-mono-stat text-xs text-accent"
-										>+{round(loadout.modifierState.passiveStacks * passive.perStack * 100)}%</span
-									>
+									<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
+										Setiap dash menambah damage output {passive.perStack * 100}% selama {passive.duration}
+										detik.
+									</p>
 								{:else if passive.type === 'stacking-flat-damage'}
-									<span class="font-mono-stat text-xs text-amber-400"
-										>+{round(loadout.modifierState.passiveStacks * passive.perStack)} dmg</span
-									>
+									<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
+										Setiap stack menambah +{passive.perStack} Physical Damage pada Skill 1.
+									</p>
 								{:else if passive.type === 'mana-stacking'}
-									<span class="font-mono-stat text-xs text-blue-400"
-										>+{round(loadout.modifierState.passiveStacks * passive.manaPerStack)} mana</span
-									>
+									<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
+										Setiap hit skill menambah +{passive.manaPerStack} Max Mana. Damage skill berskala dengan
+										Max Mana.
+									</p>
 								{:else if passive.type === 'basic-attack-hp-scaling'}
-									<span class="font-mono-stat text-xs text-amber-400"
-										>{loadout.modifierState.passiveStacks > 0 ? 'Active' : 'Inactive'}</span
-									>
+									<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
+										Basic Attack memberikan tambahan damage fisik sebesar {passive.baseDamage} (+{passive.hpScalingRatio * 100}% Total HP) ketika target memiliki Mark.
+									</p>
 								{/if}
-							</div>
-							{#if passive.type === 'stacking-buff'}
-								<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
-									Setiap dash menambah damage output {passive.perStack * 100}% selama {passive.duration}
-									detik.
-								</p>
-							{:else if passive.type === 'stacking-flat-damage'}
-								<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
-									Setiap stack menambah +{passive.perStack} Physical Damage pada Skill 1.
-								</p>
-							{:else if passive.type === 'mana-stacking'}
-								<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
-									Setiap hit skill menambah +{passive.manaPerStack} Max Mana. Damage skill berskala dengan
-									Max Mana.
-								</p>
-							{:else if passive.type === 'basic-attack-hp-scaling'}
-								<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
-									Basic Attack memberikan tambahan damage fisik sebesar {passive.baseDamage} (+{passive.hpScalingRatio * 100}% Total HP) ketika target memiliki Mark.
-								</p>
 							{/if}
 						</div>
 					</div>
-					{#if passive.type === 'stacking-buff' || passive.maxStacks === 1}
-						<input
-							type="range"
-							min="0"
-							max={passive.maxStacks}
-							bind:value={loadout.modifierState.passiveStacks}
-							class="mt-2 w-full accent-accent"
-						/>
-						<div class="mt-1 flex justify-between text-[10px] text-ink-faint">
-							{#each Array.from({ length: passive.maxStacks + 1 }, (_, i) => i) as s (s)}
-								<span>{passive.maxStacks === 1 ? (s === 0 ? 'Off' : 'On') : s}</span>
-							{/each}
-						</div>
-					{:else}
-						<div class="mt-2 flex items-center gap-2">
+					{#if passive.type !== 'zilong-passive' && passive.type !== 'layla-passive'}
+						{#if passive.type === 'stacking-buff' || passive.maxStacks === 1}
 							<input
-								type="number"
+								type="range"
 								min="0"
 								max={passive.maxStacks}
 								bind:value={loadout.modifierState.passiveStacks}
-								class="w-full rounded-lg border border-line bg-bg px-3 py-1.5 text-sm text-ink tabular-nums placeholder:text-ink-faint focus:border-accent focus:outline-none"
-								placeholder="0"
+								class="mt-2 w-full accent-accent"
 							/>
-							<span class="shrink-0 text-[10px] text-ink-faint"
-								>/ {passive.maxStacks.toLocaleString()}</span
-							>
-						</div>
+							<div class="mt-1 flex justify-between text-[10px] text-ink-faint">
+								{#each Array.from({ length: passive.maxStacks + 1 }, (_, i) => i) as s (s)}
+									<span>{passive.maxStacks === 1 ? (s === 0 ? 'Off' : 'On') : s}</span>
+								{/each}
+							</div>
+						{:else}
+							<div class="mt-2 flex items-center gap-2">
+								<input
+									type="number"
+									min="0"
+									max={passive.maxStacks}
+									bind:value={loadout.modifierState.passiveStacks}
+									class="w-full rounded-lg border border-line bg-bg px-3 py-1.5 text-sm text-ink tabular-nums placeholder:text-ink-faint focus:border-accent focus:outline-none"
+									placeholder="0"
+								/>
+								<span class="shrink-0 text-[10px] text-ink-faint"
+									>/ {passive.maxStacks.toLocaleString()}</span
+								>
+							</div>
+						{/if}
 					{/if}
 				</div>
 			{/if}
@@ -1350,6 +1456,10 @@
 				<div class="grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-center text-sm">
 					<div>
 						<p class="font-mono-stat text-ink">{round(loadout.basicAttackDamage)}</p>
+						{#if loadout.hero?.slug.toLowerCase() === 'zilong'}
+							{@const rawBa = 100 + 0.8 * loadout.finalStats.physicalAttack + (loadout.modifierState.targetLowHp ? 30 : 0)}
+							<p class="text-[9px] text-ink-faint">Raw: {round(rawBa)}</p>
+						{/if}
 					</div>
 					<p class="text-xs text-ink-muted">Damage Basic Attack</p>
 					<div>
@@ -1359,6 +1469,10 @@
 				<div class="grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-center text-sm">
 					<div>
 						<p class="font-mono-stat text-ink">{round(loadout.basicAttackCritDamage)}</p>
+						{#if loadout.hero?.slug.toLowerCase() === 'zilong'}
+							{@const rawBa = 100 + 0.8 * loadout.finalStats.physicalAttack + (loadout.modifierState.targetLowHp ? 30 : 0)}
+							<p class="text-[9px] text-ink-faint">Raw Crit: {round(rawBa)}</p>
+						{/if}
 					</div>
 					<p class="text-xs text-ink-muted">Damage Basic Attack ketika Crit</p>
 					<div>
@@ -1373,13 +1487,14 @@
 						>Skills</span
 					>
 					<div class="mt-3 space-y-3">
-						{#each loadout.hero.skills as skill (skill.id)}
+						{#each loadout.hero.skills as skill, skillIdx (skill.id)}
 							{@const maxLevel = skill.levelData?.length ?? 0}
 							{@const currentLevel = getSkillLevel(skill.id, maxLevel)}
 							{@const currentLevelData = skill.levelData?.find((l) => l.level === currentLevel)}
 							{@const skillAreas = getSkillAreas(loadout.heroMod, skill.name)}
 							{@const shieldMod = getSkillShield(loadout.heroMod, skill.name)}
-							{@const baseDmg = calculateSkillDamage(skill, currentLevel, stats, targetStats)}
+							{@const baseDmg = calculateSkillDamage(skill, currentLevel, stats, effectiveTargetStats)}
+							{@const isZilongPassive = loadout.hero?.slug.toLowerCase() === 'zilong' && skillIdx === 0}
 							<div class="rounded-lg border border-line bg-bg/50 p-3">
 								<div class="flex items-start gap-3">
 									{#if skill.imageUrl}
@@ -1431,67 +1546,101 @@
 
 										<!-- Output Widgets (Total Damage, Total Shield, dll.) -->
 										<div class="mt-3.5 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-											{#if skill.damageType !== 'none' || (typeof baseDmg === 'object' ? baseDmg.min > 0 : baseDmg > 0)}
-												{#if skillAreas}
-													{#each computeMultiAreaDamage(typeof baseDmg === 'object' ? baseDmg.min : baseDmg, skillAreas) as area (area.label)}
-														<div
-															class="rounded-xl border border-line bg-surface-2/60 p-3 shadow-sm"
-														>
+											{#if isZilongPassive}
+												{@const lowHpBonus = loadout.modifierState.targetLowHp ? 30 : 0}
+												{@const flurryRaw = 80 + 0.3 * stats.physicalAttack + lowHpBonus}
+												{@const flurryHitDmg = computeDamage({ rawDamage: flurryRaw, damageType: 'physical', attacker: stats, target: effectiveTargetStats })}
+												{@const regenRaw = 50 + 0.2 * stats.physicalAttack}
+												<div class="rounded-xl border border-line bg-surface-2/60 p-3 shadow-sm">
+													<span class="text-[10px] font-bold tracking-wider text-accent uppercase">
+														Damage Enhance
+													</span>
+													<div class="font-mono-stat mt-1.5 text-lg font-extrabold text-accent">
+														{round(flurryHitDmg * 3)}
+													</div>
+													<p class="mt-1 text-[10px] text-ink-muted">
+														Dragon Flurry: 3x {round(flurryHitDmg)} per hit.
+													</p>
+												</div>
+
+												<div class="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 shadow-sm">
+													<span class="text-[10px] font-bold tracking-wider text-emerald-400 uppercase">
+														HP Regen
+													</span>
+													<div class="font-mono-stat mt-1.5 text-lg font-extrabold text-emerald-400">
+														{round(regenRaw * 3)}
+													</div>
+													<p class="mt-1 text-[10px] text-emerald-300/80">
+														Dragon Flurry: 3x {round(regenRaw)} per hit.
+													</p>
+												</div>
+
+												<div class="rounded-xl border border-line bg-surface-2/60 p-3 shadow-sm sm:col-span-2">
+													<span class="text-[10px] font-bold tracking-wider text-amber-400 uppercase">
+														Damage Enhance
+													</span>
+													<div class="font-mono-stat mt-1.5 text-lg font-extrabold text-amber-400">
+														{loadout.modifierState.targetLowHp ? 'Active' : 'Inactive'}
+													</div>
+													<p class="mt-1 text-[10px] text-ink-muted">
+														+30 damage saat HP target &lt; 50%.
+													</p>
+												</div>
+											{:else}
+												{#if skill.damageType !== 'none' || (typeof baseDmg === 'object' ? baseDmg.min > 0 : baseDmg > 0)}
+													{#if skillAreas}
+														{#each computeMultiAreaDamage(typeof baseDmg === 'object' ? baseDmg.min : baseDmg, skillAreas) as area (area.label)}
+															<div
+																class="rounded-xl border border-line bg-surface-2/60 p-3 shadow-sm"
+															>
+																<span
+																	class="text-[10px] font-bold tracking-wider text-ink-faint uppercase"
+																>
+																	Dmg ({area.label})
+																</span>
+																<div class="font-mono-stat mt-1.5 text-lg font-extrabold text-accent">
+																	{round(area.damage)}
+																</div>
+															</div>
+														{/each}
+													{:else}
+														<div class="rounded-xl border border-line bg-surface-2/60 p-3 shadow-sm">
 															<span
 																class="text-[10px] font-bold tracking-wider text-ink-faint uppercase"
 															>
-																Dmg ({area.label})
+																Total Damage
 															</span>
 															<div class="font-mono-stat mt-1.5 text-lg font-extrabold text-accent">
-																{round(area.damage)}
+																{#if typeof baseDmg === 'object'}
+																	{round(baseDmg.min)} - {round(baseDmg.max)}
+																{:else}
+																	{round(baseDmg)}
+																{/if}
 															</div>
-															<p class="mt-1 text-[10px] leading-relaxed text-ink-muted">
-																Damage bersih yang diterima target pada {area.label.toLowerCase()} setelah
-																dikurangi Defense target.
-															</p>
 														</div>
-													{/each}
-												{:else}
-													<div class="rounded-xl border border-line bg-surface-2/60 p-3 shadow-sm">
+													{/if}
+												{/if}
+
+												{#if shieldMod}
+													<div
+														class="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 shadow-sm"
+													>
 														<span
-															class="text-[10px] font-bold tracking-wider text-ink-faint uppercase"
+															class="text-[10px] font-bold tracking-wider text-emerald-400 uppercase"
 														>
-															Total Damage
+															Total Shield
 														</span>
-														<div class="font-mono-stat mt-1.5 text-lg font-extrabold text-accent">
-															{#if typeof baseDmg === 'object'}
-																{round(baseDmg.min)} - {round(baseDmg.max)}
-															{:else}
-																{round(baseDmg)}
-															{/if}
+														<div
+															class="font-mono-stat mt-1.5 text-lg font-extrabold text-emerald-400"
+														>
+															{round(computeShieldValue(shieldMod, stats, loadout.modifierState.passiveStacks))}
 														</div>
-														<p class="mt-1 text-[10px] leading-relaxed text-ink-muted">
-															Damage bersih akhir yang masuk ke target setelah dikurangi Defense dan
-															reduksi damage target.
+														<p class="mt-1 text-[10px] leading-relaxed text-emerald-300/80">
+															Shield penyerap damage selama {shieldMod.duration} detik yang diperoleh ketika
+															menggunakan skill ini.
 														</p>
 													</div>
 												{/if}
-											{/if}
-
-											{#if shieldMod}
-												<div
-													class="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 shadow-sm"
-												>
-													<span
-														class="text-[10px] font-bold tracking-wider text-emerald-400 uppercase"
-													>
-														Total Shield
-													</span>
-													<div
-														class="font-mono-stat mt-1.5 text-lg font-extrabold text-emerald-400"
-													>
-														{round(computeShieldValue(shieldMod, stats, loadout.modifierState.passiveStacks))}
-													</div>
-													<p class="mt-1 text-[10px] leading-relaxed text-emerald-300/80">
-														Shield penyerap damage selama {shieldMod.duration} detik yang diperoleh ketika
-														menggunakan skill ini.
-													</p>
-												</div>
 											{/if}
 										</div>
 										{#if skill.levelData && skill.levelData.length > 0}

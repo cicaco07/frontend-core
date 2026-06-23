@@ -45,7 +45,7 @@ export function effectiveResistance(
 	const afterFlatReduction = defense - defReduction.flatDefReduction;
 	const afterPctReduction = afterFlatReduction * (1 - clamp01(defReduction.pctDefReduction));
 	const afterPen = afterPctReduction * (1 - clamp01(penPct));
-	return afterPen - penFlat;
+	return Math.max(-60, afterPen - penFlat);
 }
 
 export function mitigationMultiplier(effRes: number): number {
@@ -79,10 +79,11 @@ export function averageBasicAttack(
 	attacker: StatBlock,
 	target: StatBlock,
 	bonusDmgPct = 0,
-	defReduction?: DefReduction
+	defReduction?: DefReduction,
+	customRawDamage?: number
 ): number {
 	const hit = computeDamage({
-		rawDamage: attacker.physicalAttack,
+		rawDamage: customRawDamage !== undefined ? customRawDamage : attacker.physicalAttack,
 		damageType: 'physical',
 		attacker,
 		target,
@@ -101,9 +102,13 @@ export function attacksPerSecond(attacker: StatBlock, baseAttackSpeed = 1): numb
 export function basicAttackDps(
 	attacker: StatBlock,
 	target: StatBlock,
-	baseAttackSpeed = 1
+	baseAttackSpeed = 1,
+	customRawDamage?: number
 ): number {
-	return averageBasicAttack(attacker, target) * attacksPerSecond(attacker, baseAttackSpeed);
+	return (
+		averageBasicAttack(attacker, target, 0, undefined, customRawDamage) *
+		attacksPerSecond(attacker, baseAttackSpeed)
+	);
 }
 
 export function heroSkillDamage(
@@ -112,12 +117,13 @@ export function heroSkillDamage(
 	target: StatBlock,
 	level: number,
 	bonusDmgPct = 0,
-	defReduction?: DefReduction
+	defReduction?: DefReduction,
+	bonusFlatDmg = 0
 ): number {
 	if (skill.damageType === 'none') return 0;
 
 	const rank = Math.min(skill.baseDamage.length - 1, Math.max(0, level - 1));
-	let raw = skill.baseDamage[rank] ?? 0;
+	let raw = (skill.baseDamage[rank] ?? 0) + bonusFlatDmg;
 	for (const s of skill.scaling) {
 		raw += attacker[s.stat] * s.ratio;
 	}

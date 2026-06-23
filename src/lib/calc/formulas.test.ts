@@ -42,8 +42,9 @@ describe('effectiveResistance', () => {
 		expect(effectiveResistance(100, 10, 0.4)).toBe(50);
 	});
 
-	it('never returns below zero', () => {
-		expect(effectiveResistance(20, 50, 0)).toBe(0);
+	it('allows negative defense down to -60', () => {
+		expect(effectiveResistance(20, 50, 0)).toBe(-30);
+		expect(effectiveResistance(0, 100, 0)).toBe(-60);
 	});
 });
 
@@ -137,5 +138,29 @@ describe('effectiveHp', () => {
 	it('physical EHP grows with physical defense', () => {
 		const target = { ...emptyStatBlock(), hp: 5000, physicalDefense: 120 };
 		expect(effectiveHp(target, 'physical')).toBeCloseTo(10000);
+	});
+});
+
+describe('custom hero modifiers (Zilong & Layla)', () => {
+	it('applies custom raw damage to averageBasicAttack', () => {
+		const attacker = { ...emptyStatBlock(), physicalAttack: 200 };
+		const target = emptyStatBlock();
+		// Zilong: 100 + 80% PA = 100 + 160 = 260 raw
+		const customRaw = 100 + 0.8 * attacker.physicalAttack;
+		expect(averageBasicAttack(attacker, target, 0, undefined, customRaw)).toBe(260);
+	});
+
+	it('applies flat bonus to heroSkillDamage', () => {
+		const skill: HeroSkill = {
+			id: 's1',
+			name: 'Test Skill',
+			damageType: 'physical',
+			baseDamage: [100],
+			scaling: []
+		};
+		const attacker = emptyStatBlock();
+		const target = emptyStatBlock();
+		// baseDamage (100) + flatBonus (30) = 130
+		expect(heroSkillDamage(skill, attacker, target, 1, 0, undefined, 30)).toBe(130);
 	});
 });

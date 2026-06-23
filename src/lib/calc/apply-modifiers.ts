@@ -10,10 +10,22 @@ import type { StatBlock } from '../types/stats';
 
 export interface ModifierState {
 	passiveStacks: number;
+	targetLowHp?: boolean;
+	distance?: number;
+	ultUpgradeCount?: number;
+	skill2DeffLevel?: number;
+	skill2DeffActive?: boolean;
 }
 
 export function emptyModifierState(): ModifierState {
-	return { passiveStacks: 0 };
+	return {
+		passiveStacks: 0,
+		targetLowHp: false,
+		distance: 0,
+		ultUpgradeCount: 0,
+		skill2DeffLevel: 0,
+		skill2DeffActive: false
+	};
 }
 
 export function passiveDamageAmp(passive: StackingBuff, stacks: number): number {
@@ -27,9 +39,17 @@ export function applyPassiveAmp(
 	state: ModifierState
 ): number {
 	if (!mod?.passive) return baseDamage;
-	if (mod.passive.type !== 'stacking-buff') return baseDamage;
-	const amp = passiveDamageAmp(mod.passive, state.passiveStacks);
-	return baseDamage * (1 + amp);
+	if (mod.passive.type === 'stacking-buff') {
+		const amp = passiveDamageAmp(mod.passive, state.passiveStacks);
+		return baseDamage * (1 + amp);
+	}
+	if (mod.passive.type === 'layla-passive') {
+		const distance = state.distance ?? 0;
+		// 100% to 115% at 6 units distance -> +2.5% damage per unit distance
+		const amp = distance * 0.025;
+		return baseDamage * (1 + amp);
+	}
+	return baseDamage;
 }
 
 /** Compute Aldous-style enhanced basic attack damage from Soul Steal stacks. */

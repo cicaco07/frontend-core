@@ -106,29 +106,42 @@ export class Loadout {
 	totalCost = $derived(this.items.reduce((sum, i) => sum + i.cost, 0));
 
 	basicAttackDamage = $derived.by(() => {
-		const baseDmg = averageBasicAttack(this.finalStats, this.target);
+		let rawBase = this.finalStats.physicalAttack;
+		if (this.hero?.slug.toLowerCase() === 'zilong') {
+			rawBase = 100 + 0.8 * this.finalStats.physicalAttack;
+			if (this.modifierState.targetLowHp) {
+				rawBase += 30;
+			}
+		}
+		const baseDmg = averageBasicAttack(this.finalStats, this.target, 0, undefined, rawBase);
 		const ampDmg = applyPassiveAmp(baseDmg, this.heroMod, this.modifierState);
 
 		if (this.heroMod?.passive?.type === 'basic-attack-hp-scaling') {
 			const p = this.heroMod.passive;
 			const stacks = Math.min(Math.max(0, this.modifierState.passiveStacks), p.maxStacks);
-			if (stacks > 0) {
-				const extraRaw = p.baseDamage + this.finalStats.hp * p.hpScalingRatio;
-				const extraDmg = computeDamage({
-					rawDamage: extraRaw,
-					damageType: 'physical',
-					attacker: this.finalStats,
-					target: this.target
-				});
-				return ampDmg + extraDmg * stacks;
-			}
+			const extraRaw = p.baseDamage + this.finalStats.hp * p.hpScalingRatio;
+			const extraDmg = computeDamage({
+				rawDamage: extraRaw,
+				damageType: 'physical',
+				attacker: this.finalStats,
+				target: this.target
+			});
+			const totalBaseDmg = ampDmg + extraDmg * (stacks > 0 ? stacks : 1);
+			return totalBaseDmg;
 		}
 		return ampDmg;
 	});
 
 	basicAttackCritDamage = $derived.by(() => {
+		let rawBase = this.finalStats.physicalAttack;
+		if (this.hero?.slug.toLowerCase() === 'zilong') {
+			rawBase = 100 + 0.8 * this.finalStats.physicalAttack;
+			if (this.modifierState.targetLowHp) {
+				rawBase += 30;
+			}
+		}
 		const baseCrit = computeDamage({
-			rawDamage: this.finalStats.physicalAttack,
+			rawDamage: rawBase,
 			damageType: 'physical',
 			attacker: this.finalStats,
 			target: this.target
@@ -138,38 +151,41 @@ export class Loadout {
 		if (this.heroMod?.passive?.type === 'basic-attack-hp-scaling') {
 			const p = this.heroMod.passive;
 			const stacks = Math.min(Math.max(0, this.modifierState.passiveStacks), p.maxStacks);
-			if (stacks > 0) {
-				const extraRaw = p.baseDamage + this.finalStats.hp * p.hpScalingRatio;
-				const extraDmg = computeDamage({
-					rawDamage: extraRaw,
-					damageType: 'physical',
-					attacker: this.finalStats,
-					target: this.target
-				});
-				return ampCrit + extraDmg * stacks;
-			}
+			const extraRaw = p.baseDamage + this.finalStats.hp * p.hpScalingRatio;
+			const extraDmg = computeDamage({
+				rawDamage: extraRaw,
+				damageType: 'physical',
+				attacker: this.finalStats,
+				target: this.target
+			}) * (2 + this.finalStats.critDamagePct);
+			return ampCrit + extraDmg * (stacks > 0 ? stacks : 1);
 		}
 		return ampCrit;
 	});
 
 	dps = $derived.by(() => {
-		const baseDps = basicAttackDps(this.finalStats, this.target);
+		let rawBase = this.finalStats.physicalAttack;
+		if (this.hero?.slug.toLowerCase() === 'zilong') {
+			rawBase = 100 + 0.8 * this.finalStats.physicalAttack;
+			if (this.modifierState.targetLowHp) {
+				rawBase += 30;
+			}
+		}
+		const baseDps = basicAttackDps(this.finalStats, this.target, 1, rawBase);
 		const ampDps = applyPassiveAmp(baseDps, this.heroMod, this.modifierState);
 
 		if (this.heroMod?.passive?.type === 'basic-attack-hp-scaling') {
 			const p = this.heroMod.passive;
 			const stacks = Math.min(Math.max(0, this.modifierState.passiveStacks), p.maxStacks);
-			if (stacks > 0) {
-				const extraRaw = p.baseDamage + this.finalStats.hp * p.hpScalingRatio;
-				const extraDmg = computeDamage({
-					rawDamage: extraRaw,
-					damageType: 'physical',
-					attacker: this.finalStats,
-					target: this.target
-				});
-				const extraDps = extraDmg * stacks * attacksPerSecond(this.finalStats);
-				return ampDps + extraDps;
-			}
+			const extraRaw = p.baseDamage + this.finalStats.hp * p.hpScalingRatio;
+			const extraDmg = computeDamage({
+				rawDamage: extraRaw,
+				damageType: 'physical',
+				attacker: this.finalStats,
+				target: this.target
+			});
+			const extraDps = extraDmg * (stacks > 0 ? stacks : 1) * attacksPerSecond(this.finalStats);
+			return ampDps + extraDps;
 		}
 		return ampDps;
 	});
@@ -178,7 +194,11 @@ export class Loadout {
 		if (!this.hero) return 0;
 		const skill = this.hero.skills.find((s) => s.id === skillId);
 		if (!skill) return 0;
-		return heroSkillDamage(skill, this.finalStats, this.target, this.level);
+		let flatBonus = 0;
+		if (this.hero.slug.toLowerCase() === 'zilong' && this.modifierState.targetLowHp) {
+			flatBonus = 30;
+		}
+		return heroSkillDamage(skill, this.finalStats, this.target, this.level, 0, undefined, flatBonus);
 	}
 
 	addItem(item: Item) {

@@ -50,10 +50,32 @@ export interface HpScalingPassive {
 	maxStacks: number;
 }
 
+export interface ZilongPassive {
+	type: 'zilong-passive';
+	label: string;
+	maxStacks: number;
+	perStack: number;
+	duration: number;
+}
+
+export interface LaylaPassive {
+	type: 'layla-passive';
+	label: string;
+	maxStacks: number;
+	perStack: number;
+	duration: number;
+}
+
 export type SkillOverride = MultiAreaSkill | ShieldModifier;
 
 export interface HeroModConfig {
-	passive?: StackingBuff | StackingFlatDamage | ManaStackingPassive | HpScalingPassive;
+	passive?:
+		| StackingBuff
+		| StackingFlatDamage
+		| ManaStackingPassive
+		| HpScalingPassive
+		| ZilongPassive
+		| LaylaPassive;
 	skillOverrides?: Record<string, SkillOverride>;
 }
 
@@ -122,6 +144,24 @@ export const heroModifiers: Record<string, HeroModConfig> = {
 			label: 'Overflowing',
 			maxStacks: 99999,
 			manaPerStack: 10
+		}
+	},
+	zilong: {
+		passive: {
+			type: 'zilong-passive',
+			label: 'Dragon Flurry',
+			maxStacks: 0,
+			perStack: 0,
+			duration: 0
+		}
+	},
+	layla: {
+		passive: {
+			type: 'layla-passive',
+			label: 'Malefic Gun',
+			maxStacks: 0,
+			perStack: 0,
+			duration: 0
 		}
 	}
 };
