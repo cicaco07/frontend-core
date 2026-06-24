@@ -8,7 +8,8 @@
 
 	let {
 		skill,
-		currentLevel = $bindable(1),
+		level = 1,
+		onLevelChange,
 		baseDamage,
 		skillAreas,
 		shieldMod,
@@ -18,7 +19,8 @@
 		loadoutHero
 	}: {
 		skill: HeroSkill;
-		currentLevel?: number;
+		level?: number;
+		onLevelChange?: (level: number) => void;
 		baseDamage: number | { min: number; max: number };
 		skillAreas: MultiAreaSkill['areas'] | null;
 		shieldMod: ShieldModifier | null;
@@ -29,7 +31,7 @@
 	} = $props();
 
 	const maxLevel = $derived(skill.levelData?.length ?? 0);
-	const currentLevelData = $derived(skill.levelData?.find((l) => l.level === currentLevel));
+	const currentLevelData = $derived(skill.levelData?.find((l) => l.level === level));
 
 	function round(n: number): number {
 		return Math.round(n * 10) / 10;
@@ -50,8 +52,8 @@
 					{#if maxLevel > 0}
 						<select
 							class="rounded border border-line bg-bg px-1.5 py-0.5 text-xs text-ink"
-							value={currentLevel}
-							onchange={(e) => (currentLevel = Number(e.currentTarget.value))}
+							value={level}
+							onchange={(e) => onLevelChange?.(Number(e.currentTarget.value))}
 						>
 							{#each skill.levelData ?? [] as lvl (lvl.level)}
 								<option value={lvl.level}>Lv {lvl.level}</option>
@@ -65,7 +67,7 @@
 					{@html replaceAttributePlaceholders(
 						skill.description,
 						skill.levelData,
-						currentLevel
+						level
 					)}
 				</p>
 			{/if}
@@ -186,14 +188,14 @@
 									</tr>
 								</thead>
 								<tbody>
-									{#each skill.levelData as level (level.level)}
+									{#each skill.levelData as lvlData (lvlData.level)}
 										<tr
-											class="border-b border-line/50 {level.level === currentLevel
+											class="border-b border-line/50 {lvlData.level === level
 												? 'bg-accent/10'
 												: 'hover:bg-surface-2/50'}"
 										>
-											<td class="px-2 py-1 font-medium text-ink-muted">{level.level}</td>
-											{#each level.attributes as attr (attr.label)}
+											<td class="px-2 py-1 font-medium text-ink-muted">{lvlData.level}</td>
+											{#each lvlData.attributes as attr (attr.label)}
 												<td class="font-mono-stat px-2 py-1 text-right text-ink tabular-nums">{attr.value}</td>
 											{/each}
 										</tr>
