@@ -66,6 +66,14 @@ export interface LaylaPassive {
 	duration: number;
 }
 
+export interface HelcurtPassive {
+	type: 'helcurt-passive';
+	label: string;
+	maxStacks: number;
+	perStack: number;
+	duration: number;
+}
+
 export type SkillOverride = MultiAreaSkill | ShieldModifier;
 
 export interface HeroModConfig {
@@ -75,7 +83,8 @@ export interface HeroModConfig {
 		| ManaStackingPassive
 		| HpScalingPassive
 		| ZilongPassive
-		| LaylaPassive;
+		| LaylaPassive
+		| HelcurtPassive;
 	skillOverrides?: Record<string, SkillOverride>;
 }
 
@@ -162,6 +171,27 @@ export const heroModifiers: Record<string, HeroModConfig> = {
 			maxStacks: 0,
 			perStack: 0,
 			duration: 0
+		}
+	},
+	helcurt: {
+		passive: {
+			type: 'helcurt-passive',
+			label: 'Race Advantage',
+			maxStacks: 0,
+			perStack: 0,
+			duration: 0
+		},
+		skillOverrides: {
+			'deadly stinger': {
+				type: 'multi-area',
+				areas: [
+					{ label: 'Stinger 1', multiplier: 1 },
+					{ label: 'Stinger 2', multiplier: 2 },
+					{ label: 'Stinger 3', multiplier: 3 },
+					{ label: 'Stinger 4', multiplier: 4 },
+					{ label: 'Stinger 5', multiplier: 5 }
+				]
+			}
 		}
 	}
 };

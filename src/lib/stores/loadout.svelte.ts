@@ -91,12 +91,17 @@ export class Loadout {
 	);
 
 	modifierBonus = $derived.by<Partial<StatBlock>>(() => {
-		if (!this.heroMod?.passive) return {};
-		const p = this.heroMod.passive;
-		if (p.type === 'mana-stacking') {
-			return { mana: computeManaFromStacks(p, this.modifierState.passiveStacks) };
+		const result: Partial<StatBlock> = {};
+		if (this.heroMod?.passive) {
+			const p = this.heroMod.passive;
+			if (p.type === 'mana-stacking') {
+				result.mana = computeManaFromStacks(p, this.modifierState.passiveStacks);
+			}
 		}
-		return {};
+		if (this.hero?.slug.toLowerCase() === 'helcurt' && this.modifierState.shadowOfStyxActive) {
+			result.movementSpeed = 0.4;
+		}
+		return result;
 	});
 
 	finalStats = $derived(

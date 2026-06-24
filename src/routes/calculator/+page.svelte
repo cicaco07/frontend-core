@@ -186,7 +186,8 @@
 
 	function parseHitCount(description: string | undefined): number {
 		if (!description) return 1;
-		const match = description.match(/(\d+)\s*kali/i);
+		// Only match "X kali" when it means number of hits, not "X kali lebih cepat" (cooldown speed)
+		const match = description.match(/(\d+)\s*kali(?!\s*(?:lebih|lipat))/i);
 		return match ? Number(match[1]) : 1;
 	}
 
@@ -196,6 +197,8 @@
 		attackerStats: StatBlock,
 		targetStats: StatBlock
 	): any {
+		// Non-damaging skills (e.g. Helcurt passive — only heal/MS buff) return 0
+		if (skill.damageType === 'none') return 0;
 		const levelData = skill.levelData;
 		const currentLvl = levelData?.find((l) => l.level === skillLevel) ?? levelData?.[0];
 
@@ -290,7 +293,7 @@
 				const hits = parseHitCount(skill.description);
 				const dmgPerHit = computeDamage({
 					rawDamage: raw,
-					damageType: skill.damageType === 'none' ? 'physical' : skill.damageType,
+					damageType: skill.damageType,
 					attacker: attackerStats,
 					target: targetStats
 				});
@@ -337,13 +340,13 @@
 
 			const dmgPerHitMin = computeDamage({
 				rawDamage: rawMin,
-				damageType: skill.damageType === 'none' ? 'physical' : skill.damageType,
+				damageType: skill.damageType,
 				attacker: attackerStats,
 				target: targetStats
 			});
 			const dmgPerHitMax = computeDamage({
 				rawDamage: rawMax,
-				damageType: skill.damageType === 'none' ? 'physical' : skill.damageType,
+				damageType: skill.damageType,
 				attacker: attackerStats,
 				target: targetStats
 			});
@@ -375,7 +378,7 @@
 
 		const dmgPerHit = computeDamage({
 			rawDamage: raw,
-			damageType: skill.damageType === 'none' ? 'physical' : skill.damageType,
+			damageType: skill.damageType,
 			attacker: attackerStats,
 			target: targetStats
 		});
@@ -1060,6 +1063,52 @@
 										<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted flex justify-between items-center">
 											<span>Range bonus: +{round((loadout.modifierState.ultUpgradeCount ?? 0) * 0.6)} unit</span>
 											<span class="font-bold text-accent">Total: {round(4.3 + (loadout.modifierState.ultUpgradeCount ?? 0) * 0.6)} Unit</span>
+										</p>
+									</div>
+								</div>
+							{:else if passive.type === 'helcurt-passive'}
+								<div class="space-y-3">
+									<div>
+										<div class="flex justify-between items-center text-xs font-semibold text-ink">
+											<span>HP Regen (Missing HP)</span>
+											<span class="text-emerald-400">{loadout.modifierState.passiveStacks}%</span>
+										</div>
+										<input
+											type="range"
+											min="10"
+											max="20"
+											step="1"
+											bind:value={loadout.modifierState.passiveStacks}
+											class="mt-1.5 w-full accent-accent"
+										/>
+										<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
+											Memulihkan {loadout.modifierState.passiveStacks}% HP yang hilang setiap 6 detik ketika tidak menerima damage.
+										</p>
+									</div>
+									<div class="border-t border-line/30 pt-2.5">
+										<div class="flex items-center justify-between">
+											<span class="text-xs font-semibold text-ink">Shadow of Styx Aktif</span>
+											<input
+												type="checkbox"
+												bind:checked={loadout.modifierState.shadowOfStyxActive}
+												class="size-4 cursor-pointer rounded border-line bg-surface-3 text-accent accent-accent focus:ring-accent"
+											/>
+										</div>
+										<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
+											Meningkatkan Movement Speed sebesar 25%–55% dan memberikan enhanced Basic Attack.
+										</p>
+									</div>
+									<div class="border-t border-line/30 pt-2.5">
+										<div class="flex items-center justify-between">
+											<span class="text-xs font-semibold text-ink">Skill 2 Minion DMG</span>
+											<input
+												type="checkbox"
+												bind:checked={loadout.modifierState.skill2MinionDmg}
+												class="size-4 cursor-pointer rounded border-line bg-surface-3 text-accent accent-accent focus:ring-accent"
+											/>
+										</div>
+										<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
+											80% damage tambahan terhadap minion (kalkulasi menyusul).
 										</p>
 									</div>
 								</div>

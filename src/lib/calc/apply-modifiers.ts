@@ -15,6 +15,8 @@ export interface ModifierState {
 	ultUpgradeCount?: number;
 	skill2DeffLevel?: number;
 	skill2DeffActive?: boolean;
+	shadowOfStyxActive?: boolean;
+	skill2MinionDmg?: boolean;
 }
 
 export function emptyModifierState(): ModifierState {
@@ -24,7 +26,9 @@ export function emptyModifierState(): ModifierState {
 		distance: 0,
 		ultUpgradeCount: 0,
 		skill2DeffLevel: 0,
-		skill2DeffActive: false
+		skill2DeffActive: false,
+		shadowOfStyxActive: false,
+		skill2MinionDmg: false
 	};
 }
 
