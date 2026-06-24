@@ -13,6 +13,7 @@
 	import ItemStatsTable from '$lib/components/calculator/ItemStatsTable.svelte';
 	import ItemSearchGrid from '$lib/components/calculator/ItemSearchGrid.svelte';
 	import PassiveModifier from '$lib/components/calculator/PassiveModifier.svelte';
+	import EmblemSelector from '$lib/components/calculator/EmblemSelector.svelte';
 
 	import { SvelteSet } from 'svelte/reactivity';
 	import { computeDamage } from '$lib/calc/formulas';
@@ -873,26 +874,17 @@
 				deffReduction={deffReduction}
 			/>
 
-			<div class="border-t border-line pt-4">
-				<span class="font-display text-xs font-bold tracking-wide text-ink-faint uppercase"
-					>Emblem Set</span
-				>
-				<div class="mt-2 space-y-2">
-					{#each [{ key: 'main', label: 'Main Emblem', items: mainEmblems }, { key: 'primary', label: 'Primary Talent', items: primaryTalents }, { key: 's1', label: 'Tier 1 Talent', items: commonTalentsS1 }, { key: 's2', label: 'Tier 2 Talent', items: commonTalentsS2 }] as group (group.key)}
-						{@const selected = group.items.find(
-							(e) => e.slug === getSelectedEmblem(group.key)?.slug
-						)}
-						<SearchSelect
-							items={emblemSelectItems(group.items)}
-							value={selected
-								? { id: selected.slug, label: selected.name, imageUrl: selected.icon || undefined }
-								: null}
-							placeholder={group.label + '…'}
-							onchange={(item) => handleEmblemSelect(item?.id ?? '', group.key)}
-						/>
-					{/each}
-				</div>
-			</div>
+			<EmblemSelector
+				groups={[
+					{ key: 'main', label: 'Main Emblem', items: mainEmblems },
+					{ key: 'primary', label: 'Primary Talent', items: primaryTalents },
+					{ key: 's1', label: 'Tier 1 Talent', items: commonTalentsS1 },
+					{ key: 's2', label: 'Tier 2 Talent', items: commonTalentsS2 }
+				]}
+				getSelected={getSelectedEmblem}
+				onSelect={(key, itemId) => handleEmblemSelect(itemId, key)}
+				{emblemSelectItems}
+			/>
 
 			<div>
 				<div class="flex items-center justify-between">
@@ -1219,26 +1211,17 @@
 				{round}
 			/>
 
-			<div class="border-t border-line pt-4">
-				<span class="font-display text-xs font-bold tracking-wide text-ink-faint uppercase"
-					>Emblem Set</span
-				>
-				<div class="mt-2 space-y-2">
-					{#each [{ key: 'tmain', label: 'Main Emblem', items: mainEmblems }, { key: 'tprimary', label: 'Primary Talent', items: primaryTalents }, { key: 'ts1', label: 'Tier 1 Talent', items: commonTalentsS1 }, { key: 'ts2', label: 'Tier 2 Talent', items: commonTalentsS2 }] as group (group.key)}
-						{@const selected = group.items.find(
-							(e) => e.slug === getSelectedEmblem(group.key)?.slug
-						)}
-						<SearchSelect
-							items={emblemSelectItems(group.items)}
-							value={selected
-								? { id: selected.slug, label: selected.name, imageUrl: selected.icon || undefined }
-								: null}
-							placeholder={group.label + '…'}
-							onchange={(item) => handleEmblemSelect(item?.id ?? '', group.key)}
-						/>
-					{/each}
-				</div>
-			</div>
+			<EmblemSelector
+				groups={[
+					{ key: 'tmain', label: 'Main Emblem', items: mainEmblems },
+					{ key: 'tprimary', label: 'Primary Talent', items: primaryTalents },
+					{ key: 'ts1', label: 'Tier 1 Talent', items: commonTalentsS1 },
+					{ key: 'ts2', label: 'Tier 2 Talent', items: commonTalentsS2 }
+				]}
+				getSelected={getSelectedEmblem}
+				onSelect={(key, itemId) => handleEmblemSelect(itemId, key)}
+				{emblemSelectItems}
+			/>
 
 			<div class="border-t border-line pt-4">
 				<div class="flex items-center justify-between">
