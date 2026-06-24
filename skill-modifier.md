@@ -1,0 +1,21 @@
+Tambahkan widget odifier pada menu calculator berdasarkan deskripsi berikut, ini adalah awal dari perkembangan skill calculator.
+
+Skill modifier hero mlbb:
+- Terdapat 2 jenis modifier yang ditampilkan dalam bentuk widget untuk skill modifier ini.
+- Modifier pertama adalah modifier untuk pasif skill, sebagai contoh yang sudah terimplementasi dalam kode adalah modifier untuk skill passive hero "Lancelot" dan juga "Zilong". Jenis ini akan disebut sebagai "hero modifier widget". Widget ini terletak di sebelah kiri di bawah seteah memilih hero.
+- Modifier kedua adalah modifier untuk skill aktif, sebagai contoh yang sudah terimplementasi dalam kode adalah modifier untuk skill kedua hero "Lancelot" yaitu "Thorned Rose". Di mana hero lancelot dalam 1x skill 2 ini bisa memberikan damage sebanyak 3 kali. Jenis ini akan disebut sebagai "skill modifier widget". Widget ini terletak di tengah pada bagian masing masing skill yang sedang digunakan.
+
+1. Zilong
+- Tambahkan "skill modifier widget" untuk modifier skill zilong di bagian passive.
+- Passive: "Setelah memberikan damage 3 kali dengan Basic Attack atau skill, Zilong mengaktifkan Dragon Flurry pada Basic Attack berikutnya, menyerang target 3 kali. Setiap serangan memberikan 80 (+30% Total Physical Attack) Damage Basic Attack dan memulihkan 50 (+20% Total Physical Attack) HP. Basic Attack Zilong memberikan 100 (+80% Total Physical Attack) Physical Damage. Jika HP target di bawah 50%, semua damage yang diberikan oleh skill dan Basic Attack Zilong akan meningkat sebanyak 30."
+- Berdasarkan deskripsi skill zilong tersebut maka akan terdapat 3 buah "skill modifier widget", yaitu "Damage Enhance" (dari menyerang target 3 kali), "HP Regen" (dari memulihkan 50 (+20% Total Physical Attack) HP) dan "Damage Enhance" (dari HP target di bawah 50%, semua damage yang diberikan oleh skill dan Basic Attack Zilong akan meningkat sebanyak 30)
+- Kemudian pada main widget dmg zilong memiliki perhitungan yang sedikit berbeda dengan beberapa hero lainnya. Hal ini dikarenakan "Basic Attack Zilong memberikan 100 (+80% Total Physical Attack) Physical Damage", sehingga kamu perlu memodifikasi Nilai dari "Damage Basic Attack" khusus untuk hero zilong berdasarkan deskripsi skill pasifnya, bukan hanya bergantung pada total physical attack.
+- Tambahkan "hero modifier widget" untuk status hero target apakah HP target di bawah 50% atau tidak. Jika iya maka, damage yang diberikan oleh skill dan Basic Attack Zilong akan meningkat sebanyak 30. Buat ini menjadi switch button
+
+2. Helcurt 
+- Buat agar skill passive hc diubah menjadi total pemulihan hp yang sebelumnya total damage
+- Passive: Helcurt tetap berada di mode Prowler hingga terlihat oleh tim lawan, memperoleh 15% Movement Speed tambahan, dan terus-menerus memulihkan (+30% Total Physical Attack) HP jika dia tidak memberikan Damage apa pun. Dia memperoleh 50% Attack Speed dan 50% Movement Speed tambahan (berkurang seiring waktu) selama 4 detik saat terlihat dan meninggalkan mode Prowler 0.75 detik kemudian. Hero yang tereliminasi setelah diserang oleh Helcurt meninggalkan kabut gelap yang meledak dan menyebar dengan Cooldown selama 10 detik. Helcurt memasuki mode Conceal saat berada dalam kabut gelap.
+- Berdasarkan deskripsi skill pasif hc, maka akan terdapat 1 buah skill widget modifier. Yaitu adalah "HP Regen" (dari memulihkan (+30% Total Physical Attack) HP).
+- Berdasarkan deskripsi skill pasif hc (memperoleh 15% Movement Speed tambahan saat di mode prowler) terdapat lagi 1 buah hero modifier widget bernilai true false untuk skill "Shadow of Styx". Dimana ketika true maka ia menambahkan 15% Movement Speed tambahan pada stats utama di main widget.
+- Skill 2 : Helcurt menusukkan semua Deadly Stinger ke depan, masing-masing memberikan 180 (+50% Extra Physical Attack) Physical Damage ke lawan (minion dan creep hanya menerima 70% dari damage)
+- Berdasarkan deskripsi skill 2 hc yang memiliki maksimal 5 stack yang artinya 5 kali 180 (+50% Extra Physical Attack), buatkan sebuah skill modifier widget untuk masing masing stack dan skill widget untuk dmg ke minion/creep yang hanya 70%. Kamu bisa menggunakan skill "Thorned Rose" milik lancelot untuk referensi.
