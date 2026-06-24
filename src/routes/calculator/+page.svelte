@@ -372,10 +372,6 @@
 		enrichHeroSkills(hero, true);
 	}
 
-	let dragItem = $state<Item | null>(null);
-	let dragTargetItem = $state<Item | null>(null);
-	let dragSlotIndex = $state<number | null>(null);
-	let dragTargetSlotIndex = $state<number | null>(null);
 	let searchQuery = $state('');
 	let targetSearchQuery = $state('');
 	let categoryFilter = $state<ItemCategory | null>(null);
@@ -483,52 +479,6 @@
 	const commonTalentsS2 = $derived(
 		data.emblems.filter((e) => e.type === 'Common Talent - Section 2')
 	);
-
-	function onDragStart(item: Item) {
-		dragItem = item;
-		dragSlotIndex = null;
-	}
-
-	function onSlotDragStart(index: number) {
-		dragSlotIndex = index;
-		dragItem = null;
-	}
-
-	function onTargetDragStart(item: Item) {
-		dragTargetItem = item;
-		dragTargetSlotIndex = null;
-	}
-
-	function onTargetSlotDragStart(index: number) {
-		dragTargetSlotIndex = index;
-		dragTargetItem = null;
-	}
-
-	function onDragOver(e: DragEvent) {
-		e.preventDefault();
-	}
-
-	function onDropSlot(e: DragEvent, targetIndex: number) {
-		e.preventDefault();
-		if (dragSlotIndex !== null) {
-			loadout.moveItem(dragSlotIndex, targetIndex);
-			dragSlotIndex = null;
-		} else if (dragItem) {
-			loadout.addItem(dragItem);
-			dragItem = null;
-		}
-	}
-
-	function onTargetDropSlot(e: DragEvent, targetIndex: number) {
-		e.preventDefault();
-		if (dragTargetSlotIndex !== null) {
-			targetLoadout.moveItem(dragTargetSlotIndex, targetIndex);
-			dragTargetSlotIndex = null;
-		} else if (dragTargetItem) {
-			targetLoadout.addItem(dragTargetItem);
-			dragTargetItem = null;
-		}
-	}
 
 	function round(n: number): number {
 		return Math.round(n * 10) / 10;
@@ -1153,39 +1103,12 @@
 						>{loadout.totalCost.toLocaleString()} gold</span
 					>
 				</div>
-				<div class="mt-2 grid grid-cols-3 gap-1.5" role="list">
-					{#each [0, 1, 2, 3, 4, 5] as i (i)}
-						{@const item = loadout.items[i]}
-						<div
-							class="relative flex aspect-square items-center justify-center overflow-hidden rounded-lg border-2 border-dashed transition"
-							class:border-accent-40={item}
-							class:border-line={!item}
-							class:bg-surface-3={item}
-							role="listitem"
-							draggable={item ? 'true' : 'false'}
-							ondragstart={() => item && onSlotDragStart(i)}
-							ondragover={onDragOver}
-							ondrop={(e) => onDropSlot(e, i)}
-						>
-							{#if item}
-								{#if item.imageUrl}
-									<img src={item.imageUrl} alt={item.name} class="h-full w-full object-cover" />
-								{:else}
-									<span class="px-1 text-center text-[10px] text-ink-muted">{item.name}</span>
-								{/if}
-								<button
-									type="button"
-									onclick={() => loadout.removeItem(i)}
-									class="absolute top-0 right-0 flex size-4 items-center justify-center rounded-bl bg-red-500/80 text-xs text-white hover:bg-red-500"
-								>
-									<X class="size-3" />
-								</button>
-							{:else}
-								<span class="text-xs text-ink-faint">+</span>
-							{/if}
-						</div>
-					{/each}
-				</div>
+				<ItemSlotGrid
+					items={loadout.items}
+					onAddItem={(item) => loadout.addItem(item)}
+					onRemoveItem={(i) => loadout.removeItem(i)}
+					onMoveItem={(from, to) => loadout.moveItem(from, to)}
+				/>
 			</div>
 
 			<div class="border-t border-line pt-4">
@@ -1683,39 +1606,12 @@
 						>{targetLoadout.totalCost.toLocaleString()} gold</span
 					>
 				</div>
-				<div class="mt-2 grid grid-cols-3 gap-1.5" role="list">
-					{#each [0, 1, 2, 3, 4, 5] as i (i)}
-						{@const item = targetLoadout.items[i]}
-						<div
-							class="relative flex aspect-square items-center justify-center overflow-hidden rounded-lg border-2 border-dashed transition"
-							class:border-accent-40={item}
-							class:border-line={!item}
-							class:bg-surface-3={item}
-							role="listitem"
-							draggable={item ? 'true' : 'false'}
-							ondragstart={() => item && onTargetSlotDragStart(i)}
-							ondragover={onDragOver}
-							ondrop={(e) => onTargetDropSlot(e, i)}
-						>
-							{#if item}
-								{#if item.imageUrl}
-									<img src={item.imageUrl} alt={item.name} class="h-full w-full object-cover" />
-								{:else}
-									<span class="px-1 text-center text-[10px] text-ink-muted">{item.name}</span>
-								{/if}
-								<button
-									type="button"
-									onclick={() => targetLoadout.removeItem(i)}
-									class="absolute top-0 right-0 flex size-4 items-center justify-center rounded-bl bg-red-500/80 text-xs text-white hover:bg-red-500"
-								>
-									<X class="size-3" />
-								</button>
-							{:else}
-								<span class="text-xs text-ink-faint">+</span>
-							{/if}
-						</div>
-					{/each}
-				</div>
+				<ItemSlotGrid
+					items={targetLoadout.items}
+					onAddItem={(item) => targetLoadout.addItem(item)}
+					onRemoveItem={(i) => targetLoadout.removeItem(i)}
+					onMoveItem={(from, to) => targetLoadout.moveItem(from, to)}
+				/>
 			</div>
 
 			<div class="border-t border-line pt-4">
