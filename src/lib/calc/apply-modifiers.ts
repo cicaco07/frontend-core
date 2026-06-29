@@ -4,7 +4,8 @@ import type {
 	StackingBuff,
 	StackingFlatDamage,
 	ManaStackingPassive,
-	ShieldModifier
+	ShieldModifier,
+	CritStackingBuff
 } from './hero-modifiers';
 import type { StatBlock } from '../types/stats';
 
@@ -118,4 +119,10 @@ export function computeShieldValue(
 		attackerStats.hp * shieldMod.hpScalingRatio +
 		(shieldMod.stackScalingRatio ?? 0) * stacks
 	);
+}
+
+/** Compute extra crit chance from crit-stacking-buff modifier. */
+export function computeCritFromStacks(config: CritStackingBuff, stacks: number): number {
+	const clamped = Math.min(Math.max(0, stacks), config.maxStacks);
+	return clamped * config.perStack;
 }

@@ -125,6 +125,16 @@
 							</p>
 						</div>
 					</div>
+				{:else if passive.type === 'crit-stacking-buff'}
+					<div class="flex items-center justify-between">
+						<span class="text-xs font-semibold text-ink">{passive.label}</span>
+						<span class="font-mono-stat text-xs text-amber-400"
+							>+{round(modifierState.passiveStacks * passive.perStack * 100)}% crit</span
+						>
+					</div>
+					<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
+						Setiap skill hit menambah {passive.perStack * 100}% Critical Chance. Stacking hingga {passive.maxStacks} kali.
+					</p>
 				{:else}
 					<div class="flex items-center justify-between">
 						<span class="text-xs font-semibold text-ink">{passive.label}</span>

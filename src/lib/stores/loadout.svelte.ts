@@ -13,6 +13,7 @@ import { getHeroMod, type HeroModConfig } from '$lib/calc/hero-modifiers';
 import {
 	applyPassiveAmp,
 	computeManaFromStacks,
+	computeCritFromStacks,
 	emptyModifierState,
 	type ModifierState
 } from '$lib/calc/apply-modifiers';
@@ -96,6 +97,9 @@ export class Loadout {
 			const p = this.heroMod.passive;
 			if (p.type === 'mana-stacking') {
 				result.mana = computeManaFromStacks(p, this.modifierState.passiveStacks);
+			}
+			if (p.type === 'crit-stacking-buff') {
+				result.critChancePct = computeCritFromStacks(p, this.modifierState.passiveStacks);
 			}
 		}
 		if (this.hero?.slug.toLowerCase() === 'helcurt' && this.modifierState.shadowOfStyxActive) {

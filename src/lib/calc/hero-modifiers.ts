@@ -74,6 +74,14 @@ export interface HelcurtPassive {
 	duration: number;
 }
 
+/** Crit chance stacking on skill hits (e.g. Bruno Mecha Legs). */
+export interface CritStackingBuff {
+	type: 'crit-stacking-buff';
+	label: string;
+	maxStacks: number;
+	perStack: number;
+}
+
 export type SkillOverride = MultiAreaSkill | ShieldModifier;
 
 export interface HeroModConfig {
@@ -84,7 +92,8 @@ export interface HeroModConfig {
 		| HpScalingPassive
 		| ZilongPassive
 		| LaylaPassive
-		| HelcurtPassive;
+		| HelcurtPassive
+		| CritStackingBuff;
 	skillOverrides?: Record<string, SkillOverride>;
 }
 
@@ -192,6 +201,14 @@ export const heroModifiers: Record<string, HeroModConfig> = {
 					{ label: 'Stinger 5', multiplier: 5 }
 				]
 			}
+		}
+	},
+	bruno: {
+		passive: {
+			type: 'crit-stacking-buff',
+			label: 'Mecha Legs',
+			maxStacks: 8,
+			perStack: 0.025
 		}
 	}
 };
