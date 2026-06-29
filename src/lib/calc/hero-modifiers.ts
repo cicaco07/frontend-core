@@ -82,7 +82,29 @@ export interface CritStackingBuff {
 	perStack: number;
 }
 
-export type SkillOverride = MultiAreaSkill | ShieldModifier;
+/** On-hit buff toggle: adds extra damage per attack when active (e.g. Alice Blood Banquet). */
+export interface ToggleOnHitBuff {
+	type: 'toggle-on-hit-buff';
+	label: string;
+	/** Base magic damage added per hit */
+	baseDamage: number;
+	/** Scaling ratio against total magic power */
+	magicScalingRatio: number;
+	/** HP ratio at level 1 */
+	minHpRatio: number;
+	/** HP ratio at max level */
+	maxHpRatio: number;
+}
+
+/** Skill that applies a multiplier to the on-hit buff damage when active. */
+export interface SkillOnHitMultiplier {
+	type: 'skill-on-hit-multiplier';
+	label: string;
+	/** Multiplier applied to the on-hit buff base damage */
+	multiplier: number;
+}
+
+export type SkillOverride = MultiAreaSkill | ShieldModifier | SkillOnHitMultiplier;
 
 export interface HeroModConfig {
 	passive?:
@@ -93,7 +115,8 @@ export interface HeroModConfig {
 		| ZilongPassive
 		| LaylaPassive
 		| HelcurtPassive
-		| CritStackingBuff;
+		| CritStackingBuff
+		| ToggleOnHitBuff;
 	skillOverrides?: Record<string, SkillOverride>;
 }
 
@@ -209,6 +232,23 @@ export const heroModifiers: Record<string, HeroModConfig> = {
 			label: 'Mecha Legs',
 			maxStacks: 8,
 			perStack: 0.025
+		}
+	},
+	alice: {
+		passive: {
+			type: 'toggle-on-hit-buff',
+			label: 'Blood Banquet',
+			baseDamage: 25,
+			magicScalingRatio: 0.3,
+			minHpRatio: 0.005,
+			maxHpRatio: 0.025
+		},
+		skillOverrides: {
+			'doom waltz': {
+				type: 'skill-on-hit-multiplier',
+				label: 'Doom Waltz (Blood Banquet bonus)',
+				multiplier: 3
+			}
 		}
 	}
 };

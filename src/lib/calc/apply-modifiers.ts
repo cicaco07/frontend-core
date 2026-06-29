@@ -5,7 +5,8 @@ import type {
 	StackingFlatDamage,
 	ManaStackingPassive,
 	ShieldModifier,
-	CritStackingBuff
+	CritStackingBuff,
+	ToggleOnHitBuff
 } from './hero-modifiers';
 import type { StatBlock } from '../types/stats';
 
@@ -18,6 +19,7 @@ export interface ModifierState {
 	skill2DeffActive?: boolean;
 	shadowOfStyxActive?: boolean;
 	skill2MinionDmg?: boolean;
+	bloodBanquetActive?: boolean;
 }
 
 export function emptyModifierState(): ModifierState {
@@ -29,7 +31,8 @@ export function emptyModifierState(): ModifierState {
 		skill2DeffLevel: 0,
 		skill2DeffActive: false,
 		shadowOfStyxActive: false,
-		skill2MinionDmg: false
+		skill2MinionDmg: false,
+		bloodBanquetActive: false
 	};
 }
 
@@ -125,4 +128,24 @@ export function computeShieldValue(
 export function computeCritFromStacks(config: CritStackingBuff, stacks: number): number {
 	const clamped = Math.min(Math.max(0, stacks), config.maxStacks);
 	return clamped * config.perStack;
+}
+
+/**
+ * Compute on-hit magic damage from toggle-on-hit-buff (e.g. Alice Blood Banquet).
+ * Damage = baseDamage + magicScaling * MP + hpRatio * targetMaxHP.
+ * hpRatio interpolates between minHpRatio and maxHpRatio based on level (1 to 15).
+ */
+export function computeOnHitBuffDamage(
+	config: ToggleOnHitBuff,
+	attackerStats: StatBlock,
+	targetMaxHP: number,
+	level: number
+): number {
+	const t = Math.min(Math.max(0, (level - 1) / 14), 1);
+	const hpRatio = config.minHpRatio + t * (config.maxHpRatio - config.minHpRatio);
+	return (
+		config.baseDamage +
+		config.magicScalingRatio * attackerStats.magicPower +
+		hpRatio * targetMaxHP
+	);
 }

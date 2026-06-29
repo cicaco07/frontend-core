@@ -135,6 +135,17 @@
 					<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
 						Setiap skill hit menambah {passive.perStack * 100}% Critical Chance. Stacking hingga {passive.maxStacks} kali.
 					</p>
+				{:else if passive.type === 'toggle-on-hit-buff'}
+					<div class="flex items-center justify-between">
+						<span class="text-xs font-semibold text-ink">{passive.label}</span>
+						<label class="flex items-center gap-2 cursor-pointer">
+							<span class="text-[10px] text-ink-faint">Active</span>
+							<input type="checkbox" bind:checked={modifierState.bloodBanquetActive} class="size-4 cursor-pointer rounded border-line bg-surface-3 text-accent accent-accent focus:ring-accent" />
+						</label>
+					</div>
+					<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
+						{round(passive.baseDamage + passive.magicScalingRatio * 0)} (+{passive.magicScalingRatio * 100}% Magic Power) + {round(passive.minHpRatio * 100)}%-{round(passive.maxHpRatio * 100)}% Max HP target sebagai Magic Damage per hit.
+					</p>
 				{:else}
 					<div class="flex items-center justify-between">
 						<span class="text-xs font-semibold text-ink">{passive.label}</span>

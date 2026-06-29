@@ -14,6 +14,7 @@ import {
 	applyPassiveAmp,
 	computeManaFromStacks,
 	computeCritFromStacks,
+	computeOnHitBuffDamage,
 	emptyModifierState,
 	type ModifierState
 } from '$lib/calc/apply-modifiers';
@@ -138,6 +139,17 @@ export class Loadout {
 			const totalBaseDmg = ampDmg + extraDmg * (stacks > 0 ? stacks : 1);
 			return totalBaseDmg;
 		}
+		if (this.heroMod?.passive?.type === 'toggle-on-hit-buff' && this.modifierState.bloodBanquetActive) {
+			const p = this.heroMod.passive;
+			const onHitRaw = computeOnHitBuffDamage(p, this.finalStats, this.target.hp, this.level);
+			const onHitDmg = computeDamage({
+				rawDamage: onHitRaw,
+				damageType: 'magic',
+				attacker: this.finalStats,
+				target: this.target
+			});
+			return ampDmg + onHitDmg;
+		}
 		return ampDmg;
 	});
 
@@ -169,6 +181,18 @@ export class Loadout {
 			}) * (2 + this.finalStats.critDamagePct);
 			return ampCrit + extraDmg * (stacks > 0 ? stacks : 1);
 		}
+		if (this.heroMod?.passive?.type === 'toggle-on-hit-buff' && this.modifierState.bloodBanquetActive) {
+			const p = this.heroMod.passive;
+			const onHitRaw = computeOnHitBuffDamage(p, this.finalStats, this.target.hp, this.level);
+			const onHitDmg = computeDamage({
+				rawDamage: onHitRaw,
+				damageType: 'magic',
+				attacker: this.finalStats,
+				target: this.target
+			});
+			// on-hit magic damage doesn't crit
+			return ampCrit + onHitDmg;
+		}
 		return ampCrit;
 	});
 
@@ -196,6 +220,18 @@ export class Loadout {
 			const extraDps = extraDmg * (stacks > 0 ? stacks : 1) * attacksPerSecond(this.finalStats);
 			return ampDps + extraDps;
 		}
+		if (this.heroMod?.passive?.type === 'toggle-on-hit-buff' && this.modifierState.bloodBanquetActive) {
+			const p = this.heroMod.passive;
+			const onHitRaw = computeOnHitBuffDamage(p, this.finalStats, this.target.hp, this.level);
+			const onHitDmg = computeDamage({
+				rawDamage: onHitRaw,
+				damageType: 'magic',
+				attacker: this.finalStats,
+				target: this.target
+			});
+			const extraDps = onHitDmg * attacksPerSecond(this.finalStats);
+			return ampDps + extraDps;
+		}
 		return ampDps;
 	});
 
@@ -204,10 +240,18 @@ export class Loadout {
 		const skill = this.hero.skills.find((s) => s.id === skillId);
 		if (!skill) return 0;
 		let flatBonus = 0;
+		let multiplier = 1;
 		if (this.hero.slug.toLowerCase() === 'zilong' && this.modifierState.targetLowHp) {
 			flatBonus = 30;
 		}
-		return heroSkillDamage(skill, this.finalStats, this.target, this.level, 0, undefined, flatBonus);
+		// skill-on-hit-multiplier: e.g. Alice Doom Waltz 300% Blood Banquet
+		if (this.heroMod?.skillOverrides && this.modifierState.bloodBanquetActive) {
+			const override = this.heroMod.skillOverrides[skill.name.toLowerCase()];
+			if (override?.type === 'skill-on-hit-multiplier') {
+				multiplier = override.multiplier;
+			}
+		}
+		return heroSkillDamage(skill, this.finalStats, this.target, this.level, multiplier - 1, undefined, flatBonus);
 	}
 
 	addItem(item: Item) {
