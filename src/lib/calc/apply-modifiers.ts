@@ -23,6 +23,7 @@ export interface ModifierState {
 	bloodBanquetActive?: boolean;
 	fannyFlying?: boolean;
 	fannyPreyMarks?: number;
+	superconductorActive?: boolean;
 }
 
 export function emptyModifierState(): ModifierState {
@@ -37,7 +38,8 @@ export function emptyModifierState(): ModifierState {
 		skill2MinionDmg: false,
 		bloodBanquetActive: false,
 		fannyFlying: false,
-		fannyPreyMarks: 0
+		fannyPreyMarks: 0,
+		superconductorActive: false
 	};
 }
 
@@ -65,6 +67,9 @@ export function applyPassiveAmp(
 	if (mod.passive.type === 'fanny-passive' && state.fannyFlying) {
 		const amp = mod.passive.minAmp; // flying damage = min 10% bonus
 		return baseDamage * (1 + amp);
+	}
+	if (mod.passive.type === 'eudora-passive' && state.superconductorActive) {
+		return baseDamage * (1 + mod.passive.comboAmp);
 	}
 	return baseDamage;
 }

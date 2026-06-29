@@ -161,6 +161,17 @@
 								class="w-16 rounded-lg border border-line bg-bg px-2 py-1 text-xs text-ink tabular-nums focus:border-accent focus:outline-none" />
 						</label>
 					</div>
+				{:else if passive.type === 'eudora-passive'}
+					<div class="flex items-center justify-between">
+						<span class="text-xs font-semibold text-ink">{passive.label}</span>
+						<label class="flex items-center gap-2 cursor-pointer">
+							<span class="text-[10px] text-ink-faint">Active</span>
+							<input type="checkbox" bind:checked={modifierState.superconductorActive} class="size-4 cursor-pointer rounded border-line bg-surface-3 text-accent accent-accent focus:ring-accent" />
+						</label>
+					</div>
+					<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
+						Full combo: S2 magic shred → S1 chain lightning → +{passive.comboAmp * 100}% bonus damage on all hits.
+					</p>
 				{:else}
 					<div class="flex items-center justify-between">
 						<span class="text-xs font-semibold text-ink">{passive.label}</span>
@@ -202,7 +213,7 @@
 				{/if}
 			</div>
 		</div>
-		{#if passive && passive.type !== 'zilong-passive' && passive.type !== 'layla-passive' && passive.type !== 'helcurt-passive' && passive.type !== 'fanny-passive'}
+		{#if passive && passive.type !== 'zilong-passive' && passive.type !== 'layla-passive' && passive.type !== 'helcurt-passive' && passive.type !== 'fanny-passive' && passive.type !== 'eudora-passive'}
 			{@const maxStacks = (passive as any).maxStacks ?? 1}
 			{#if passive.type === 'stacking-buff' || maxStacks === 1}
 				<input type="range" min="0" max={maxStacks} bind:value={modifierState.passiveStacks} class="mt-2 w-full accent-accent" />

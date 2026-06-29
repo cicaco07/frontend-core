@@ -118,6 +118,14 @@ export interface FannyPassive {
 	preyMarkDamagePct: number;
 }
 
+/** Eudora Superconductor: toggle full combo (stun → shred → lightning chain). */
+export interface EudoraPassive {
+	type: 'eudora-passive';
+	label: string;
+	/** Bonus damage ratio when Superconductor is active (e.g. 0.3 = 30%) */
+	comboAmp: number;
+}
+
 export type SkillOverride = MultiAreaSkill | ShieldModifier | SkillOnHitMultiplier;
 
 export interface HeroModConfig {
@@ -131,7 +139,8 @@ export interface HeroModConfig {
 		| HelcurtPassive
 		| CritStackingBuff
 		| ToggleOnHitBuff
-		| FannyPassive;
+		| FannyPassive
+		| EudoraPassive;
 	skillOverrides?: Record<string, SkillOverride>;
 }
 
@@ -274,6 +283,13 @@ export const heroModifiers: Record<string, HeroModConfig> = {
 			maxAmp: 0.2,
 			maxPreyMarks: 2,
 			preyMarkDamagePct: 0.3
+		}
+	},
+	eudora: {
+		passive: {
+			type: 'eudora-passive',
+			label: 'Superconductor',
+			comboAmp: 0.3
 		}
 	}
 };
