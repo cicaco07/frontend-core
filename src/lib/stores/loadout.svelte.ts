@@ -13,6 +13,8 @@ import { getHeroMod, type HeroModConfig } from '$lib/calc/hero-modifiers';
 import {
 	applyPassiveAmp,
 	computeManaFromStacks,
+	computeCritFromStacks,
+	computeOnHitBuffDamage,
 	emptyModifierState,
 	type ModifierState
 } from '$lib/calc/apply-modifiers';
@@ -97,6 +99,9 @@ export class Loadout {
 			if (p.type === 'mana-stacking') {
 				result.mana = computeManaFromStacks(p, this.modifierState.passiveStacks);
 			}
+			if (p.type === 'crit-stacking-buff') {
+				result.critChancePct = computeCritFromStacks(p, this.modifierState.passiveStacks);
+			}
 		}
 		if (this.hero?.slug.toLowerCase() === 'helcurt' && this.modifierState.shadowOfStyxActive) {
 			result.movementSpeed = 0.4;
@@ -134,6 +139,20 @@ export class Loadout {
 			const totalBaseDmg = ampDmg + extraDmg * (stacks > 0 ? stacks : 1);
 			return totalBaseDmg;
 		}
+		if (this.heroMod?.passive?.type === 'toggle-on-hit-buff' && this.modifierState.bloodBanquetActive) {
+			const p = this.heroMod.passive;
+			const onHitRaw = computeOnHitBuffDamage(p, this.finalStats, this.target.hp, this.level);
+			const onHitDmg = computeDamage({
+				rawDamage: onHitRaw,
+				damageType: 'magic',
+				attacker: this.finalStats,
+				target: this.target
+			});
+			return ampDmg + onHitDmg;
+		}
+		if (this.heroMod?.passive?.type === 'toggle-basic-atk-multiplier' && this.modifierState.onlyFastActive) {
+			return ampDmg * this.heroMod.passive.multiplier;
+		}
 		return ampDmg;
 	});
 
@@ -165,6 +184,22 @@ export class Loadout {
 			}) * (2 + this.finalStats.critDamagePct);
 			return ampCrit + extraDmg * (stacks > 0 ? stacks : 1);
 		}
+		if (this.heroMod?.passive?.type === 'toggle-on-hit-buff' && this.modifierState.bloodBanquetActive) {
+			const p = this.heroMod.passive;
+			const onHitRaw = computeOnHitBuffDamage(p, this.finalStats, this.target.hp, this.level);
+			const onHitDmg = computeDamage({
+				rawDamage: onHitRaw,
+				damageType: 'magic',
+				attacker: this.finalStats,
+				target: this.target
+			});
+			// on-hit magic damage doesn't crit
+			return ampCrit + onHitDmg;
+		}
+		if (this.heroMod?.passive?.type === 'toggle-basic-atk-multiplier' && this.modifierState.onlyFastActive) {
+			// Cannot crit when Only Fast is active — use non-crit damage instead
+			return this.basicAttackDamage;
+		}
 		return ampCrit;
 	});
 
@@ -192,6 +227,21 @@ export class Loadout {
 			const extraDps = extraDmg * (stacks > 0 ? stacks : 1) * attacksPerSecond(this.finalStats);
 			return ampDps + extraDps;
 		}
+		if (this.heroMod?.passive?.type === 'toggle-on-hit-buff' && this.modifierState.bloodBanquetActive) {
+			const p = this.heroMod.passive;
+			const onHitRaw = computeOnHitBuffDamage(p, this.finalStats, this.target.hp, this.level);
+			const onHitDmg = computeDamage({
+				rawDamage: onHitRaw,
+				damageType: 'magic',
+				attacker: this.finalStats,
+				target: this.target
+			});
+			const extraDps = onHitDmg * attacksPerSecond(this.finalStats);
+			return ampDps + extraDps;
+		}
+		if (this.heroMod?.passive?.type === 'toggle-basic-atk-multiplier' && this.modifierState.onlyFastActive) {
+			return ampDps * this.heroMod.passive.multiplier;
+		}
 		return ampDps;
 	});
 
@@ -200,10 +250,24 @@ export class Loadout {
 		const skill = this.hero.skills.find((s) => s.id === skillId);
 		if (!skill) return 0;
 		let flatBonus = 0;
+		let multiplier = 1;
 		if (this.hero.slug.toLowerCase() === 'zilong' && this.modifierState.targetLowHp) {
 			flatBonus = 30;
 		}
-		return heroSkillDamage(skill, this.finalStats, this.target, this.level, 0, undefined, flatBonus);
+		// skill-on-hit-multiplier: e.g. Alice Doom Waltz 300% Blood Banquet
+		if (this.heroMod?.skillOverrides && this.modifierState.bloodBanquetActive) {
+			const override = this.heroMod.skillOverrides[skill.name.toLowerCase()];
+			if (override?.type === 'skill-on-hit-multiplier') {
+				multiplier = override.multiplier;
+			}
+		}
+		// Fanny Prey Mark: +30% Ultimate damage per mark
+		if (this.heroMod?.passive?.type === 'fanny-passive' && skill.skillType === 'ultimate') {
+			const p = this.heroMod.passive;
+			const marks = Math.min(Math.max(0, this.modifierState.fannyPreyMarks ?? 0), p.maxPreyMarks);
+			multiplier = 1 + marks * p.preyMarkDamagePct;
+		}
+		return heroSkillDamage(skill, this.finalStats, this.target, this.level, multiplier - 1, undefined, flatBonus);
 	}
 
 	addItem(item: Item) {

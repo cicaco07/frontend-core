@@ -4,7 +4,10 @@ import type {
 	StackingBuff,
 	StackingFlatDamage,
 	ManaStackingPassive,
-	ShieldModifier
+	ShieldModifier,
+	CritStackingBuff,
+	ToggleOnHitBuff,
+	FannyPassive
 } from './hero-modifiers';
 import type { StatBlock } from '../types/stats';
 
@@ -17,6 +20,11 @@ export interface ModifierState {
 	skill2DeffActive?: boolean;
 	shadowOfStyxActive?: boolean;
 	skill2MinionDmg?: boolean;
+	bloodBanquetActive?: boolean;
+	fannyFlying?: boolean;
+	fannyPreyMarks?: number;
+	superconductorActive?: boolean;
+	onlyFastActive?: boolean;
 }
 
 export function emptyModifierState(): ModifierState {
@@ -28,7 +36,12 @@ export function emptyModifierState(): ModifierState {
 		skill2DeffLevel: 0,
 		skill2DeffActive: false,
 		shadowOfStyxActive: false,
-		skill2MinionDmg: false
+		skill2MinionDmg: false,
+		bloodBanquetActive: false,
+		fannyFlying: false,
+		fannyPreyMarks: 0,
+		superconductorActive: false,
+		onlyFastActive: false
 	};
 }
 
@@ -52,6 +65,13 @@ export function applyPassiveAmp(
 		// 100% to 115% at 6 units distance -> +2.5% damage per unit distance
 		const amp = distance * 0.025;
 		return baseDamage * (1 + amp);
+	}
+	if (mod.passive.type === 'fanny-passive' && state.fannyFlying) {
+		const amp = mod.passive.minAmp; // flying damage = min 10% bonus
+		return baseDamage * (1 + amp);
+	}
+	if (mod.passive.type === 'eudora-passive' && state.superconductorActive) {
+		return baseDamage * (1 + mod.passive.comboAmp);
 	}
 	return baseDamage;
 }
@@ -117,5 +137,31 @@ export function computeShieldValue(
 		shieldMod.baseShield +
 		attackerStats.hp * shieldMod.hpScalingRatio +
 		(shieldMod.stackScalingRatio ?? 0) * stacks
+	);
+}
+
+/** Compute extra crit chance from crit-stacking-buff modifier. */
+export function computeCritFromStacks(config: CritStackingBuff, stacks: number): number {
+	const clamped = Math.min(Math.max(0, stacks), config.maxStacks);
+	return clamped * config.perStack;
+}
+
+/**
+ * Compute on-hit magic damage from toggle-on-hit-buff (e.g. Alice Blood Banquet).
+ * Damage = baseDamage + magicScaling * MP + hpRatio * targetMaxHP.
+ * hpRatio interpolates between minHpRatio and maxHpRatio based on level (1 to 15).
+ */
+export function computeOnHitBuffDamage(
+	config: ToggleOnHitBuff,
+	attackerStats: StatBlock,
+	targetMaxHP: number,
+	level: number
+): number {
+	const t = Math.min(Math.max(0, (level - 1) / 14), 1);
+	const hpRatio = config.minHpRatio + t * (config.maxHpRatio - config.minHpRatio);
+	return (
+		config.baseDamage +
+		config.magicScalingRatio * attackerStats.magicPower +
+		hpRatio * targetMaxHP
 	);
 }

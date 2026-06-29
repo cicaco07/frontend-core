@@ -74,7 +74,69 @@ export interface HelcurtPassive {
 	duration: number;
 }
 
-export type SkillOverride = MultiAreaSkill | ShieldModifier;
+/** Crit chance stacking on skill hits (e.g. Bruno Mecha Legs). */
+export interface CritStackingBuff {
+	type: 'crit-stacking-buff';
+	label: string;
+	maxStacks: number;
+	perStack: number;
+}
+
+/** On-hit buff toggle: adds extra damage per attack when active (e.g. Alice Blood Banquet). */
+export interface ToggleOnHitBuff {
+	type: 'toggle-on-hit-buff';
+	label: string;
+	/** Base magic damage added per hit */
+	baseDamage: number;
+	/** Scaling ratio against total magic power */
+	magicScalingRatio: number;
+	/** HP ratio at level 1 */
+	minHpRatio: number;
+	/** HP ratio at max level */
+	maxHpRatio: number;
+}
+
+/** Skill that applies a multiplier to the on-hit buff damage when active. */
+export interface SkillOnHitMultiplier {
+	type: 'skill-on-hit-multiplier';
+	label: string;
+	/** Multiplier applied to the on-hit buff base damage */
+	multiplier: number;
+}
+
+/** Fanny Air Superiority: flying damage amp + Prey Mark stacks on Ultimate. */
+export interface FannyPassive {
+	type: 'fanny-passive';
+	label: string;
+	/** Min damage amp (ratio) when flying slow */
+	minAmp: number;
+	/** Max damage amp (ratio) when flying fast */
+	maxAmp: number;
+	/** Max Prey Mark stacks */
+	maxPreyMarks: number;
+	/** Bonus damage per Prey Mark on Ultimate */
+	preyMarkDamagePct: number;
+}
+
+/** Eudora Superconductor: toggle full combo (stun → shred → lightning chain). */
+export interface EudoraPassive {
+	type: 'eudora-passive';
+	label: string;
+	/** Bonus damage ratio when Superconductor is active (e.g. 0.3 = 30%) */
+	comboAmp: number;
+}
+
+/** Toggle basic attack multiplier + optional no-crit (e.g. Chou Only Fast). */
+export interface ToggleBasicAtkMultiplier {
+	type: 'toggle-basic-atk-multiplier';
+	label: string;
+	/** Multiplier on basic attack damage when active */
+	multiplier: number;
+	/** If true, basic attacks cannot crit when active */
+	noCrit?: boolean;
+}
+
+export type SkillOverride = MultiAreaSkill | ShieldModifier | SkillOnHitMultiplier;
 
 export interface HeroModConfig {
 	passive?:
@@ -84,7 +146,12 @@ export interface HeroModConfig {
 		| HpScalingPassive
 		| ZilongPassive
 		| LaylaPassive
-		| HelcurtPassive;
+		| HelcurtPassive
+		| CritStackingBuff
+		| ToggleOnHitBuff
+		| FannyPassive
+		| EudoraPassive
+		| ToggleBasicAtkMultiplier;
 	skillOverrides?: Record<string, SkillOverride>;
 }
 
@@ -190,6 +257,80 @@ export const heroModifiers: Record<string, HeroModConfig> = {
 					{ label: 'Stinger 3', multiplier: 3 },
 					{ label: 'Stinger 4', multiplier: 4 },
 					{ label: 'Stinger 5', multiplier: 5 }
+				]
+			}
+		}
+	},
+	bruno: {
+		passive: {
+			type: 'crit-stacking-buff',
+			label: 'Mecha Legs',
+			maxStacks: 8,
+			perStack: 0.025
+		}
+	},
+	alice: {
+		passive: {
+			type: 'toggle-on-hit-buff',
+			label: 'Blood Banquet',
+			baseDamage: 25,
+			magicScalingRatio: 0.3,
+			minHpRatio: 0.005,
+			maxHpRatio: 0.025
+		},
+		skillOverrides: {
+			'doom waltz': {
+				type: 'skill-on-hit-multiplier',
+				label: 'Doom Waltz (Blood Banquet bonus)',
+				multiplier: 3
+			}
+		}
+	},
+	fanny: {
+		passive: {
+			type: 'fanny-passive',
+			label: 'Air Superiority',
+			minAmp: 0.1,
+			maxAmp: 0.2,
+			maxPreyMarks: 2,
+			preyMarkDamagePct: 0.3
+		}
+	},
+	eudora: {
+		passive: {
+			type: 'eudora-passive',
+			label: 'Superconductor',
+			comboAmp: 0.3
+		}
+	},
+	chou: {
+		passive: {
+			type: 'toggle-basic-atk-multiplier',
+			label: 'Only Fast (180% DMG, no crit)',
+			multiplier: 1.8,
+			noCrit: true
+		},
+		skillOverrides: {
+			'shunpo': {
+				type: 'shield',
+				label: 'Shunpo Shield',
+				baseShield: 350,
+				hpScalingRatio: 0,
+				duration: 5
+			},
+			'jeet kune do': {
+				type: 'multi-area',
+				areas: [
+					{ label: 'Kick 1', multiplier: 1 },
+					{ label: 'Kick 2', multiplier: 2 },
+					{ label: 'Kick 3 (Airborne)', multiplier: 3 }
+				]
+			},
+			'the way of dragon': {
+				type: 'multi-area',
+				areas: [
+					{ label: 'Dragon Kick', multiplier: 1 },
+					{ label: 'Dragon Kick + Chase', multiplier: 2 }
 				]
 			}
 		}

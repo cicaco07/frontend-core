@@ -125,6 +125,65 @@
 							</p>
 						</div>
 					</div>
+				{:else if passive.type === 'crit-stacking-buff'}
+					<div class="flex items-center justify-between">
+						<span class="text-xs font-semibold text-ink">{passive.label}</span>
+						<span class="font-mono-stat text-xs text-amber-400"
+							>+{round(modifierState.passiveStacks * passive.perStack * 100)}% crit</span
+						>
+					</div>
+					<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
+						Setiap skill hit menambah {passive.perStack * 100}% Critical Chance. Stacking hingga {passive.maxStacks} kali.
+					</p>
+				{:else if passive.type === 'toggle-on-hit-buff'}
+					<div class="flex items-center justify-between">
+						<span class="text-xs font-semibold text-ink">{passive.label}</span>
+						<label class="flex items-center gap-2 cursor-pointer">
+							<span class="text-[10px] text-ink-faint">Active</span>
+							<input type="checkbox" bind:checked={modifierState.bloodBanquetActive} class="size-4 cursor-pointer rounded border-line bg-surface-3 text-accent accent-accent focus:ring-accent" />
+						</label>
+					</div>
+					<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
+						{round(passive.baseDamage + passive.magicScalingRatio * 0)} (+{passive.magicScalingRatio * 100}% Magic Power) + {round(passive.minHpRatio * 100)}%-{round(passive.maxHpRatio * 100)}% Max HP target sebagai Magic Damage per hit.
+					</p>
+				{:else if passive.type === 'fanny-passive'}
+					<div class="space-y-2">
+						<label class="flex items-center justify-between cursor-pointer">
+							<span class="text-xs font-semibold text-ink">{passive.label}</span>
+							<input type="checkbox" bind:checked={modifierState.fannyFlying} class="size-4 cursor-pointer rounded border-line bg-surface-3 text-accent accent-accent focus:ring-accent" />
+						</label>
+						<p class="text-[10px] leading-relaxed text-ink-muted">
+							Flying: +{passive.minAmp * 100}%-{passive.maxAmp * 100}% extra damage. Prey Mark: up to {passive.maxPreyMarks} marks, +{passive.preyMarkDamagePct * 100}% Ultimate damage each.
+						</p>
+						<label class="flex items-center justify-between cursor-pointer">
+							<span class="text-[10px] text-ink-faint">Prey Marks</span>
+							<input type="number" min="0" max={passive.maxPreyMarks} bind:value={modifierState.fannyPreyMarks}
+								class="w-16 rounded-lg border border-line bg-bg px-2 py-1 text-xs text-ink tabular-nums focus:border-accent focus:outline-none" />
+						</label>
+					</div>
+				{:else if passive.type === 'eudora-passive'}
+					<div class="flex items-center justify-between">
+						<span class="text-xs font-semibold text-ink">{passive.label}</span>
+						<label class="flex items-center gap-2 cursor-pointer">
+							<span class="text-[10px] text-ink-faint">Active</span>
+							<input type="checkbox" bind:checked={modifierState.superconductorActive} class="size-4 cursor-pointer rounded border-line bg-surface-3 text-accent accent-accent focus:ring-accent" />
+						</label>
+					</div>
+					<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
+						Full combo: S2 magic shred → S1 chain lightning → +{passive.comboAmp * 100}% bonus damage on all hits.
+					</p>
+				{:else if passive.type === 'toggle-basic-atk-multiplier'}
+					<div class="flex items-center justify-between">
+						<span class="text-xs font-semibold text-ink">{passive.label}</span>
+						<label class="flex items-center gap-2 cursor-pointer">
+							<span class="text-[10px] text-ink-faint">Active</span>
+							<input type="checkbox" bind:checked={modifierState.onlyFastActive} class="size-4 cursor-pointer rounded border-line bg-surface-3 text-accent accent-accent focus:ring-accent" />
+						</label>
+					</div>
+					<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
+						{passive.multiplier * 100}% Basic Attack damage
+						{#if passive.noCrit} (cannot crit){/if}.
+					</p>
 				{:else}
 					<div class="flex items-center justify-between">
 						<span class="text-xs font-semibold text-ink">{passive.label}</span>
@@ -166,7 +225,7 @@
 				{/if}
 			</div>
 		</div>
-		{#if passive && passive.type !== 'zilong-passive' && passive.type !== 'layla-passive' && passive.type !== 'helcurt-passive'}
+		{#if passive && passive.type !== 'zilong-passive' && passive.type !== 'layla-passive' && passive.type !== 'helcurt-passive' && passive.type !== 'fanny-passive' && passive.type !== 'eudora-passive' && passive.type !== 'toggle-basic-atk-multiplier'}
 			{@const maxStacks = (passive as any).maxStacks ?? 1}
 			{#if passive.type === 'stacking-buff' || maxStacks === 1}
 				<input type="range" min="0" max={maxStacks} bind:value={modifierState.passiveStacks} class="mt-2 w-full accent-accent" />
