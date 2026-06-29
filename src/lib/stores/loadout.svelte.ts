@@ -150,6 +150,9 @@ export class Loadout {
 			});
 			return ampDmg + onHitDmg;
 		}
+		if (this.heroMod?.passive?.type === 'toggle-basic-atk-multiplier' && this.modifierState.onlyFastActive) {
+			return ampDmg * this.heroMod.passive.multiplier;
+		}
 		return ampDmg;
 	});
 
@@ -193,6 +196,10 @@ export class Loadout {
 			// on-hit magic damage doesn't crit
 			return ampCrit + onHitDmg;
 		}
+		if (this.heroMod?.passive?.type === 'toggle-basic-atk-multiplier' && this.modifierState.onlyFastActive) {
+			// Cannot crit when Only Fast is active — use non-crit damage instead
+			return this.basicAttackDamage;
+		}
 		return ampCrit;
 	});
 
@@ -231,6 +238,9 @@ export class Loadout {
 			});
 			const extraDps = onHitDmg * attacksPerSecond(this.finalStats);
 			return ampDps + extraDps;
+		}
+		if (this.heroMod?.passive?.type === 'toggle-basic-atk-multiplier' && this.modifierState.onlyFastActive) {
+			return ampDps * this.heroMod.passive.multiplier;
 		}
 		return ampDps;
 	});

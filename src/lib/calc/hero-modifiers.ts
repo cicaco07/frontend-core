@@ -126,6 +126,16 @@ export interface EudoraPassive {
 	comboAmp: number;
 }
 
+/** Toggle basic attack multiplier + optional no-crit (e.g. Chou Only Fast). */
+export interface ToggleBasicAtkMultiplier {
+	type: 'toggle-basic-atk-multiplier';
+	label: string;
+	/** Multiplier on basic attack damage when active */
+	multiplier: number;
+	/** If true, basic attacks cannot crit when active */
+	noCrit?: boolean;
+}
+
 export type SkillOverride = MultiAreaSkill | ShieldModifier | SkillOnHitMultiplier;
 
 export interface HeroModConfig {
@@ -140,7 +150,8 @@ export interface HeroModConfig {
 		| CritStackingBuff
 		| ToggleOnHitBuff
 		| FannyPassive
-		| EudoraPassive;
+		| EudoraPassive
+		| ToggleBasicAtkMultiplier;
 	skillOverrides?: Record<string, SkillOverride>;
 }
 
@@ -290,6 +301,38 @@ export const heroModifiers: Record<string, HeroModConfig> = {
 			type: 'eudora-passive',
 			label: 'Superconductor',
 			comboAmp: 0.3
+		}
+	},
+	chou: {
+		passive: {
+			type: 'toggle-basic-atk-multiplier',
+			label: 'Only Fast (180% DMG, no crit)',
+			multiplier: 1.8,
+			noCrit: true
+		},
+		skillOverrides: {
+			'shunpo': {
+				type: 'shield',
+				label: 'Shunpo Shield',
+				baseShield: 350,
+				hpScalingRatio: 0,
+				duration: 5
+			},
+			'jeet kune do': {
+				type: 'multi-area',
+				areas: [
+					{ label: 'Kick 1', multiplier: 1 },
+					{ label: 'Kick 2', multiplier: 2 },
+					{ label: 'Kick 3 (Airborne)', multiplier: 3 }
+				]
+			},
+			'the way of dragon': {
+				type: 'multi-area',
+				areas: [
+					{ label: 'Dragon Kick', multiplier: 1 },
+					{ label: 'Dragon Kick + Chase', multiplier: 2 }
+				]
+			}
 		}
 	}
 };

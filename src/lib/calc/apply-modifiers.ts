@@ -24,6 +24,7 @@ export interface ModifierState {
 	fannyFlying?: boolean;
 	fannyPreyMarks?: number;
 	superconductorActive?: boolean;
+	onlyFastActive?: boolean;
 }
 
 export function emptyModifierState(): ModifierState {
@@ -39,7 +40,8 @@ export function emptyModifierState(): ModifierState {
 		bloodBanquetActive: false,
 		fannyFlying: false,
 		fannyPreyMarks: 0,
-		superconductorActive: false
+		superconductorActive: false,
+		onlyFastActive: false
 	};
 }
 
