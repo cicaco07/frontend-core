@@ -6,7 +6,8 @@ import type {
 	ManaStackingPassive,
 	ShieldModifier,
 	CritStackingBuff,
-	ToggleOnHitBuff
+	ToggleOnHitBuff,
+	FannyPassive
 } from './hero-modifiers';
 import type { StatBlock } from '../types/stats';
 
@@ -20,6 +21,8 @@ export interface ModifierState {
 	shadowOfStyxActive?: boolean;
 	skill2MinionDmg?: boolean;
 	bloodBanquetActive?: boolean;
+	fannyFlying?: boolean;
+	fannyPreyMarks?: number;
 }
 
 export function emptyModifierState(): ModifierState {
@@ -32,7 +35,9 @@ export function emptyModifierState(): ModifierState {
 		skill2DeffActive: false,
 		shadowOfStyxActive: false,
 		skill2MinionDmg: false,
-		bloodBanquetActive: false
+		bloodBanquetActive: false,
+		fannyFlying: false,
+		fannyPreyMarks: 0
 	};
 }
 
@@ -55,6 +60,10 @@ export function applyPassiveAmp(
 		const distance = state.distance ?? 0;
 		// 100% to 115% at 6 units distance -> +2.5% damage per unit distance
 		const amp = distance * 0.025;
+		return baseDamage * (1 + amp);
+	}
+	if (mod.passive.type === 'fanny-passive' && state.fannyFlying) {
+		const amp = mod.passive.minAmp; // flying damage = min 10% bonus
 		return baseDamage * (1 + amp);
 	}
 	return baseDamage;

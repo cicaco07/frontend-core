@@ -104,6 +104,20 @@ export interface SkillOnHitMultiplier {
 	multiplier: number;
 }
 
+/** Fanny Air Superiority: flying damage amp + Prey Mark stacks on Ultimate. */
+export interface FannyPassive {
+	type: 'fanny-passive';
+	label: string;
+	/** Min damage amp (ratio) when flying slow */
+	minAmp: number;
+	/** Max damage amp (ratio) when flying fast */
+	maxAmp: number;
+	/** Max Prey Mark stacks */
+	maxPreyMarks: number;
+	/** Bonus damage per Prey Mark on Ultimate */
+	preyMarkDamagePct: number;
+}
+
 export type SkillOverride = MultiAreaSkill | ShieldModifier | SkillOnHitMultiplier;
 
 export interface HeroModConfig {
@@ -116,7 +130,8 @@ export interface HeroModConfig {
 		| LaylaPassive
 		| HelcurtPassive
 		| CritStackingBuff
-		| ToggleOnHitBuff;
+		| ToggleOnHitBuff
+		| FannyPassive;
 	skillOverrides?: Record<string, SkillOverride>;
 }
 
@@ -249,6 +264,16 @@ export const heroModifiers: Record<string, HeroModConfig> = {
 				label: 'Doom Waltz (Blood Banquet bonus)',
 				multiplier: 3
 			}
+		}
+	},
+	fanny: {
+		passive: {
+			type: 'fanny-passive',
+			label: 'Air Superiority',
+			minAmp: 0.1,
+			maxAmp: 0.2,
+			maxPreyMarks: 2,
+			preyMarkDamagePct: 0.3
 		}
 	}
 };

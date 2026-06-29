@@ -251,6 +251,12 @@ export class Loadout {
 				multiplier = override.multiplier;
 			}
 		}
+		// Fanny Prey Mark: +30% Ultimate damage per mark
+		if (this.heroMod?.passive?.type === 'fanny-passive' && skill.skillType === 'ultimate') {
+			const p = this.heroMod.passive;
+			const marks = Math.min(Math.max(0, this.modifierState.fannyPreyMarks ?? 0), p.maxPreyMarks);
+			multiplier = 1 + marks * p.preyMarkDamagePct;
+		}
 		return heroSkillDamage(skill, this.finalStats, this.target, this.level, multiplier - 1, undefined, flatBonus);
 	}
 

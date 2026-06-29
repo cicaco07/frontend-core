@@ -146,6 +146,21 @@
 					<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
 						{round(passive.baseDamage + passive.magicScalingRatio * 0)} (+{passive.magicScalingRatio * 100}% Magic Power) + {round(passive.minHpRatio * 100)}%-{round(passive.maxHpRatio * 100)}% Max HP target sebagai Magic Damage per hit.
 					</p>
+				{:else if passive.type === 'fanny-passive'}
+					<div class="space-y-2">
+						<label class="flex items-center justify-between cursor-pointer">
+							<span class="text-xs font-semibold text-ink">{passive.label}</span>
+							<input type="checkbox" bind:checked={modifierState.fannyFlying} class="size-4 cursor-pointer rounded border-line bg-surface-3 text-accent accent-accent focus:ring-accent" />
+						</label>
+						<p class="text-[10px] leading-relaxed text-ink-muted">
+							Flying: +{passive.minAmp * 100}%-{passive.maxAmp * 100}% extra damage. Prey Mark: up to {passive.maxPreyMarks} marks, +{passive.preyMarkDamagePct * 100}% Ultimate damage each.
+						</p>
+						<label class="flex items-center justify-between cursor-pointer">
+							<span class="text-[10px] text-ink-faint">Prey Marks</span>
+							<input type="number" min="0" max={passive.maxPreyMarks} bind:value={modifierState.fannyPreyMarks}
+								class="w-16 rounded-lg border border-line bg-bg px-2 py-1 text-xs text-ink tabular-nums focus:border-accent focus:outline-none" />
+						</label>
+					</div>
 				{:else}
 					<div class="flex items-center justify-between">
 						<span class="text-xs font-semibold text-ink">{passive.label}</span>
@@ -187,7 +202,7 @@
 				{/if}
 			</div>
 		</div>
-		{#if passive && passive.type !== 'zilong-passive' && passive.type !== 'layla-passive' && passive.type !== 'helcurt-passive'}
+		{#if passive && passive.type !== 'zilong-passive' && passive.type !== 'layla-passive' && passive.type !== 'helcurt-passive' && passive.type !== 'fanny-passive'}
 			{@const maxStacks = (passive as any).maxStacks ?? 1}
 			{#if passive.type === 'stacking-buff' || maxStacks === 1}
 				<input type="range" min="0" max={maxStacks} bind:value={modifierState.passiveStacks} class="mt-2 w-full accent-accent" />
