@@ -424,6 +424,15 @@ export const heroModifiers: Record<string, HeroModConfig> = {
 			perStack: 0,
 			duration: 0
 		}
+	},
+	gusion: {
+		passive: {
+			type: 'stacking-buff',
+			label: 'Dagger Specialist',
+			maxStacks: 4,
+			perStack: 0.15,
+			duration: 0
+		}
 	}
 };
 
