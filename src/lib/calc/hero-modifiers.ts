@@ -343,6 +343,24 @@ export const heroModifiers: Record<string, HeroModConfig> = {
 			perStack: 0.08,
 			duration: 3
 		}
+	},
+	balmond: {
+		passive: {
+			type: 'stacking-buff',
+			label: 'Bloodthirst',
+			maxStacks: 1,
+			perStack: 0,
+			duration: 0
+		},
+		skillOverrides: {
+			'cyclone sweep': {
+				type: 'multi-area',
+				areas: [
+					{ label: 'Tick 1-2 (100%)', multiplier: 1 },
+					{ label: 'Tick 3-6 (50%)', multiplier: 0.5 }
+				]
+			}
+		}
 	}
 };
 
