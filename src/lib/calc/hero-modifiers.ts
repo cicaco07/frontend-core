@@ -343,6 +343,42 @@ export const heroModifiers: Record<string, HeroModConfig> = {
 			perStack: 0.08,
 			duration: 3
 		}
+	},
+	balmond: {
+		passive: {
+			type: 'stacking-buff',
+			label: 'Bloodthirst',
+			maxStacks: 1,
+			perStack: 0,
+			duration: 0
+		},
+		skillOverrides: {
+			'cyclone sweep': {
+				type: 'multi-area',
+				areas: [
+					{ label: 'Tick 1-2 (100%)', multiplier: 1 },
+					{ label: 'Tick 3-6 (50%)', multiplier: 0.5 }
+				]
+			}
+		}
+	},
+	tigreal: {
+		passive: {
+			type: 'stacking-buff',
+			label: 'Fearless',
+			maxStacks: 4,
+			perStack: 0.05,
+			duration: 0
+		}
+	},
+	franco: {
+		passive: {
+			type: 'stacking-buff',
+			label: 'Wasteland Force',
+			maxStacks: 10,
+			perStack: 0.03,
+			duration: 0
+		}
 	}
 };
 
