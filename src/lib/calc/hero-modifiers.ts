@@ -415,6 +415,15 @@ export const heroModifiers: Record<string, HeroModConfig> = {
 			perStack: 0.25,
 			duration: 4
 		}
+	},
+	bane: {
+		passive: {
+			type: 'stacking-buff',
+			label: 'Shark Bite',
+			maxStacks: 2,
+			perStack: 0,
+			duration: 0
+		}
 	}
 };
 
