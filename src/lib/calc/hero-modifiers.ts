@@ -361,6 +361,15 @@ export const heroModifiers: Record<string, HeroModConfig> = {
 				]
 			}
 		}
+	},
+	tigreal: {
+		passive: {
+			type: 'stacking-buff',
+			label: 'Fearless',
+			maxStacks: 4,
+			perStack: 0.05,
+			duration: 0
+		}
 	}
 };
 
