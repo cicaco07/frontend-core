@@ -433,6 +433,15 @@ export const heroModifiers: Record<string, HeroModConfig> = {
 			perStack: 0.15,
 			duration: 0
 		}
+	},
+	lunox: {
+		passive: {
+			type: 'stacking-buff',
+			label: 'Order & Chaos',
+			maxStacks: 4,
+			perStack: 0,
+			duration: 0
+		}
 	}
 };
 
