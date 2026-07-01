@@ -397,6 +397,15 @@ export const heroModifiers: Record<string, HeroModConfig> = {
 			perStack: 0,
 			duration: 0
 		}
+	},
+	alucard: {
+		passive: {
+			type: 'stacking-buff',
+			label: 'Pursuit',
+			maxStacks: 2,
+			perStack: 0.5,
+			duration: 4
+		}
 	}
 };
 
