@@ -370,6 +370,15 @@ export const heroModifiers: Record<string, HeroModConfig> = {
 			perStack: 0.05,
 			duration: 0
 		}
+	},
+	franco: {
+		passive: {
+			type: 'stacking-buff',
+			label: 'Wasteland Force',
+			maxStacks: 10,
+			perStack: 0.03,
+			duration: 0
+		}
 	}
 };
 
