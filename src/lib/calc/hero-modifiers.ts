@@ -406,6 +406,15 @@ export const heroModifiers: Record<string, HeroModConfig> = {
 			perStack: 0.5,
 			duration: 4
 		}
+	},
+	karina: {
+		passive: {
+			type: 'stacking-buff',
+			label: 'Shadow Combo',
+			maxStacks: 3,
+			perStack: 0.25,
+			duration: 4
+		}
 	}
 };
 
