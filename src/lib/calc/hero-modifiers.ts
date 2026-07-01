@@ -388,6 +388,15 @@ export const heroModifiers: Record<string, HeroModConfig> = {
 			perStack: 0,
 			duration: 0
 		}
+	},
+	rafaela: {
+		passive: {
+			type: 'stacking-buff',
+			label: 'Divine Resurrection',
+			maxStacks: 1,
+			perStack: 0,
+			duration: 0
+		}
 	}
 };
 
