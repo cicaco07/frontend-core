@@ -379,6 +379,15 @@ export const heroModifiers: Record<string, HeroModConfig> = {
 			perStack: 0.03,
 			duration: 0
 		}
+	},
+	nana: {
+		passive: {
+			type: 'stacking-buff',
+			label: "Molina's Gift (Survival)",
+			maxStacks: 1,
+			perStack: 0,
+			duration: 0
+		}
 	}
 };
 
