@@ -334,6 +334,15 @@ export const heroModifiers: Record<string, HeroModConfig> = {
 				]
 			}
 		}
+	},
+	miya: {
+		passive: {
+			type: 'stacking-buff',
+			label: 'Moon Blessing',
+			maxStacks: 5,
+			perStack: 0.05,
+			duration: 4
+		}
 	}
 };
 
