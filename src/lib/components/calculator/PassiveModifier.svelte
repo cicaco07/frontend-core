@@ -207,7 +207,9 @@
 					</div>
 					{#if passive.type === 'stacking-buff'}
 						<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
-							Setiap dash menambah damage output {(passive as any).perStack * 100}% selama {(passive as any).duration} detik.
+							{hero?.slug.toLowerCase() === 'miya'
+							? `Setiap Basic Attack menambah ${(passive as any).perStack * 100}% Attack Speed selama ${(passive as any).duration} detik (maks ${(passive as any).maxStacks} stack).`
+							: `Setiap skill hit menambah damage output ${(passive as any).perStack * 100}% selama ${(passive as any).duration} detik.`}
 						</p>
 					{:else if passive.type === 'stacking-flat-damage'}
 						<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
