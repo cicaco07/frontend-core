@@ -473,6 +473,50 @@ export const heroModifiers: Record<string, HeroModConfig> = {
 			baseDamage: 200,
 			scalingRatio: 1.1
 		}
+	},
+	saber: {
+		passive: {
+			type: 'defense-shred',
+			label: "Enemy's Bane",
+			maxStacks: 5,
+			flatPerStackByLevel: [3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 8, 8, 8],
+			defenseType: 'physical'
+		}
+	},
+	sun: {
+		passive: {
+			type: 'defense-shred',
+			label: 'Simian God',
+			maxStacks: 6,
+			pctPerStack: 0.05,
+			defenseType: 'physical'
+		}
+	},
+	carmilla: {
+		passive: {
+			type: 'defense-shred',
+			label: 'Vampire Pact',
+			maxStacks: 999,
+			flatPerStackByLevel: [6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13],
+			defenseType: 'both'
+		}
+	},
+	harley: {
+		passive: {
+			type: 'defense-shred',
+			label: 'Magic Master',
+			maxStacks: 10,
+			flatPerStack: 2,
+			defenseType: 'magic'
+		}
+	},
+	franco: {
+		passive: {
+			type: 'consume-all-stack-skill',
+			label: 'Wasteland Force',
+			maxStacks: 10,
+			perStack: 0.15
+		}
 	}
 };
 
