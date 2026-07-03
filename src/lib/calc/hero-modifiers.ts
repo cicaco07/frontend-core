@@ -431,6 +431,48 @@ export const heroModifiers: Record<string, HeroModConfig> = {
 			perStack: 0.01,
 			duration: 6
 		}
+	},
+	alucard: {
+		passive: {
+			type: 'toggle-enhanced-ba',
+			label: 'Pursuit',
+			baseDamage: 0,
+			scalingRatio: 1.25,
+			creepBonus: 0.1
+		}
+	},
+	clint: {
+		passive: {
+			type: 'toggle-enhanced-ba',
+			label: 'Double Shot',
+			baseDamage: 150,
+			scalingRatio: 1.0
+		}
+	},
+	lesley: {
+		passive: {
+			type: 'toggle-enhanced-ba',
+			label: 'Lethal Shot',
+			baseDamage: 100,
+			scalingRatio: 1.0,
+			damageType: 'true'
+		}
+	},
+	hilda: {
+		passive: {
+			type: 'toggle-enhanced-ba',
+			label: 'Blessing of Wilderness',
+			baseDamage: 110,
+			scalingRatio: 1.3
+		}
+	},
+	natalia: {
+		passive: {
+			type: 'toggle-enhanced-ba',
+			label: 'Assassin Instinct',
+			baseDamage: 200,
+			scalingRatio: 1.1
+		}
 	}
 };
 
