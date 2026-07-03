@@ -395,6 +395,42 @@ export const heroModifiers: Record<string, HeroModConfig> = {
 			perStack: 0.05,
 			duration: 4
 		}
+	},
+	hayabusa: {
+		passive: {
+			type: 'stacking-buff',
+			label: 'Ninjutsu: Passive',
+			maxStacks: 5,
+			perStack: 0.03,
+			duration: 5
+		}
+	},
+	jawhead: {
+		passive: {
+			type: 'stacking-buff',
+			label: 'Mecha Suppression',
+			maxStacks: 6,
+			perStack: 0.08,
+			duration: 2.5
+		}
+	},
+	barats: {
+		passive: {
+			type: 'stacking-buff',
+			label: 'Big Guy',
+			maxStacks: 25,
+			perStack: 0.03,
+			duration: 5
+		}
+	},
+	yve: {
+		passive: {
+			type: 'stacking-buff',
+			label: 'Galactic Power',
+			maxStacks: 10,
+			perStack: 0.01,
+			duration: 6
+		}
 	}
 };
 
