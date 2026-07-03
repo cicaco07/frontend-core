@@ -27,6 +27,7 @@
 			: null
 	);
 	const modIcon = $derived(relatedSkill?.imageUrl ?? passiveSkill?.imageUrl);
+	const slug = $derived(hero?.slug.toLowerCase() ?? '');
 </script>
 
 {#if passive}
@@ -184,6 +185,46 @@
 						{passive.multiplier * 100}% Basic Attack damage
 						{#if passive.noCrit} (cannot crit){/if}.
 					</p>
+				{:else if passive.type === 'toggle-enhanced-ba'}
+					<div class="flex items-center justify-between">
+						<span class="text-xs font-semibold text-ink">{passive.label}</span>
+						<label class="flex items-center gap-2 cursor-pointer">
+							<span class="text-[10px] text-ink-faint">Active</span>
+							<input type="checkbox" bind:checked={modifierState.baEnhancedActive} class="size-4 cursor-pointer rounded border-line bg-surface-3 text-accent accent-accent focus:ring-accent" />
+						</label>
+					</div>
+					<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
+						Enhanced BA: {round(passive.baseDamage)} + {passive.scalingRatio * 100}% PATK
+						{#if passive.damageType && passive.damageType !== 'physical'} ({passive.damageType} damage){/if}
+						{#if passive.canCrit === false} (cannot crit){/if}
+						{#if passive.creepBonus} | +{passive.creepBonus * 100}% to Creep{/if}.
+					</p>
+				{:else if passive.type === 'defense-shred'}
+					<div class="flex items-center justify-between">
+						<span class="text-xs font-semibold text-ink">{passive.label}</span>
+						<span class="font-mono-stat text-xs text-red-400"
+							>Stacks: {modifierState.defenseShredStacks ?? 0}/{passive.maxStacks}</span
+						>
+					</div>
+					<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
+						{#if passive.pctPerStack}
+							-{passive.pctPerStack * 100}% {passive.defenseType === 'both' ? 'Phys + Magic' : passive.defenseType} per stack
+						{:else if passive.flatPerStackByLevel}
+							-{passive.flatPerStackByLevel[0]}~{passive.flatPerStackByLevel[passive.flatPerStackByLevel.length - 1]} {passive.defenseType === 'both' ? 'Phys + Magic' : passive.defenseType} (by level) per stack
+						{:else}
+							-{passive.flatPerStack} {passive.defenseType === 'both' ? 'Phys + Magic' : passive.defenseType} per stack
+						{/if}.
+					</p>
+				{:else if passive.type === 'consume-all-stack-skill'}
+					<div class="flex items-center justify-between">
+						<span class="text-xs font-semibold text-ink">{passive.label}</span>
+						<span class="font-mono-stat text-xs text-accent"
+							>+{round(modifierState.passiveStacks * (passive as any).perStack * 100)}%</span
+						>
+					</div>
+					<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
+						Mengonsumsi semua stack untuk meningkatkan damage skill berikutnya {round((passive as any).perStack * 100)}% per stack (maks {passive.maxStacks}×).
+					</p>
 				{:else}
 					<div class="flex items-center justify-between">
 						<span class="text-xs font-semibold text-ink">{passive.label}</span>
@@ -207,9 +248,13 @@
 					</div>
 					{#if passive.type === 'stacking-buff'}
 						<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
-							{hero?.slug.toLowerCase() === 'miya'
-							? `Setiap Basic Attack menambah ${(passive as any).perStack * 100}% Attack Speed selama ${(passive as any).duration} detik (maks ${(passive as any).maxStacks} stack).`
-							: `Setiap skill hit menambah damage output ${(passive as any).perStack * 100}% selama ${(passive as any).duration} detik.`}
+							{#if slug === 'miya'}
+								Setiap Basic Attack menambah {(passive as any).perStack * 100}% Attack Speed selama {(passive as any).duration} detik (maks {(passive as any).maxStacks} stack).
+							{:else if slug === 'lancelot'}
+								Setiap dash memberikan +{(passive as any).perStack * 100}% damage selama {(passive as any).duration} detik (maks {(passive as any).maxStacks} stack, reset on hit taken).
+							{:else}
+								Setiap stack menambah damage output {(passive as any).perStack * 100}% selama {(passive as any).duration} detik (maks {(passive as any).maxStacks} stack).
+							{/if}
 						</p>
 					{:else if passive.type === 'stacking-flat-damage'}
 						<p class="mt-0.5 text-[10px] leading-relaxed text-ink-muted">
@@ -227,9 +272,16 @@
 				{/if}
 			</div>
 		</div>
-		{#if passive && passive.type !== 'zilong-passive' && passive.type !== 'layla-passive' && passive.type !== 'helcurt-passive' && passive.type !== 'fanny-passive' && passive.type !== 'eudora-passive' && passive.type !== 'toggle-basic-atk-multiplier'}
+		{#if passive && passive.type !== 'zilong-passive' && passive.type !== 'layla-passive' && passive.type !== 'helcurt-passive' && passive.type !== 'fanny-passive' && passive.type !== 'eudora-passive' && passive.type !== 'toggle-basic-atk-multiplier' && passive.type !== 'toggle-enhanced-ba'}
 			{@const maxStacks = (passive as any).maxStacks ?? 1}
-			{#if passive.type === 'stacking-buff' || maxStacks === 1}
+			{#if passive.type === 'defense-shred'}
+				<input type="range" min="0" max={maxStacks} bind:value={modifierState.defenseShredStacks} class="mt-2 w-full accent-accent" />
+				<div class="mt-1 flex justify-between text-[10px] text-ink-faint">
+					{#each Array.from({ length: maxStacks + 1 }, (_, i) => i) as s (s)}
+						<span>{s}</span>
+					{/each}
+				</div>
+			{:else if passive.type === 'stacking-buff' || maxStacks === 1}
 				<input type="range" min="0" max={maxStacks} bind:value={modifierState.passiveStacks} class="mt-2 w-full accent-accent" />
 				<div class="mt-1 flex justify-between text-[10px] text-ink-faint">
 					{#each Array.from({ length: maxStacks + 1 }, (_, i) => i) as s (s)}

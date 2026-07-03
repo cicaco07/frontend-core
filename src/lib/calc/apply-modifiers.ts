@@ -7,6 +7,9 @@ import type {
 	ShieldModifier,
 	CritStackingBuff,
 	ToggleOnHitBuff,
+	ToggleEnhancedBa,
+	DefenseShred,
+	ConsumeAllStackSkill,
 	FannyPassive
 } from './hero-modifiers';
 import type { StatBlock } from '../types/stats';
@@ -25,6 +28,10 @@ export interface ModifierState {
 	fannyPreyMarks?: number;
 	superconductorActive?: boolean;
 	onlyFastActive?: boolean;
+	/** Whether the enhanced BA toggle is active (Alucard, Clint, Lesley, Hilda, Natalia). */
+	baEnhancedActive?: boolean;
+	/** Active count of defense shred stacks (Saber, Sun, Carmilla, Harley, Hilda). */
+	defenseShredStacks?: number;
 }
 
 export function emptyModifierState(): ModifierState {
@@ -41,7 +48,9 @@ export function emptyModifierState(): ModifierState {
 		fannyFlying: false,
 		fannyPreyMarks: 0,
 		superconductorActive: false,
-		onlyFastActive: false
+		onlyFastActive: false,
+		baEnhancedActive: false,
+		defenseShredStacks: 0
 	};
 }
 
@@ -164,4 +173,57 @@ export function computeOnHitBuffDamage(
 		config.magicScalingRatio * attackerStats.magicPower +
 		hpRatio * targetMaxHP
 	);
+}
+
+/**
+ * Compute raw damage for enhanced basic attack.
+ * Formula: baseDamage + scalingRatio × physicalAttack.
+ * Does NOT apply defense reduction — caller is responsible for computeDamage().
+ */
+export function computeEnhancedBaRaw(
+	config: ToggleEnhancedBa,
+	attackerStats: StatBlock
+): number {
+	return config.baseDamage + config.scalingRatio * attackerStats.physicalAttack;
+}
+
+/**
+ * Compute total defense reduction from defense-shred modifier.
+ * Returns { physReduction, magicReduction } — subtract these from target defense.
+ */
+export function computeDefenseShred(
+	config: DefenseShred,
+	stacks: number,
+	level: number
+): { physReduction: number; magicReduction: number } {
+	const clamped = Math.min(Math.max(0, stacks), config.maxStacks);
+	let flat = config.flatPerStack ?? 0;
+	if (config.flatPerStackByLevel && level >= 1 && level <= config.flatPerStackByLevel.length) {
+		flat = config.flatPerStackByLevel[level - 1];
+	}
+	let pct = 0;
+	if (config.pctPerStack) {
+		// percentage shred is additive per stack
+		pct = clamped * config.pctPerStack;
+	}
+	const isPhys = config.defenseType === 'physical' || config.defenseType === 'both';
+	const isMagic = config.defenseType === 'magic' || config.defenseType === 'both';
+	return {
+		physReduction: isPhys ? clamped * flat : 0,
+		magicReduction: isMagic ? clamped * flat : 0
+	};
+	// Note: percentage shred (pct) is applied differently — it's a multiplier
+	// on the defense value, not a flat subtraction. Caller handles this.
+	// We return the raw values; caller applies: targetDef * (1 - pct) - flatReduction
+}
+
+/**
+ * Compute damage multiplier from consume-all-stack-skill (e.g. Franco Wasteland Force).
+ */
+export function computeConsumeAllStackAmp(
+	config: ConsumeAllStackSkill,
+	stacks: number
+): number {
+	const clamped = Math.min(Math.max(0, stacks), config.maxStacks);
+	return clamped * config.perStack;
 }

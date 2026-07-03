@@ -136,6 +136,55 @@ export interface ToggleBasicAtkMultiplier {
 	noCrit?: boolean;
 }
 
+/**
+ * Enhanced Basic Attack toggle — replaces normal BA formula with
+ * baseDamage + scalingRatio × PATK when active.
+ * Used by heroes whose passive/skill transforms their next BA
+ * (e.g. Alucard Pursuit, Clint Double Shot, Lesley Lethal Shot).
+ */
+export interface ToggleEnhancedBa {
+	type: 'toggle-enhanced-ba';
+	label: string;
+	/** Flat base damage */
+	baseDamage: number;
+	/** Scaling ratio against total physical attack (e.g. 1.25 = 125% PATK) */
+	scalingRatio: number;
+	/** Damage type (default: 'physical') */
+	damageType?: 'physical' | 'magic' | 'true';
+	/** Can this enhanced BA crit? (default: true) */
+	canCrit?: boolean;
+	/** Bonus damage multiplier vs Creep (e.g. 0.1 = +10%) */
+	creepBonus?: number;
+}
+
+/**
+ * Defense Shred — each stack reduces target defense.
+ * Supports flat reduction (e.g. Saber -3~8 PhysDef) and percentage
+ * reduction (e.g. Sun -5% PhysDef), or both simultaneously.
+ * `flatPerStackByLevel` is indexed by level (index 0 = level 1).
+ */
+export interface DefenseShred {
+	type: 'defense-shred';
+	label: string;
+	maxStacks: number;
+	flatPerStack?: number;
+	flatPerStackByLevel?: number[];
+	pctPerStack?: number;
+	defenseType: 'physical' | 'magic' | 'both';
+}
+
+/**
+ * Consume All Stack on Skill — build stacks then consume all at once
+ * on next skill cast for a damage multiplier (e.g. Franco Wasteland Force).
+ * Different from stacking-buff because stacks are consumed, not persistent.
+ */
+export interface ConsumeAllStackSkill {
+	type: 'consume-all-stack-skill';
+	label: string;
+	maxStacks: number;
+	perStack: number;
+}
+
 export type SkillOverride = MultiAreaSkill | ShieldModifier | SkillOnHitMultiplier;
 
 export interface HeroModConfig {
@@ -151,7 +200,10 @@ export interface HeroModConfig {
 		| ToggleOnHitBuff
 		| FannyPassive
 		| EudoraPassive
-		| ToggleBasicAtkMultiplier;
+		| ToggleBasicAtkMultiplier
+		| ToggleEnhancedBa
+		| DefenseShred
+		| ConsumeAllStackSkill;
 	skillOverrides?: Record<string, SkillOverride>;
 }
 
