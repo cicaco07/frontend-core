@@ -548,6 +548,54 @@ export const heroModifiers: Record<string, HeroModConfig> = {
 			baseDamage: 0,
 			scalingRatio: 2.15
 		}
+	},
+	odette: {
+		passive: {
+			type: 'toggle-enhanced-ba',
+			label: 'Lakeshore Ambience',
+			baseDamage: 144,
+			scalingRatio: 0,
+			magicScalingRatio: 0.50,
+			damageType: 'magic'
+		}
+	},
+	guinevere: {
+		passive: {
+			type: 'toggle-enhanced-ba',
+			label: 'Super Magic',
+			baseDamage: 0,
+			scalingRatio: 0.80,
+			magicScalingRatio: 0.60,
+			damageType: 'magic'
+		}
+	},
+	silvanna: {
+		passive: {
+			type: 'toggle-enhanced-ba',
+			label: "Knightess' Resolve",
+			baseDamage: 25,
+			scalingRatio: 0.45,
+			magicScalingRatio: 0.75,
+			damageType: 'magic'
+		}
+	},
+	martis: {
+		passive: {
+			type: 'stacking-buff',
+			label: "Asura's Wrath",
+			maxStacks: 4,
+			perStack: 0.30,
+			duration: 4
+		}
+	},
+	aulus: {
+		passive: {
+			type: 'stacking-buff',
+			label: 'Fighting Spirit',
+			maxStacks: 6,
+			perStack: 0.075,
+			duration: 4
+		}
 	}
 };
 
