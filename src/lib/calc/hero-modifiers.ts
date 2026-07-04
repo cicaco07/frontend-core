@@ -521,6 +521,16 @@ export const heroModifiers: Record<string, HeroModConfig> = {
 			maxStacks: 10,
 			perStack: 0.15
 		}
+	},
+	khufra: {
+		passive: {
+			type: 'toggle-enhanced-ba',
+			label: 'Spell Curse',
+			baseDamage: 100,
+			scalingRatio: 1.20,
+			hpScalingRatio: 0.06,
+			damageType: 'magic'
+		}
 	}
 };
 
