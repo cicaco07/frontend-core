@@ -189,6 +189,23 @@ export interface ConsumeAllStackSkill {
 	perStack: number;
 }
 
+/**
+ * Always-active bonus damage added to every Basic Attack.
+ * (e.g. Claude Dexter: +25 + 25% PATK per BA)
+ */
+export interface BaOnHitBuff {
+	type: 'ba-on-hit-buff';
+	label: string;
+	/** Flat bonus damage per BA */
+	baseDamage: number;
+	/** Scaling against PATK */
+	scalingRatio: number;
+	/** Scaling against MP */
+	magicScalingRatio?: number;
+	/** Damage type */
+	damageType: 'physical' | 'magic';
+}
+
 export type SkillOverride = MultiAreaSkill | ShieldModifier | SkillOnHitMultiplier;
 
 export interface HeroModConfig {
@@ -207,7 +224,8 @@ export interface HeroModConfig {
 		| ToggleBasicAtkMultiplier
 		| ToggleEnhancedBa
 		| DefenseShred
-		| ConsumeAllStackSkill;
+		| ConsumeAllStackSkill
+		| BaOnHitBuff;
 	skillOverrides?: Record<string, SkillOverride>;
 }
 
@@ -595,6 +613,15 @@ export const heroModifiers: Record<string, HeroModConfig> = {
 			maxStacks: 6,
 			perStack: 0.075,
 			duration: 4
+		}
+	},
+	claude: {
+		passive: {
+			type: 'ba-on-hit-buff',
+			label: 'Battle Side-by-side',
+			baseDamage: 25,
+			scalingRatio: 0.25,
+			damageType: 'physical'
 		}
 	}
 };
