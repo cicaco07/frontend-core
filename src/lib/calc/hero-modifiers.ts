@@ -531,6 +531,15 @@ export const heroModifiers: Record<string, HeroModConfig> = {
 			hpScalingRatio: 0.06,
 			damageType: 'magic'
 		}
+	},
+	khaleed: {
+		passive: {
+			type: 'toggle-enhanced-ba',
+			label: 'Desert Power',
+			baseDamage: 50,
+			scalingRatio: 1.40,
+			canCrit: false
+		}
 	}
 };
 
