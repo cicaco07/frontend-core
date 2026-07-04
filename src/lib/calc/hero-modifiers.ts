@@ -206,6 +206,26 @@ export interface BaOnHitBuff {
 	damageType: 'physical' | 'magic';
 }
 
+/**
+ * Triggers an extra Basic Attack hit with separate formula + heal.
+ * The normal BA still fires; this is an additional hit.
+ * (e.g. Argus Demonic Slash when Meteoric Sword is full)
+ */
+export interface ExtraBaHit {
+	type: 'extra-ba-hit';
+	label: string;
+	/** Flat bonus damage on extra hit */
+	baseDamage: number;
+	/** PATK scaling on extra hit */
+	scalingRatio: number;
+	/** Base HP healed */
+	healBase: number;
+	/** PATK scaling on heal */
+	healScalingRatio: number;
+	/** Physical defense ignored (e.g. 0.30 = 30%) */
+	defenseIgnorePct: number;
+}
+
 export type SkillOverride = MultiAreaSkill | ShieldModifier | SkillOnHitMultiplier;
 
 export interface HeroModConfig {
@@ -225,7 +245,8 @@ export interface HeroModConfig {
 		| ToggleEnhancedBa
 		| DefenseShred
 		| ConsumeAllStackSkill
-		| BaOnHitBuff;
+		| BaOnHitBuff
+		| ExtraBaHit;
 	skillOverrides?: Record<string, SkillOverride>;
 }
 
@@ -622,6 +643,17 @@ export const heroModifiers: Record<string, HeroModConfig> = {
 			baseDamage: 25,
 			scalingRatio: 0.25,
 			damageType: 'physical'
+		}
+	},
+	argus: {
+		passive: {
+			type: 'extra-ba-hit',
+			label: 'Meteoric Sword (Demonic Slash)',
+			baseDamage: 80,
+			scalingRatio: 0.50,
+			healBase: 100,
+			healScalingRatio: 0.10,
+			defenseIgnorePct: 0.30
 		}
 	}
 };
