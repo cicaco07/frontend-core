@@ -540,6 +540,14 @@ export const heroModifiers: Record<string, HeroModConfig> = {
 			scalingRatio: 1.40,
 			canCrit: false
 		}
+	},
+	benedetta: {
+		passive: {
+			type: 'toggle-enhanced-ba',
+			label: 'Swordout Slash',
+			baseDamage: 0,
+			scalingRatio: 2.15
+		}
 	}
 };
 
