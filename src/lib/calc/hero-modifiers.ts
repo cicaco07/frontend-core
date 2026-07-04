@@ -149,6 +149,10 @@ export interface ToggleEnhancedBa {
 	baseDamage: number;
 	/** Scaling ratio against total physical attack (e.g. 1.25 = 125% PATK) */
 	scalingRatio: number;
+	/** Scaling ratio against total magic power (e.g. 0.50 = 50% MP) */
+	magicScalingRatio?: number;
+	/** Scaling ratio against max HP (e.g. 0.06 = 6% MaxHP) */
+	hpScalingRatio?: number;
 	/** Damage type (default: 'physical') */
 	damageType?: 'physical' | 'magic' | 'true';
 	/** Can this enhanced BA crit? (default: true) */
