@@ -13,7 +13,7 @@ import type { Hero } from '$lib/types';
 import type { Emblem, Item } from '$lib/types/equipment';
 
 interface TheorycrafterData {
-	heroes: BackendHero[];
+	heroes: { items: BackendHero[] };
 	items: BackendItem[];
 	emblems: BackendEmblem[];
 }
@@ -22,7 +22,7 @@ export const load: PageLoad = async ({ fetch }) => {
 	try {
 		const data = await gqlRequest<TheorycrafterData>(THEORYCRAFTER_QUERY, undefined, fetch);
 		return {
-			heroes: data.heroes.map(mapHero),
+			heroes: data.heroes.items.map(mapHero),
 			items: data.items.map(mapItem),
 			emblems: data.emblems.map(mapEmblem)
 		};

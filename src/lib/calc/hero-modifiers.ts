@@ -136,6 +136,96 @@ export interface ToggleBasicAtkMultiplier {
 	noCrit?: boolean;
 }
 
+/**
+ * Enhanced Basic Attack toggle — replaces normal BA formula with
+ * baseDamage + scalingRatio × PATK when active.
+ * Used by heroes whose passive/skill transforms their next BA
+ * (e.g. Alucard Pursuit, Clint Double Shot, Lesley Lethal Shot).
+ */
+export interface ToggleEnhancedBa {
+	type: 'toggle-enhanced-ba';
+	label: string;
+	/** Flat base damage */
+	baseDamage: number;
+	/** Scaling ratio against total physical attack (e.g. 1.25 = 125% PATK) */
+	scalingRatio: number;
+	/** Scaling ratio against total magic power (e.g. 0.50 = 50% MP) */
+	magicScalingRatio?: number;
+	/** Scaling ratio against max HP (e.g. 0.06 = 6% MaxHP) */
+	hpScalingRatio?: number;
+	/** Damage type (default: 'physical') */
+	damageType?: 'physical' | 'magic' | 'true';
+	/** Can this enhanced BA crit? (default: true) */
+	canCrit?: boolean;
+	/** Bonus damage multiplier vs Creep (e.g. 0.1 = +10%) */
+	creepBonus?: number;
+}
+
+/**
+ * Defense Shred — each stack reduces target defense.
+ * Supports flat reduction (e.g. Saber -3~8 PhysDef) and percentage
+ * reduction (e.g. Sun -5% PhysDef), or both simultaneously.
+ * `flatPerStackByLevel` is indexed by level (index 0 = level 1).
+ */
+export interface DefenseShred {
+	type: 'defense-shred';
+	label: string;
+	maxStacks: number;
+	flatPerStack?: number;
+	flatPerStackByLevel?: number[];
+	pctPerStack?: number;
+	defenseType: 'physical' | 'magic' | 'both';
+}
+
+/**
+ * Consume All Stack on Skill — build stacks then consume all at once
+ * on next skill cast for a damage multiplier (e.g. Franco Wasteland Force).
+ * Different from stacking-buff because stacks are consumed, not persistent.
+ */
+export interface ConsumeAllStackSkill {
+	type: 'consume-all-stack-skill';
+	label: string;
+	maxStacks: number;
+	perStack: number;
+}
+
+/**
+ * Always-active bonus damage added to every Basic Attack.
+ * (e.g. Claude Dexter: +25 + 25% PATK per BA)
+ */
+export interface BaOnHitBuff {
+	type: 'ba-on-hit-buff';
+	label: string;
+	/** Flat bonus damage per BA */
+	baseDamage: number;
+	/** Scaling against PATK */
+	scalingRatio: number;
+	/** Scaling against MP */
+	magicScalingRatio?: number;
+	/** Damage type */
+	damageType: 'physical' | 'magic';
+}
+
+/**
+ * Triggers an extra Basic Attack hit with separate formula + heal.
+ * The normal BA still fires; this is an additional hit.
+ * (e.g. Argus Demonic Slash when Meteoric Sword is full)
+ */
+export interface ExtraBaHit {
+	type: 'extra-ba-hit';
+	label: string;
+	/** Flat bonus damage on extra hit */
+	baseDamage: number;
+	/** PATK scaling on extra hit */
+	scalingRatio: number;
+	/** Base HP healed */
+	healBase: number;
+	/** PATK scaling on heal */
+	healScalingRatio: number;
+	/** Physical defense ignored (e.g. 0.30 = 30%) */
+	defenseIgnorePct: number;
+}
+
 export type SkillOverride = MultiAreaSkill | ShieldModifier | SkillOnHitMultiplier;
 
 export interface HeroModConfig {
@@ -151,7 +241,12 @@ export interface HeroModConfig {
 		| ToggleOnHitBuff
 		| FannyPassive
 		| EudoraPassive
-		| ToggleBasicAtkMultiplier;
+		| ToggleBasicAtkMultiplier
+		| ToggleEnhancedBa
+		| DefenseShred
+		| ConsumeAllStackSkill
+		| BaOnHitBuff
+		| ExtraBaHit;
 	skillOverrides?: Record<string, SkillOverride>;
 }
 
@@ -342,6 +437,223 @@ export const heroModifiers: Record<string, HeroModConfig> = {
 			maxStacks: 5,
 			perStack: 0.05,
 			duration: 4
+		}
+	},
+	hayabusa: {
+		passive: {
+			type: 'stacking-buff',
+			label: 'Ninjutsu: Passive',
+			maxStacks: 5,
+			perStack: 0.03,
+			duration: 5
+		}
+	},
+	jawhead: {
+		passive: {
+			type: 'stacking-buff',
+			label: 'Mecha Suppression',
+			maxStacks: 6,
+			perStack: 0.08,
+			duration: 2.5
+		}
+	},
+	barats: {
+		passive: {
+			type: 'stacking-buff',
+			label: 'Big Guy',
+			maxStacks: 25,
+			perStack: 0.03,
+			duration: 5
+		}
+	},
+	yve: {
+		passive: {
+			type: 'stacking-buff',
+			label: 'Galactic Power',
+			maxStacks: 10,
+			perStack: 0.01,
+			duration: 6
+		}
+	},
+	alucard: {
+		passive: {
+			type: 'toggle-enhanced-ba',
+			label: 'Pursuit',
+			baseDamage: 0,
+			scalingRatio: 1.25,
+			creepBonus: 0.1
+		}
+	},
+	clint: {
+		passive: {
+			type: 'toggle-enhanced-ba',
+			label: 'Double Shot',
+			baseDamage: 150,
+			scalingRatio: 1.0
+		}
+	},
+	lesley: {
+		passive: {
+			type: 'toggle-enhanced-ba',
+			label: 'Lethal Shot',
+			baseDamage: 100,
+			scalingRatio: 1.0,
+			damageType: 'true'
+		}
+	},
+	hilda: {
+		passive: {
+			type: 'toggle-enhanced-ba',
+			label: 'Blessing of Wilderness',
+			baseDamage: 110,
+			scalingRatio: 1.3
+		}
+	},
+	natalia: {
+		passive: {
+			type: 'toggle-enhanced-ba',
+			label: 'Assassin Instinct',
+			baseDamage: 200,
+			scalingRatio: 1.1
+		}
+	},
+	saber: {
+		passive: {
+			type: 'defense-shred',
+			label: "Enemy's Bane",
+			maxStacks: 5,
+			flatPerStackByLevel: [3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 8, 8, 8],
+			defenseType: 'physical'
+		}
+	},
+	sun: {
+		passive: {
+			type: 'defense-shred',
+			label: 'Simian God',
+			maxStacks: 6,
+			pctPerStack: 0.05,
+			defenseType: 'physical'
+		}
+	},
+	carmilla: {
+		passive: {
+			type: 'defense-shred',
+			label: 'Vampire Pact',
+			maxStacks: 999,
+			flatPerStackByLevel: [6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13],
+			defenseType: 'both'
+		}
+	},
+	harley: {
+		passive: {
+			type: 'defense-shred',
+			label: 'Magic Master',
+			maxStacks: 10,
+			flatPerStack: 2,
+			defenseType: 'magic'
+		}
+	},
+	franco: {
+		passive: {
+			type: 'consume-all-stack-skill',
+			label: 'Wasteland Force',
+			maxStacks: 10,
+			perStack: 0.15
+		}
+	},
+	khufra: {
+		passive: {
+			type: 'toggle-enhanced-ba',
+			label: 'Spell Curse',
+			baseDamage: 100,
+			scalingRatio: 1.20,
+			hpScalingRatio: 0.06,
+			damageType: 'magic'
+		}
+	},
+	khaleed: {
+		passive: {
+			type: 'toggle-enhanced-ba',
+			label: 'Desert Power',
+			baseDamage: 50,
+			scalingRatio: 1.40,
+			canCrit: false
+		}
+	},
+	benedetta: {
+		passive: {
+			type: 'toggle-enhanced-ba',
+			label: 'Swordout Slash',
+			baseDamage: 0,
+			scalingRatio: 2.15
+		}
+	},
+	odette: {
+		passive: {
+			type: 'toggle-enhanced-ba',
+			label: 'Lakeshore Ambience',
+			baseDamage: 144,
+			scalingRatio: 0,
+			magicScalingRatio: 0.50,
+			damageType: 'magic'
+		}
+	},
+	guinevere: {
+		passive: {
+			type: 'toggle-enhanced-ba',
+			label: 'Super Magic',
+			baseDamage: 0,
+			scalingRatio: 0.80,
+			magicScalingRatio: 0.60,
+			damageType: 'magic'
+		}
+	},
+	silvanna: {
+		passive: {
+			type: 'toggle-enhanced-ba',
+			label: "Knightess' Resolve",
+			baseDamage: 25,
+			scalingRatio: 0.45,
+			magicScalingRatio: 0.75,
+			damageType: 'magic'
+		}
+	},
+	martis: {
+		passive: {
+			type: 'stacking-buff',
+			label: "Asura's Wrath",
+			maxStacks: 4,
+			perStack: 0.30,
+			duration: 4
+		}
+	},
+	aulus: {
+		passive: {
+			type: 'stacking-buff',
+			label: 'Fighting Spirit',
+			maxStacks: 6,
+			perStack: 0.075,
+			duration: 4
+		}
+	},
+	claude: {
+		passive: {
+			type: 'ba-on-hit-buff',
+			label: 'Battle Side-by-side',
+			baseDamage: 25,
+			scalingRatio: 0.25,
+			damageType: 'physical'
+		}
+	},
+	argus: {
+		passive: {
+			type: 'extra-ba-hit',
+			label: 'Meteoric Sword (Demonic Slash)',
+			baseDamage: 80,
+			scalingRatio: 0.50,
+			healBase: 100,
+			healScalingRatio: 0.10,
+			defenseIgnorePct: 0.30
 		}
 	}
 };

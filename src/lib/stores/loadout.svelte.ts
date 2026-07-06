@@ -15,6 +15,9 @@ import {
 	computeManaFromStacks,
 	computeCritFromStacks,
 	computeOnHitBuffDamage,
+	computeEnhancedBaRaw,
+	computeDefenseShred,
+	computeConsumeAllStackAmp,
 	emptyModifierState,
 	type ModifierState
 } from '$lib/calc/apply-modifiers';
@@ -109,6 +112,31 @@ export class Loadout {
 		return result;
 	});
 
+	/** Adjusted target defense after defense-shred modifier is applied. */
+	adjustedTarget = $derived.by<StatBlock>(() => {
+		const t = { ...this.target };
+		if (this.heroMod?.passive?.type === 'defense-shred') {
+			const p = this.heroMod.passive;
+			const { physReduction, magicReduction } = computeDefenseShred(
+				p,
+				this.modifierState.defenseShredStacks ?? 0,
+				this.level
+			);
+			const pct = p.pctPerStack ?? 0;
+			const clamped = Math.min(
+				Math.max(0, this.modifierState.defenseShredStacks ?? 0),
+				p.maxStacks
+			);
+			if (p.defenseType === 'physical' || p.defenseType === 'both') {
+				t.physicalDefense = Math.max(0, t.physicalDefense * (1 - clamped * pct) - physReduction);
+			}
+			if (p.defenseType === 'magic' || p.defenseType === 'both') {
+				t.magicDefense = Math.max(0, t.magicDefense * (1 - clamped * pct) - magicReduction);
+			}
+		}
+		return t;
+	});
+
 	finalStats = $derived(
 		sumStats([this.heroStats, this.baseBonus, this.itemStats, this.emblemStats, this.modifierBonus])
 	);
@@ -123,7 +151,22 @@ export class Loadout {
 				rawBase += 30;
 			}
 		}
-		const baseDmg = averageBasicAttack(this.finalStats, this.target, 0, undefined, rawBase);
+		// toggle-enhanced-ba: replace BA formula entirely
+		if (this.heroMod?.passive?.type === 'toggle-enhanced-ba' && this.modifierState.baEnhancedActive) {
+			const p = this.heroMod.passive;
+			const rawDmg = computeEnhancedBaRaw(p, this.finalStats);
+			let dmg = computeDamage({
+				rawDamage: rawDmg,
+				damageType: p.damageType ?? 'physical',
+				attacker: this.finalStats,
+				target: this.adjustedTarget
+			});
+			// Opt out of crit for enhanced BA if canCrit is explicitly false
+			// (non-crit just returns the raw computeDamage value)
+			// Note: enhanced BA CAN crit by default — crit version is handled in basicAttackCritDamage
+			return dmg;
+		}
+		const baseDmg = averageBasicAttack(this.finalStats, this.adjustedTarget, 0, undefined, rawBase);
 		const ampDmg = applyPassiveAmp(baseDmg, this.heroMod, this.modifierState);
 
 		if (this.heroMod?.passive?.type === 'basic-attack-hp-scaling') {
@@ -134,19 +177,19 @@ export class Loadout {
 				rawDamage: extraRaw,
 				damageType: 'physical',
 				attacker: this.finalStats,
-				target: this.target
+				target: this.adjustedTarget
 			});
 			const totalBaseDmg = ampDmg + extraDmg * (stacks > 0 ? stacks : 1);
 			return totalBaseDmg;
 		}
 		if (this.heroMod?.passive?.type === 'toggle-on-hit-buff' && this.modifierState.bloodBanquetActive) {
 			const p = this.heroMod.passive;
-			const onHitRaw = computeOnHitBuffDamage(p, this.finalStats, this.target.hp, this.level);
+			const onHitRaw = computeOnHitBuffDamage(p, this.finalStats, this.adjustedTarget.hp, this.level);
 			const onHitDmg = computeDamage({
 				rawDamage: onHitRaw,
 				damageType: 'magic',
 				attacker: this.finalStats,
-				target: this.target
+				target: this.adjustedTarget
 			});
 			return ampDmg + onHitDmg;
 		}
@@ -157,6 +200,22 @@ export class Loadout {
 	});
 
 	basicAttackCritDamage = $derived.by(() => {
+		// toggle-enhanced-ba: crit damage uses enhanced BA formula × crit multiplier
+		if (this.heroMod?.passive?.type === 'toggle-enhanced-ba' && this.modifierState.baEnhancedActive) {
+			const p = this.heroMod.passive;
+			// If canCrit is explicitly false, return non-crit damage
+			if (p.canCrit === false) {
+				return this.basicAttackDamage;
+			}
+			const rawDmg = computeEnhancedBaRaw(p, this.finalStats);
+			const base = computeDamage({
+				rawDamage: rawDmg,
+				damageType: p.damageType ?? 'physical',
+				attacker: this.finalStats,
+				target: this.adjustedTarget
+			});
+			return base * (2 + this.finalStats.critDamagePct);
+		}
 		let rawBase = this.finalStats.physicalAttack;
 		if (this.hero?.slug.toLowerCase() === 'zilong') {
 			rawBase = 100 + 0.8 * this.finalStats.physicalAttack;
@@ -168,7 +227,7 @@ export class Loadout {
 			rawDamage: rawBase,
 			damageType: 'physical',
 			attacker: this.finalStats,
-			target: this.target
+			target: this.adjustedTarget
 		}) * (2 + this.finalStats.critDamagePct);
 		const ampCrit = applyPassiveAmp(baseCrit, this.heroMod, this.modifierState);
 
@@ -180,18 +239,18 @@ export class Loadout {
 				rawDamage: extraRaw,
 				damageType: 'physical',
 				attacker: this.finalStats,
-				target: this.target
+				target: this.adjustedTarget
 			}) * (2 + this.finalStats.critDamagePct);
 			return ampCrit + extraDmg * (stacks > 0 ? stacks : 1);
 		}
 		if (this.heroMod?.passive?.type === 'toggle-on-hit-buff' && this.modifierState.bloodBanquetActive) {
 			const p = this.heroMod.passive;
-			const onHitRaw = computeOnHitBuffDamage(p, this.finalStats, this.target.hp, this.level);
+			const onHitRaw = computeOnHitBuffDamage(p, this.finalStats, this.adjustedTarget.hp, this.level);
 			const onHitDmg = computeDamage({
 				rawDamage: onHitRaw,
 				damageType: 'magic',
 				attacker: this.finalStats,
-				target: this.target
+				target: this.adjustedTarget
 			});
 			// on-hit magic damage doesn't crit
 			return ampCrit + onHitDmg;
@@ -211,7 +270,11 @@ export class Loadout {
 				rawBase += 30;
 			}
 		}
-		const baseDps = basicAttackDps(this.finalStats, this.target, 1, rawBase);
+		// toggle-enhanced-ba: DPS uses enhanced BA × attacks per second
+		if (this.heroMod?.passive?.type === 'toggle-enhanced-ba' && this.modifierState.baEnhancedActive) {
+			return this.basicAttackDamage * attacksPerSecond(this.finalStats);
+		}
+		const baseDps = basicAttackDps(this.finalStats, this.adjustedTarget, 1, rawBase);
 		const ampDps = applyPassiveAmp(baseDps, this.heroMod, this.modifierState);
 
 		if (this.heroMod?.passive?.type === 'basic-attack-hp-scaling') {
@@ -222,19 +285,19 @@ export class Loadout {
 				rawDamage: extraRaw,
 				damageType: 'physical',
 				attacker: this.finalStats,
-				target: this.target
+				target: this.adjustedTarget
 			});
 			const extraDps = extraDmg * (stacks > 0 ? stacks : 1) * attacksPerSecond(this.finalStats);
 			return ampDps + extraDps;
 		}
 		if (this.heroMod?.passive?.type === 'toggle-on-hit-buff' && this.modifierState.bloodBanquetActive) {
 			const p = this.heroMod.passive;
-			const onHitRaw = computeOnHitBuffDamage(p, this.finalStats, this.target.hp, this.level);
+			const onHitRaw = computeOnHitBuffDamage(p, this.finalStats, this.adjustedTarget.hp, this.level);
 			const onHitDmg = computeDamage({
 				rawDamage: onHitRaw,
 				damageType: 'magic',
 				attacker: this.finalStats,
-				target: this.target
+				target: this.adjustedTarget
 			});
 			const extraDps = onHitDmg * attacksPerSecond(this.finalStats);
 			return ampDps + extraDps;
@@ -267,7 +330,12 @@ export class Loadout {
 			const marks = Math.min(Math.max(0, this.modifierState.fannyPreyMarks ?? 0), p.maxPreyMarks);
 			multiplier = 1 + marks * p.preyMarkDamagePct;
 		}
-		return heroSkillDamage(skill, this.finalStats, this.target, this.level, multiplier - 1, undefined, flatBonus);
+		// consume-all-stack-skill: consume all stacks for damage amp (e.g. Franco)
+		if (this.heroMod?.passive?.type === 'consume-all-stack-skill') {
+			const amp = computeConsumeAllStackAmp(this.heroMod.passive, this.modifierState.passiveStacks);
+			multiplier *= (1 + amp);
+		}
+		return heroSkillDamage(skill, this.finalStats, this.adjustedTarget, this.level, multiplier - 1, undefined, flatBonus);
 	}
 
 	addItem(item: Item) {
