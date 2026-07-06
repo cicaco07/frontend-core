@@ -43,6 +43,10 @@ export interface StatBlock {
 	magicDamageReductionPct: number;
 	reviveAvailable: number;
 	executeThresholdPct: number;
+	enemyAttackSpeedReductionPct: number;
+	enemyShieldRegenReductionPct: number;
+	enemyPhysicalAttackReductionPct: number;
+	enemyPhysicalDamageReductionPct: number;
 }
 
 /** A zeroed StatBlock — the additive identity for stat summation. */
@@ -78,6 +82,10 @@ export function emptyStatBlock(): StatBlock {
 		damageReductionPct: 0,
 		magicDamageReductionPct: 0,
 		reviveAvailable: 0,
-		executeThresholdPct: 0
+		executeThresholdPct: 0,
+		enemyAttackSpeedReductionPct: 0,
+		enemyShieldRegenReductionPct: 0,
+		enemyPhysicalAttackReductionPct: 0,
+		enemyPhysicalDamageReductionPct: 0
 	};
 }

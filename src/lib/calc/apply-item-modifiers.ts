@@ -155,6 +155,19 @@ export function computeItemModifierStats(
 		result.damageReductionPct += 0.3;
 	}
 
+	if (hasItem(items, 'dominance-ice') && enabled(state, 'dominance-ice')) {
+		result.enemyAttackSpeedReductionPct += 0.2;
+		result.enemyShieldRegenReductionPct += 0.5;
+	}
+
+	if (hasItem(items, 'antique-cuirass')) {
+		result.enemyPhysicalDamageReductionPct += stack(state, 'antique-cuirass', 3) * 0.06;
+	}
+
+	if (hasItem(items, 'dreadnaught-armor')) {
+		result.enemyPhysicalAttackReductionPct += stack(state, 'dreadnaught-armor', 3) * 0.04;
+	}
+
 	return result;
 }
 

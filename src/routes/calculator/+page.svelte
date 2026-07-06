@@ -547,7 +547,11 @@
 		| 'hpRegenPct'
 		| 'damageReductionPct'
 		| 'magicDamageReductionPct'
-		| 'reviveAvailable';
+		| 'reviveAvailable'
+		| 'enemyAttackSpeedReductionPct'
+		| 'enemyShieldRegenReductionPct'
+		| 'enemyPhysicalAttackReductionPct'
+		| 'enemyPhysicalDamageReductionPct';
 
 	function getStatBreakdown(key: StatKey): { source: string; value: number }[] {
 		const sources: { source: string; value: number }[] = [];
@@ -724,6 +728,41 @@
 			isPct: true
 		},
 		{ label: 'Revive', value: stats.reviveAvailable, color: '#93c5fd', key: 'reviveAvailable' }
+	]);
+
+	const debuffStats = $derived<StatRow[]>([
+		{
+			label: 'Enemy ATK SPD RED',
+			value: stats.enemyAttackSpeedReductionPct * 100,
+			color: '#fb923c',
+			suffix: '%',
+			key: 'enemyAttackSpeedReductionPct',
+			isPct: true
+		},
+		{
+			label: 'Enemy Shield/Regen RED',
+			value: stats.enemyShieldRegenReductionPct * 100,
+			color: '#fb923c',
+			suffix: '%',
+			key: 'enemyShieldRegenReductionPct',
+			isPct: true
+		},
+		{
+			label: 'Enemy Phys ATK RED',
+			value: stats.enemyPhysicalAttackReductionPct * 100,
+			color: '#fb923c',
+			suffix: '%',
+			key: 'enemyPhysicalAttackReductionPct',
+			isPct: true
+		},
+		{
+			label: 'Enemy Phys DMG RED',
+			value: stats.enemyPhysicalDamageReductionPct * 100,
+			color: '#fb923c',
+			suffix: '%',
+			key: 'enemyPhysicalDamageReductionPct',
+			isPct: true
+		}
 	]);
 
 	const targetOffenseStats = $derived<StatRow[]>([

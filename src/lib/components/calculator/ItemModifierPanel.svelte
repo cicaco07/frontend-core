@@ -75,6 +75,18 @@
 			label: 'Sky Piercer - Lifebane',
 			max: 80,
 			description: 'Execute threshold 4% + 0.1% per stack.'
+		},
+		{
+			slug: 'antique-cuirass',
+			label: 'Antique Cuirass - Deter',
+			max: 3,
+			description: 'Mengurangi Physical Damage attacker 6% per stack.'
+		},
+		{
+			slug: 'dreadnaught-armor',
+			label: 'Dreadnaught Armor - Deter',
+			max: 3,
+			description: 'Mengurangi Physical Attack attacker 4% per stack.'
 		}
 	];
 
@@ -97,6 +109,7 @@
 		{ slug: 'magic-blade', label: 'Magic Blade - Lifeline', description: 'HP rendah: shield 60 x level dan +50% Movement Speed.' },
 		{ slug: 'immortality', label: 'Immortality - Immortal', description: 'Revive tersedia dan shield scaling level.' },
 		{ slug: 'queens-wings', label: "Queen's Wings - Demonize", description: 'HP rendah: +30% Damage Reduction.' },
+		{ slug: 'dominance-ice', label: 'Dominance Ice - Arctic Cold / Lifebane', description: 'Mengurangi Attack Speed attacker 20% dan Shield/HP Regen 50%.' },
 		{
 			slug: 'berserkers-fury',
 			label: "Berserker's Fury - Doom",
