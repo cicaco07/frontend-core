@@ -3,6 +3,24 @@ import type { StatBlock } from './stats';
 export type ItemCategory = 'attack' | 'magic' | 'defense' | 'movement' | 'jungle' | 'roam';
 export type ItemTier = 'TIER_1' | 'TIER_2' | 'TIER_3' | 'ETC';
 
+export interface CalculationAttribute {
+	key: string;
+	value?: number;
+	min_value?: number;
+	max_value?: number;
+	value_type: string;
+	scaling_stat?: string;
+	source: string;
+	trigger: string;
+	condition?: string;
+	target?: string;
+	duration?: number;
+	cooldown?: number;
+	max_stacks?: number;
+	cap?: number;
+	note?: string;
+}
+
 export interface Item {
 	id: string;
 	slug: string;
@@ -13,6 +31,7 @@ export interface Item {
 	cost: number;
 	imageUrl: string;
 	stats: Partial<StatBlock>;
+	calculationAttributes: CalculationAttribute[];
 	passiveName?: string;
 	passiveDescription?: string;
 }

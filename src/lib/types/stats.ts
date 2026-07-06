@@ -24,12 +24,18 @@ export interface StatBlock {
 	spellVampPct: number; // 0..1
 
 	movementSpeed: number;
+	movementSpeedPct: number; // 0.1 = +10%
+	controlDurationReductionPct: number; // 0..1
 
 	// Penetration: flat is subtracted before pct is applied.
 	physicalPenFlat: number;
 	physicalPenPct: number; // 0..1
 	magicPenFlat: number;
 	magicPenPct: number; // 0..1
+
+	basicAttackRangePct: number; // 0..1
+	maxCooldownReductionPct: number; // 0..1
+	adaptiveAttack: number;
 }
 
 /** A zeroed StatBlock — the additive identity for stat summation. */
@@ -50,9 +56,14 @@ export function emptyStatBlock(): StatBlock {
 		lifestealPct: 0,
 		spellVampPct: 0,
 		movementSpeed: 0,
+		movementSpeedPct: 0,
+		controlDurationReductionPct: 0,
 		physicalPenFlat: 0,
 		physicalPenPct: 0,
 		magicPenFlat: 0,
-		magicPenPct: 0
+		magicPenPct: 0,
+		basicAttackRangePct: 0,
+		maxCooldownReductionPct: 0,
+		adaptiveAttack: 0
 	};
 }

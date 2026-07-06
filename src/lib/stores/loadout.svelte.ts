@@ -21,6 +21,15 @@ import {
 	emptyModifierState,
 	type ModifierState
 } from '$lib/calc/apply-modifiers';
+import {
+	adjustTargetWithItemModifiers,
+	computeItemModifierStats,
+	computeItemPenetrationStats,
+	emptyItemModifierState,
+	itemDamageBonusPct,
+	itemBasicAttackExtraDamage,
+	type ItemModifierState
+} from '$lib/calc/apply-item-modifiers';
 
 export class Loadout {
 	hero = $state<Hero | null>(null);
@@ -32,6 +41,7 @@ export class Loadout {
 	tier2Talent = $state<Emblem | null>(null);
 	target = $state<StatBlock>(emptyStatBlock());
 	modifierState = $state<ModifierState>(emptyModifierState());
+	itemModifierState = $state<ItemModifierState>(emptyItemModifierState());
 	hasSkin = $state(false);
 
 	heroMod = $derived<HeroModConfig | null>(this.hero ? getHeroMod(this.hero.slug) : null);
@@ -112,6 +122,21 @@ export class Loadout {
 		return result;
 	});
 
+	preItemModifierStats = $derived(
+		sumStats([this.heroStats, this.baseBonus, this.itemStats, this.emblemStats, this.modifierBonus])
+	);
+
+	itemModifierBonus = $derived(
+		computeItemModifierStats(this.items, this.itemModifierState, {
+			level: this.level,
+			heroRole: this.hero?.role,
+			baseStats: this.preItemModifierStats,
+			target: this.target
+		})
+	);
+
+	itemPenetrationBonus = $derived(computeItemPenetrationStats(this.items, { target: this.target }));
+
 	/** Adjusted target defense after defense-shred modifier is applied. */
 	adjustedTarget = $derived.by<StatBlock>(() => {
 		const t = { ...this.target };
@@ -134,12 +159,10 @@ export class Loadout {
 				t.magicDefense = Math.max(0, t.magicDefense * (1 - clamped * pct) - magicReduction);
 			}
 		}
-		return t;
+		return adjustTargetWithItemModifiers(t, this.items, this.itemModifierState, this.level);
 	});
 
-	finalStats = $derived(
-		sumStats([this.heroStats, this.baseBonus, this.itemStats, this.emblemStats, this.modifierBonus])
-	);
+	finalStats = $derived(sumStats([this.preItemModifierStats, this.itemModifierBonus, this.itemPenetrationBonus]));
 
 	totalCost = $derived(this.items.reduce((sum, i) => sum + i.cost, 0));
 
@@ -166,7 +189,13 @@ export class Loadout {
 			// Note: enhanced BA CAN crit by default — crit version is handled in basicAttackCritDamage
 			return dmg;
 		}
-		const baseDmg = averageBasicAttack(this.finalStats, this.adjustedTarget, 0, undefined, rawBase);
+		const baseDmg = averageBasicAttack(
+			this.finalStats,
+			this.adjustedTarget,
+			itemDamageBonusPct(this.items, this.itemModifierState, 'physical', this.hero?.role),
+			undefined,
+			rawBase
+		);
 		const ampDmg = applyPassiveAmp(baseDmg, this.heroMod, this.modifierState);
 
 		if (this.heroMod?.passive?.type === 'basic-attack-hp-scaling') {
@@ -196,7 +225,7 @@ export class Loadout {
 		if (this.heroMod?.passive?.type === 'toggle-basic-atk-multiplier' && this.modifierState.onlyFastActive) {
 			return ampDmg * this.heroMod.passive.multiplier;
 		}
-		return ampDmg;
+		return ampDmg + itemBasicAttackExtraDamage(this.items, this.itemModifierState, this.finalStats, this.adjustedTarget, this.level, this.hero?.role);
 	});
 
 	basicAttackCritDamage = $derived.by(() => {
@@ -227,7 +256,8 @@ export class Loadout {
 			rawDamage: rawBase,
 			damageType: 'physical',
 			attacker: this.finalStats,
-			target: this.adjustedTarget
+			target: this.adjustedTarget,
+			bonusDmgPct: itemDamageBonusPct(this.items, this.itemModifierState, 'physical', this.hero?.role)
 		}) * (2 + this.finalStats.critDamagePct);
 		const ampCrit = applyPassiveAmp(baseCrit, this.heroMod, this.modifierState);
 
@@ -259,7 +289,7 @@ export class Loadout {
 			// Cannot crit when Only Fast is active — use non-crit damage instead
 			return this.basicAttackDamage;
 		}
-		return ampCrit;
+		return ampCrit + itemBasicAttackExtraDamage(this.items, this.itemModifierState, this.finalStats, this.adjustedTarget, this.level, this.hero?.role);
 	});
 
 	dps = $derived.by(() => {
@@ -274,7 +304,14 @@ export class Loadout {
 		if (this.heroMod?.passive?.type === 'toggle-enhanced-ba' && this.modifierState.baEnhancedActive) {
 			return this.basicAttackDamage * attacksPerSecond(this.finalStats);
 		}
-		const baseDps = basicAttackDps(this.finalStats, this.adjustedTarget, 1, rawBase);
+		const baseDps =
+			averageBasicAttack(
+				this.finalStats,
+				this.adjustedTarget,
+				itemDamageBonusPct(this.items, this.itemModifierState, 'physical', this.hero?.role),
+				undefined,
+				rawBase
+			) * attacksPerSecond(this.finalStats);
 		const ampDps = applyPassiveAmp(baseDps, this.heroMod, this.modifierState);
 
 		if (this.heroMod?.passive?.type === 'basic-attack-hp-scaling') {
@@ -305,7 +342,7 @@ export class Loadout {
 		if (this.heroMod?.passive?.type === 'toggle-basic-atk-multiplier' && this.modifierState.onlyFastActive) {
 			return ampDps * this.heroMod.passive.multiplier;
 		}
-		return ampDps;
+		return ampDps + itemBasicAttackExtraDamage(this.items, this.itemModifierState, this.finalStats, this.adjustedTarget, this.level, this.hero?.role) * attacksPerSecond(this.finalStats);
 	});
 
 	skillDamage(skillId: string): number {
@@ -335,7 +372,21 @@ export class Loadout {
 			const amp = computeConsumeAllStackAmp(this.heroMod.passive, this.modifierState.passiveStacks);
 			multiplier *= (1 + amp);
 		}
-		return heroSkillDamage(skill, this.finalStats, this.adjustedTarget, this.level, multiplier - 1, undefined, flatBonus);
+		const itemBonus = itemDamageBonusPct(
+			this.items,
+			this.itemModifierState,
+			skill.damageType === 'none' ? 'physical' : skill.damageType,
+			this.hero?.role
+		);
+		return heroSkillDamage(
+			skill,
+			this.finalStats,
+			this.adjustedTarget,
+			this.level,
+			multiplier - 1 + itemBonus,
+			undefined,
+			flatBonus
+		);
 	}
 
 	addItem(item: Item) {
@@ -373,6 +424,7 @@ export class Loadout {
 		this.tier2Talent = null;
 		this.target = emptyStatBlock();
 		this.modifierState = emptyModifierState();
+		this.itemModifierState = emptyItemModifierState();
 		this.hasSkin = false;
 	}
 }

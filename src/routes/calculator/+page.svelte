@@ -13,6 +13,7 @@
 	import ItemStatsTable from '$lib/components/calculator/ItemStatsTable.svelte';
 	import ItemSearchGrid from '$lib/components/calculator/ItemSearchGrid.svelte';
 	import PassiveModifier from '$lib/components/calculator/PassiveModifier.svelte';
+	import ItemModifierPanel from '$lib/components/calculator/ItemModifierPanel.svelte';
 	import EmblemSelector from '$lib/components/calculator/EmblemSelector.svelte';
 
 	import { SvelteSet } from 'svelte/reactivity';
@@ -896,12 +897,14 @@
 					>
 				</div>
 				<ItemSlotGrid
-					items={loadout.items}
-					onAddItem={(item) => loadout.addItem(item)}
-					onRemoveItem={(i) => loadout.removeItem(i)}
-					onMoveItem={(from, to) => loadout.moveItem(from, to)}
-				/>
+						items={loadout.items}
+						onAddItem={(item) => loadout.addItem(item)}
+						onRemoveItem={(i) => loadout.removeItem(i)}
+						onMoveItem={(from, to) => loadout.moveItem(from, to)}
+					/>
 			</div>
+
+			<ItemModifierPanel items={loadout.items} state={loadout.itemModifierState} />
 
 			<div class="border-t border-line pt-4">
 				<ItemSearchGrid

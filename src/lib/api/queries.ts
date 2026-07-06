@@ -1,6 +1,6 @@
 export const HERO_LIST_QUERY = `
 	query HeroesList {
-		heroes {
+		heroes(filter: { limit: 200 }) {
 			items {
 				_id
 				name
@@ -116,6 +116,23 @@ export const ITEMS_QUERY = `
 			description
 			story
 			tips
+			calculation_attributes {
+				key
+				value
+				min_value
+				max_value
+				value_type
+				scaling_stat
+				source
+				trigger
+				condition
+				target
+				duration
+				cooldown
+				max_stacks
+				cap
+				note
+			}
 		}
 	}
 `;
@@ -137,7 +154,7 @@ export const EMBLEMS_QUERY = `
 
 export const THEORYCRAFTER_QUERY = `
 	query TheorycrafterData {
-		heroes {
+		heroes(filter: { limit: 200 }) {
 			items {
 				_id
 				name
@@ -196,6 +213,23 @@ export const THEORYCRAFTER_QUERY = `
 			image
 			attributes
 			description
+			calculation_attributes {
+				key
+				value
+				min_value
+				max_value
+				value_type
+				scaling_stat
+				source
+				trigger
+				condition
+				target
+				duration
+				cooldown
+				max_stacks
+				cap
+				note
+			}
 		}
 		emblems {
 			_id

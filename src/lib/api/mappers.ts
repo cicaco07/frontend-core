@@ -1,5 +1,13 @@
 import { emptyStatBlock, type Hero, type HeroRole, type StatBlock } from '$lib/types';
-import type { Emblem, EmblemAttribute, Item, ItemCategory, ItemTier } from '$lib/types/equipment';
+import { sumStats } from '$lib/calc/formulas';
+import type {
+	CalculationAttribute,
+	Emblem,
+	EmblemAttribute,
+	Item,
+	ItemCategory,
+	ItemTier
+} from '$lib/types/equipment';
 import type { Build } from '$lib/types/build';
 
 export interface BackendBaseStat {
@@ -79,6 +87,7 @@ export interface BackendItem {
 	description?: string[] | null;
 	story?: string | null;
 	tips?: string | null;
+	calculation_attributes?: CalculationAttribute[] | null;
 }
 
 export interface BackendEmblem {
@@ -318,7 +327,92 @@ export function mapHero(hero: BackendHero): Hero {
 	};
 }
 
+function calculationAttributesToStats(attrs: CalculationAttribute[] = []): Partial<StatBlock> {
+	const stats: Partial<StatBlock> = {};
+	const add = (key: keyof StatBlock, value: number) => {
+		stats[key] = (stats[key] ?? 0) + value;
+	};
+
+	for (const attr of attrs) {
+		if (attr.target && attr.target !== 'self') continue;
+		if (attr.trigger !== 'always') continue;
+		if (typeof attr.value !== 'number') continue;
+
+		const asRatio = attr.value_type.includes('percent') ? attr.value / 100 : attr.value;
+		switch (attr.key) {
+			case 'physical_attack':
+				add('physicalAttack', attr.value_type.includes('percent') ? 0 : attr.value);
+				break;
+			case 'magic_power':
+				add('magicPower', attr.value_type.includes('percent') ? 0 : attr.value);
+				break;
+			case 'adaptive_attack':
+				add('adaptiveAttack', attr.value);
+				add('physicalAttack', attr.value);
+				add('magicPower', attr.value);
+				break;
+			case 'physical_defense':
+				add('physicalDefense', attr.value);
+				break;
+			case 'magic_defense':
+				add('magicDefense', attr.value);
+				break;
+			case 'hybrid_defense':
+				add('physicalDefense', attr.value);
+				add('magicDefense', attr.value);
+				break;
+			case 'hp':
+				add('hp', attr.value);
+				break;
+			case 'mana':
+				add('mana', attr.value);
+				break;
+			case 'hp_regen':
+				add('hpRegen', attr.value);
+				break;
+			case 'mana_regen':
+				add('manaRegen', attr.value);
+				break;
+			case 'attack_speed':
+				add('attackSpeedPct', asRatio);
+				break;
+			case 'critical_chance':
+			case 'crit_chance':
+				add('critChancePct', asRatio);
+				break;
+			case 'cooldown_reduction':
+				add('cooldownReductionPct', asRatio);
+				break;
+			case 'max_cooldown_reduction':
+				add('maxCooldownReductionPct', asRatio);
+				break;
+			case 'lifesteal':
+				add('lifestealPct', asRatio);
+				break;
+			case 'spell_vamp':
+				add('spellVampPct', asRatio);
+				break;
+			case 'movement_speed':
+				add('movementSpeed', attr.value_type.includes('percent') ? 0 : attr.value);
+				break;
+			case 'physical_penetration':
+				if (attr.value_type.includes('percent')) add('physicalPenPct', asRatio);
+				else add('physicalPenFlat', attr.value);
+				break;
+			case 'magic_penetration':
+				if (attr.value_type.includes('percent')) add('magicPenPct', asRatio);
+				else add('magicPenFlat', attr.value);
+				break;
+			case 'basic_attack_range':
+				add('basicAttackRangePct', asRatio);
+				break;
+		}
+	}
+	return stats;
+}
+
 export function mapItem(item: BackendItem): Item {
+	const calculationAttributes = item.calculation_attributes ?? [];
 	return {
 		id: item._id,
 		slug: slugify(item.name),
@@ -328,7 +422,8 @@ export function mapItem(item: BackendItem): Item {
 		tier: TIERS.find((t) => t === item.tier) ?? 'ETC',
 		cost: item.price,
 		imageUrl: item.image,
-		stats: parseStatStrings(item.attributes),
+		stats: sumStats([parseStatStrings(item.attributes), calculationAttributesToStats(calculationAttributes)]),
+		calculationAttributes,
 		passiveName: item.story ?? item.tips ?? undefined,
 		passiveDescription: item.description?.join(' ') ?? item.tips ?? undefined
 	};
