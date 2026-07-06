@@ -1236,6 +1236,19 @@
 						</div>
 					{/each}
 				</div>
+
+				<div class="mt-4 mb-2 flex items-center gap-1 text-xs font-semibold text-ink-faint">
+					Debuffs Applied by Hero Items
+				</div>
+				<div class="space-y-1">
+					{#each debuffStats as row (row.label)}
+						<div class="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-2 rounded px-1 py-0.5 text-sm">
+							<span class="font-mono-stat text-left text-ink tabular-nums">{round(row.value)}{row.suffix ?? ''}</span>
+							<span class="text-center text-ink-muted">{row.label}</span>
+							<span class="font-mono-stat text-right text-ink-faint tabular-nums">—</span>
+						</div>
+					{/each}
+				</div>
 			</div>
 
 			<div class="mt-6 w-full space-y-1 border-t border-line pt-4">
