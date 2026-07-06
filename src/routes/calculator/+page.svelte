@@ -515,6 +515,24 @@
 		physicalDefense: Math.max(-60, targetStats.physicalDefense - deffReduction)
 	});
 
+	function mitigation(defense: number): number {
+		return 120 / (120 + Math.max(-60, defense));
+	}
+
+	function effectiveHpValue(block: StatBlock, type: 'physical' | 'magic'): number {
+		const defense = type === 'physical' ? block.physicalDefense : block.magicDefense;
+		const reduction = block.damageReductionPct + (type === 'magic' ? block.magicDamageReductionPct : 0);
+		const hpPool = block.hp + block.shield + (block.reviveAvailable ? block.hp * 0.16 : 0);
+		return hpPool / mitigation(defense) / Math.max(0.01, 1 - reduction);
+	}
+
+	const survivabilityStats = $derived([
+		{ label: 'Physical EHP', value: effectiveHpValue(stats, 'physical') },
+		{ label: 'Magic EHP', value: effectiveHpValue(stats, 'magic') },
+		{ label: 'Target Physical EHP', value: effectiveHpValue(targetStats, 'physical') },
+		{ label: 'Target Magic EHP', value: effectiveHpValue(targetStats, 'magic') }
+	]);
+
 	const mainItemStats = $derived(loadout.itemStats);
 	const targetItemStats = $derived(targetLoadout.itemStats);
 
@@ -1233,6 +1251,19 @@
 									</div>
 								</div>
 							{/if}
+						</div>
+					{/each}
+				</div>
+
+				<div class="mt-4 mb-2 flex items-center gap-1 text-xs font-semibold text-ink-faint">
+					Effective HP
+				</div>
+				<div class="space-y-1">
+					{#each survivabilityStats as row (row.label)}
+						<div class="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-2 rounded px-1 py-0.5 text-sm">
+							<span class="font-mono-stat text-left text-ink tabular-nums">{row.label.startsWith('Target') ? '—' : round(row.value)}</span>
+							<span class="text-center text-ink-muted">{row.label.replace('Target ', '')}</span>
+							<span class="font-mono-stat text-right text-ink tabular-nums">{row.label.startsWith('Target') ? round(row.value) : '—'}</span>
 						</div>
 					{/each}
 				</div>
