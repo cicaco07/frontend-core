@@ -123,6 +123,10 @@ export function computeItemModifierStats(
 		result.magicDefense += hybridDefense;
 	}
 
+	if (hasItem(items, 'sky-piercer')) {
+		result.executeThresholdPct += 0.04 + stack(state, 'sky-piercer', 80) * 0.001;
+	}
+
 	return result;
 }
 

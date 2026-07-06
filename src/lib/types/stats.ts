@@ -42,6 +42,7 @@ export interface StatBlock {
 	damageReductionPct: number;
 	magicDamageReductionPct: number;
 	reviveAvailable: number;
+	executeThresholdPct: number;
 }
 
 /** A zeroed StatBlock — the additive identity for stat summation. */
@@ -76,6 +77,7 @@ export function emptyStatBlock(): StatBlock {
 		hpRegenPct: 0,
 		damageReductionPct: 0,
 		magicDamageReductionPct: 0,
-		reviveAvailable: 0
+		reviveAvailable: 0,
+		executeThresholdPct: 0
 	};
 }

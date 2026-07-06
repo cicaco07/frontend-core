@@ -69,6 +69,12 @@
 			label: 'Swift Crossbow - Impulse',
 			max: 5,
 			description: '+3% Attack Speed per stack.'
+		},
+		{
+			slug: 'sky-piercer',
+			label: 'Sky Piercer - Lifebane',
+			max: 80,
+			description: 'Execute threshold 4% + 0.1% per stack.'
 		}
 	];
 

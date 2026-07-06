@@ -541,7 +541,8 @@
 		| 'magicDefense'
 		| 'movementSpeed'
 		| 'movementSpeedPct'
-		| 'controlDurationReductionPct';
+		| 'controlDurationReductionPct'
+		| 'executeThresholdPct';
 
 	function getStatBreakdown(key: StatKey): { source: string; value: number }[] {
 		const sources: { source: string; value: number }[] = [];
@@ -654,6 +655,14 @@
 			suffix: '%',
 			key: 'magicPenPct',
 			isPct: true
+		},
+		{
+			label: 'Execute',
+			value: stats.executeThresholdPct * 100,
+			color: '#f87171',
+			suffix: '%',
+			key: 'executeThresholdPct',
+			isPct: true
 		}
 	]);
 
@@ -747,6 +756,14 @@
 			color: '#7b68ee',
 			suffix: '%',
 			key: 'magicPenPct',
+			isPct: true
+		},
+		{
+			label: 'Execute',
+			value: targetStats.executeThresholdPct * 100,
+			color: '#f87171',
+			suffix: '%',
+			key: 'executeThresholdPct',
 			isPct: true
 		}
 	]);
