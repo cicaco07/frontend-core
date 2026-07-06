@@ -16,6 +16,7 @@ export interface StatBlock {
 	magicDefense: number;
 
 	attackSpeedPct: number; // ratio over base, 0.25 = +25%
+	attackSpeedCapPct: number; // 5 = 500% cap display/metadata
 	critChancePct: number; // 0..1
 	critDamagePct: number; // bonus over the default 2.0x, e.g. 0.4 = +40%
 
@@ -36,6 +37,11 @@ export interface StatBlock {
 	basicAttackRangePct: number; // 0..1
 	maxCooldownReductionPct: number; // 0..1
 	adaptiveAttack: number;
+	shield: number;
+	hpRegenPct: number;
+	damageReductionPct: number;
+	magicDamageReductionPct: number;
+	reviveAvailable: number;
 }
 
 /** A zeroed StatBlock — the additive identity for stat summation. */
@@ -50,6 +56,7 @@ export function emptyStatBlock(): StatBlock {
 		physicalDefense: 0,
 		magicDefense: 0,
 		attackSpeedPct: 0,
+		attackSpeedCapPct: 0,
 		critChancePct: 0,
 		critDamagePct: 0,
 		cooldownReductionPct: 0,
@@ -64,6 +71,11 @@ export function emptyStatBlock(): StatBlock {
 		magicPenPct: 0,
 		basicAttackRangePct: 0,
 		maxCooldownReductionPct: 0,
-		adaptiveAttack: 0
+		adaptiveAttack: 0,
+		shield: 0,
+		hpRegenPct: 0,
+		damageReductionPct: 0,
+		magicDamageReductionPct: 0,
+		reviveAvailable: 0
 	};
 }

@@ -130,6 +130,7 @@ export class Loadout {
 		computeItemModifierStats(this.items, this.itemModifierState, {
 			level: this.level,
 			heroRole: this.hero?.role,
+			heroSlug: this.hero?.slug,
 			baseStats: this.preItemModifierStats,
 			target: this.target
 		})

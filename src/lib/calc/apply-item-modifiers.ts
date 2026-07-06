@@ -13,6 +13,7 @@ export interface ItemModifierState {
 export interface ItemModifierContext {
 	level: number;
 	heroRole?: HeroRole;
+	heroSlug?: string;
 	baseStats: StatBlock;
 	target: StatBlock;
 }
@@ -33,6 +34,17 @@ const stack = (state: ItemModifierState, slug: string, max: number) =>
 	clamp(state.itemStacks[slug] ?? 0, 0, max);
 const enabled = (state: ItemModifierState, slug: string) => state.itemToggles[slug] ?? false;
 const reducedWarAxeRole = (role?: HeroRole) => role === 'marksman' || role === 'mage' || role === 'support';
+const magicAdaptiveSlugs = new Set(['natan', 'kimmy', 'guinevere', 'silvanna', 'julian', 'gusion', 'karina', 'kaja', 'joy', 'esmeralda', 'harley']);
+const adaptiveTarget = (role?: HeroRole, slug?: string) => {
+	if (slug && magicAdaptiveSlugs.has(slug)) return 'magic';
+	return role === 'mage' || role === 'support' ? 'magic' : 'physical';
+};
+
+function addAdaptive(result: StatBlock, value: number, role?: HeroRole, slug?: string) {
+	result.adaptiveAttack += value;
+	if (adaptiveTarget(role, slug) === 'magic') result.magicPower += value;
+	else result.physicalAttack += value;
+}
 
 export function computeItemModifierStats(
 	items: Item[],
@@ -43,9 +55,7 @@ export function computeItemModifierStats(
 
 	if (hasItem(items, 'brute-force-breastplate')) {
 		const stacks = stack(state, 'brute-force-breastplate', 6);
-		result.adaptiveAttack += stacks * 6;
-		result.physicalAttack += stacks * 6;
-		result.magicPower += stacks * 6;
+		addAdaptive(result, stacks * 6, context.heroRole, context.heroSlug);
 		result.movementSpeedPct += stacks * 0.02;
 		if (stacks >= 6) result.controlDurationReductionPct += 0.15;
 	}
@@ -89,6 +99,8 @@ export function computeItemModifierStats(
 
 	if (hasItem(items, 'golden-staff')) {
 		result.attackSpeedPct += context.baseStats.critChancePct;
+		result.critChancePct -= context.baseStats.critChancePct;
+		result.attackSpeedCapPct = Math.max(result.attackSpeedCapPct, 5);
 		if (enabled(state, 'golden-staff')) result.attackSpeedPct += 0.8;
 	}
 
@@ -174,6 +186,7 @@ export function itemBasicAttackExtraDamage(
 	heroRole?: HeroRole
 ): number {
 	let extra = 0;
+	const attackEffectMultiplier = hasItem(items, 'golden-staff') && enabled(state, 'golden-staff') ? 3 : 1;
 	const add = (rawDamage: number, damageType: DamageType, canCrit = false) => {
 		let damage = rawDamage;
 		if (damageType !== 'true') {
@@ -188,11 +201,12 @@ export function itemBasicAttackExtraDamage(
 		}
 		extra += Math.max(0, damage);
 	};
+	const addAttackEffect = (rawDamage: number, damageType: DamageType) => add(rawDamage * attackEffectMultiplier, damageType);
 
-	if (hasItem(items, 'demon-hunter-sword') && enabled(state, 'demon-hunter-sword')) add(target.hp * 0.08, 'physical');
-	if (hasItem(items, 'feather-of-heaven') && enabled(state, 'feather-of-heaven')) add(50 + attacker.magicPower * 0.3, 'magic');
-	if (hasItem(items, 'corrosion-scythe') && enabled(state, 'corrosion-scythe')) add(80, 'physical');
-	if (hasItem(items, 'swift-crossbow') && enabled(state, 'swift-crossbow')) add(40, attacker.magicPower > attacker.physicalAttack ? 'magic' : 'physical');
+	if (hasItem(items, 'demon-hunter-sword') && enabled(state, 'demon-hunter-sword')) addAttackEffect(target.hp * 0.08, 'physical');
+	if (hasItem(items, 'feather-of-heaven') && enabled(state, 'feather-of-heaven')) addAttackEffect(50 + attacker.magicPower * 0.3, 'magic');
+	if (hasItem(items, 'corrosion-scythe') && enabled(state, 'corrosion-scythe')) addAttackEffect(80, 'physical');
+	if (hasItem(items, 'swift-crossbow') && enabled(state, 'swift-crossbow')) addAttackEffect(40, attacker.magicPower > attacker.physicalAttack ? 'magic' : 'physical');
 	if (hasItem(items, 'azure-blade') && enabled(state, 'azure-blade')) add(50, 'true');
 	if (hasItem(items, 'endless-battle') && enabled(state, 'endless-battle')) add(attacker.physicalAttack * 0.6, 'true');
 	if (hasItem(items, 'starlium-scythe') && enabled(state, 'starlium-scythe')) add(100 + attacker.magicPower, 'true');

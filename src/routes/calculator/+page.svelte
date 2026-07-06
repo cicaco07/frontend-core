@@ -527,6 +527,7 @@
 		| 'physicalAttack'
 		| 'magicPower'
 		| 'attackSpeedPct'
+		| 'attackSpeedCapPct'
 		| 'critChancePct'
 		| 'lifestealPct'
 		| 'spellVampPct'
@@ -592,6 +593,14 @@
 			color: '#ffb86b',
 			suffix: '%',
 			key: 'attackSpeedPct',
+			isPct: true
+		},
+		{
+			label: 'ATK SPD Cap',
+			value: stats.attackSpeedCapPct * 100,
+			color: '#ffb86b',
+			suffix: '%',
+			key: 'attackSpeedCapPct',
 			isPct: true
 		},
 		{
