@@ -13,8 +13,12 @@ const EMPTY_RELATIONS: HeroRelations = {
 
 export const load: PageLoad = async ({ params, fetch }) => {
 	try {
-		const list = await gqlRequest<{ heroes: BackendHero[] }>(HERO_LIST_QUERY, undefined, fetch);
-		const summary = list.heroes.map(mapHero).find((item) => item.slug === params.slug);
+		const list = await gqlRequest<{ heroes: { items: BackendHero[] } }>(
+			HERO_LIST_QUERY,
+			undefined,
+			fetch
+		);
+		const summary = list.heroes.items.map(mapHero).find((item) => item.slug === params.slug);
 		if (!summary) throw error(404, 'Hero not found');
 
 		const detail = await gqlRequest<{ hero: BackendHero }, { id: string }>(

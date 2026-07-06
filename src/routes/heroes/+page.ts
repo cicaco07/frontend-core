@@ -5,13 +5,13 @@ import { HERO_LIST_QUERY } from '$lib/api/queries';
 import { mapHero, type BackendHero } from '$lib/api/mappers';
 
 interface HeroesListData {
-	heroes: BackendHero[];
+	heroes: { items: BackendHero[] };
 }
 
 export const load: PageLoad = async ({ fetch }) => {
 	try {
 		const data = await gqlRequest<HeroesListData>(HERO_LIST_QUERY, undefined, fetch);
-		const heroes = data.heroes.map(mapHero);
+		const heroes = data.heroes.items.map(mapHero);
 		return { heroes };
 	} catch {
 		return { heroes: [] as Hero[] };
