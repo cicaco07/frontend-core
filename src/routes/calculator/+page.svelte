@@ -542,7 +542,12 @@
 		| 'movementSpeed'
 		| 'movementSpeedPct'
 		| 'controlDurationReductionPct'
-		| 'executeThresholdPct';
+		| 'executeThresholdPct'
+		| 'shield'
+		| 'hpRegenPct'
+		| 'damageReductionPct'
+		| 'magicDamageReductionPct'
+		| 'reviveAvailable';
 
 	function getStatBreakdown(key: StatKey): { source: string; value: number }[] {
 		const sources: { source: string; value: number }[] = [];
@@ -692,7 +697,33 @@
 			suffix: '%',
 			key: 'controlDurationReductionPct',
 			isPct: true
-		}
+		},
+		{ label: 'Shield', value: stats.shield, color: '#93c5fd', key: 'shield' },
+		{
+			label: 'HP Regen %',
+			value: stats.hpRegenPct * 100,
+			color: '#5fb38a',
+			suffix: '%',
+			key: 'hpRegenPct',
+			isPct: true
+		},
+		{
+			label: 'DMG RED',
+			value: stats.damageReductionPct * 100,
+			color: '#93c5fd',
+			suffix: '%',
+			key: 'damageReductionPct',
+			isPct: true
+		},
+		{
+			label: 'Magic RED',
+			value: stats.magicDamageReductionPct * 100,
+			color: '#93c5fd',
+			suffix: '%',
+			key: 'magicDamageReductionPct',
+			isPct: true
+		},
+		{ label: 'Revive', value: stats.reviveAvailable, color: '#93c5fd', key: 'reviveAvailable' }
 	]);
 
 	const targetOffenseStats = $derived<StatRow[]>([
@@ -794,7 +825,33 @@
 			suffix: '%',
 			key: 'controlDurationReductionPct',
 			isPct: true
-		}
+		},
+		{ label: 'Shield', value: targetStats.shield, color: '#93c5fd', key: 'shield' },
+		{
+			label: 'HP Regen %',
+			value: targetStats.hpRegenPct * 100,
+			color: '#5fb38a',
+			suffix: '%',
+			key: 'hpRegenPct',
+			isPct: true
+		},
+		{
+			label: 'DMG RED',
+			value: targetStats.damageReductionPct * 100,
+			color: '#93c5fd',
+			suffix: '%',
+			key: 'damageReductionPct',
+			isPct: true
+		},
+		{
+			label: 'Magic RED',
+			value: targetStats.magicDamageReductionPct * 100,
+			color: '#93c5fd',
+			suffix: '%',
+			key: 'magicDamageReductionPct',
+			isPct: true
+		},
+		{ label: 'Revive', value: targetStats.reviveAvailable, color: '#93c5fd', key: 'reviveAvailable' }
 	]);
 
 	function selectMainEmblem(slug: string) {

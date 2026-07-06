@@ -91,6 +91,12 @@
 		{ slug: 'windtalker', label: 'Windtalker - Typhoon', description: 'Basic Attack proc magic damage level-scaled dan dapat crit.' },
 		{ slug: 'wishing-lantern', label: 'Wishing Lantern - Butterfly Goddess', description: 'Proc 10% target current HP sebagai Magic Damage.' },
 		{ slug: 'golden-staff', label: 'Golden Staff - Endless Strike', description: 'Next Basic Attack mendapat +80% Attack Speed. Crit Chance juga dikonversi menjadi Attack Speed.' },
+		{ slug: 'athenas-shield', label: "Athena's Shield - Shield", description: '+25% Magic Damage Reduction aktif.' },
+		{ slug: 'guardian-helmet', label: 'Guardian Helmet - Out of Combat', description: 'Aktif: 2.5% Max HP Regen/s. Nonaktif: 0.5% Max HP Regen/s.' },
+		{ slug: 'blood-wings', label: 'Blood Wings - Guard', description: 'Shield 800 + 100% Magic Power dan +30 Movement Speed.' },
+		{ slug: 'magic-blade', label: 'Magic Blade - Lifeline', description: 'HP rendah: shield 60 x level dan +50% Movement Speed.' },
+		{ slug: 'immortality', label: 'Immortality - Immortal', description: 'Revive tersedia dan shield scaling level.' },
+		{ slug: 'queens-wings', label: "Queen's Wings - Demonize", description: 'HP rendah: +30% Damage Reduction.' },
 		{
 			slug: 'berserkers-fury',
 			label: "Berserker's Fury - Doom",

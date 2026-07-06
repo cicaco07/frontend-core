@@ -127,6 +127,34 @@ export function computeItemModifierStats(
 		result.executeThresholdPct += 0.04 + stack(state, 'sky-piercer', 80) * 0.001;
 	}
 
+	if (hasItem(items, 'athenas-shield') && enabled(state, 'athenas-shield')) {
+		result.magicDamageReductionPct += 0.25;
+	}
+
+	if (hasItem(items, 'guardian-helmet')) {
+		result.hpRegenPct += enabled(state, 'guardian-helmet') ? 0.025 : 0.005;
+	}
+
+	if (hasItem(items, 'blood-wings') && enabled(state, 'blood-wings')) {
+		result.shield += 800 + context.baseStats.magicPower;
+		result.movementSpeed += 30;
+	}
+
+	if (hasItem(items, 'magic-blade') && enabled(state, 'magic-blade')) {
+		result.shield += 60 * context.level;
+		result.movementSpeedPct += 0.5;
+	}
+
+	if (hasItem(items, 'immortality') && enabled(state, 'immortality')) {
+		const t = clamp((context.level - 1) / 14, 0, 1);
+		result.reviveAvailable = 1;
+		result.shield += 220 + (1200 - 220) * t;
+	}
+
+	if (hasItem(items, 'queens-wings') && enabled(state, 'queens-wings')) {
+		result.damageReductionPct += 0.3;
+	}
+
 	return result;
 }
 
