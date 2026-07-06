@@ -140,11 +140,15 @@
 	const activeToggleConfigs = $derived(TOGGLE_CONFIGS.filter((config) => hasItem(config.slug)));
 	const showSeaHalberd = $derived(hasItem('sea-halberd'));
 	const showQueensWings = $derived(hasItem('queens-wings'));
+	const showTargetCurrentHp = $derived(
+		hasItem('demon-hunter-sword') || hasItem('wishing-lantern') || hasItem('sky-piercer')
+	);
 	const hasModifiers = $derived(
 		activeStackConfigs.length > 0 ||
 			activeToggleConfigs.length > 0 ||
 			showSeaHalberd ||
-			showQueensWings
+			showQueensWings ||
+			showTargetCurrentHp
 	);
 
 	function setStack(slug: string, value: number) {
@@ -213,6 +217,32 @@
 					</span>
 				</label>
 			{/each}
+
+			{#if showTargetCurrentHp}
+				<label class="block rounded-xl border border-line bg-surface/60 p-3">
+					<div class="mb-2 flex items-center justify-between gap-3">
+						<div>
+							<p class="text-xs font-bold text-ink">Target Current HP</p>
+							<p class="text-[10px] leading-snug text-ink-faint">Dipakai Demon Hunter Sword, Wishing Lantern, dan evaluasi execute Sky Piercer.</p>
+						</div>
+						<span class="font-mono-stat rounded-lg bg-accent/10 px-2 py-1 text-xs text-accent">
+							{Math.round(state.targetCurrentHpPct * 100)}% HP
+						</span>
+					</div>
+					<input
+						type="range"
+						min="1"
+						max="100"
+						step="1"
+						value={Math.round(state.targetCurrentHpPct * 100)}
+						oninput={(event) => (state.targetCurrentHpPct = Number(event.currentTarget.value) / 100)}
+						class="w-full accent-accent"
+					/>
+					<div class="mt-1 flex justify-between text-[10px] text-ink-faint">
+						<span>1%</span><span>100%</span>
+					</div>
+				</label>
+			{/if}
 
 			{#if showSeaHalberd}
 				<label class="flex cursor-pointer items-start gap-3 rounded-xl border border-line bg-surface/60 p-3">

@@ -7,6 +7,7 @@ export interface ItemModifierState {
 	itemToggles: Record<string, boolean>;
 	targetHigherExtraHp: boolean;
 	targetLowHp: boolean;
+	targetCurrentHpPct: number;
 	selfHpPct: number;
 }
 
@@ -24,6 +25,7 @@ export function emptyItemModifierState(): ItemModifierState {
 		itemToggles: {},
 		targetHigherExtraHp: false,
 		targetLowHp: false,
+		targetCurrentHpPct: 1,
 		selfHpPct: 1
 	};
 }
@@ -231,6 +233,7 @@ export function itemBasicAttackExtraDamage(
 	heroRole?: HeroRole
 ): number {
 	let extra = 0;
+	const targetCurrentHp = target.hp * clamp(state.targetCurrentHpPct, 0.01, 1);
 	const attackEffectMultiplier = hasItem(items, 'golden-staff') && enabled(state, 'golden-staff') ? 3 : 1;
 	const add = (rawDamage: number, damageType: DamageType, canCrit = false) => {
 		let damage = rawDamage;
@@ -248,7 +251,7 @@ export function itemBasicAttackExtraDamage(
 	};
 	const addAttackEffect = (rawDamage: number, damageType: DamageType) => add(rawDamage * attackEffectMultiplier, damageType);
 
-	if (hasItem(items, 'demon-hunter-sword') && enabled(state, 'demon-hunter-sword')) addAttackEffect(target.hp * 0.08, 'physical');
+	if (hasItem(items, 'demon-hunter-sword') && enabled(state, 'demon-hunter-sword')) addAttackEffect(targetCurrentHp * 0.08, 'physical');
 	if (hasItem(items, 'feather-of-heaven') && enabled(state, 'feather-of-heaven')) addAttackEffect(50 + attacker.magicPower * 0.3, 'magic');
 	if (hasItem(items, 'corrosion-scythe') && enabled(state, 'corrosion-scythe')) addAttackEffect(80, 'physical');
 	if (hasItem(items, 'swift-crossbow') && enabled(state, 'swift-crossbow')) addAttackEffect(40, attacker.magicPower > attacker.physicalAttack ? 'magic' : 'physical');
@@ -264,6 +267,6 @@ export function itemBasicAttackExtraDamage(
 		const t = clamp((level - 1) / 14, 0, 1);
 		add(150 + (362 - 150) * t, 'magic', true);
 	}
-	if (hasItem(items, 'wishing-lantern') && enabled(state, 'wishing-lantern')) add(target.hp * 0.1, 'magic');
+	if (hasItem(items, 'wishing-lantern') && enabled(state, 'wishing-lantern')) add(targetCurrentHp * 0.1, 'magic');
 	return extra;
 }
