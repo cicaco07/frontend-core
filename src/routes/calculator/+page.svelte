@@ -538,7 +538,9 @@
 		| 'mana'
 		| 'physicalDefense'
 		| 'magicDefense'
-		| 'movementSpeed';
+		| 'movementSpeed'
+		| 'movementSpeedPct'
+		| 'controlDurationReductionPct';
 
 	function getStatBreakdown(key: StatKey): { source: string; value: number }[] {
 		const sources: { source: string; value: number }[] = [];
@@ -656,7 +658,23 @@
 			key: 'physicalDefense'
 		},
 		{ label: 'Magic DEF', value: stats.magicDefense, color: '#b25c8f', key: 'magicDefense' },
-		{ label: 'Move SPD', value: stats.movementSpeed, color: '#c9a24a', key: 'movementSpeed' }
+		{ label: 'Move SPD', value: stats.movementSpeed * (1 + stats.movementSpeedPct), color: '#c9a24a', key: 'movementSpeed' },
+		{
+			label: 'Move SPD %',
+			value: stats.movementSpeedPct * 100,
+			color: '#c9a24a',
+			suffix: '%',
+			key: 'movementSpeedPct',
+			isPct: true
+		},
+		{
+			label: 'Control RED',
+			value: stats.controlDurationReductionPct * 100,
+			color: '#c9a24a',
+			suffix: '%',
+			key: 'controlDurationReductionPct',
+			isPct: true
+		}
 	]);
 
 	const targetOffenseStats = $derived<StatRow[]>([
@@ -734,7 +752,23 @@
 			key: 'physicalDefense'
 		},
 		{ label: 'Magic DEF', value: targetStats.magicDefense, color: '#b25c8f', key: 'magicDefense' },
-		{ label: 'Move SPD', value: targetStats.movementSpeed, color: '#c9a24a', key: 'movementSpeed' }
+		{ label: 'Move SPD', value: targetStats.movementSpeed * (1 + targetStats.movementSpeedPct), color: '#c9a24a', key: 'movementSpeed' },
+		{
+			label: 'Move SPD %',
+			value: targetStats.movementSpeedPct * 100,
+			color: '#c9a24a',
+			suffix: '%',
+			key: 'movementSpeedPct',
+			isPct: true
+		},
+		{
+			label: 'Control RED',
+			value: targetStats.controlDurationReductionPct * 100,
+			color: '#c9a24a',
+			suffix: '%',
+			key: 'controlDurationReductionPct',
+			isPct: true
+		}
 	]);
 
 	function selectMainEmblem(slug: string) {

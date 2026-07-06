@@ -51,6 +51,24 @@
 			label: 'Genius Wand',
 			max: 3,
 			description: 'Mengurangi Magic Defense target per stack.'
+		},
+		{
+			slug: 'feather-of-heaven',
+			label: 'Feather of Heaven - Impulse',
+			max: 5,
+			description: '+6% Attack Speed per stack.'
+		},
+		{
+			slug: 'corrosion-scythe',
+			label: 'Corrosion Scythe - Impulse',
+			max: 5,
+			description: '+6% Attack Speed per stack.'
+		},
+		{
+			slug: 'swift-crossbow',
+			label: 'Swift Crossbow - Impulse',
+			max: 5,
+			description: '+3% Attack Speed per stack.'
 		}
 	];
 
@@ -66,6 +84,7 @@
 		{ slug: 'thunder-belt', label: 'Thunder Belt - Thunderbolt', description: 'Basic Attack proc +50 + Physical Defense + Magic Defense True Damage.' },
 		{ slug: 'windtalker', label: 'Windtalker - Typhoon', description: 'Basic Attack proc magic damage level-scaled dan dapat crit.' },
 		{ slug: 'wishing-lantern', label: 'Wishing Lantern - Butterfly Goddess', description: 'Proc 10% target current HP sebagai Magic Damage.' },
+		{ slug: 'golden-staff', label: 'Golden Staff - Endless Strike', description: 'Next Basic Attack mendapat +80% Attack Speed. Crit Chance juga dikonversi menjadi Attack Speed.' },
 		{
 			slug: 'berserkers-fury',
 			label: "Berserker's Fury - Doom",

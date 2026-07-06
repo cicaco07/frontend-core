@@ -75,6 +75,23 @@ export function computeItemModifierStats(
 		result.magicDefense += perStack * stacks;
 	}
 
+	if (hasItem(items, 'feather-of-heaven')) {
+		result.attackSpeedPct += stack(state, 'feather-of-heaven', 5) * 0.06;
+	}
+
+	if (hasItem(items, 'corrosion-scythe')) {
+		result.attackSpeedPct += stack(state, 'corrosion-scythe', 5) * 0.06;
+	}
+
+	if (hasItem(items, 'swift-crossbow')) {
+		result.attackSpeedPct += stack(state, 'swift-crossbow', 5) * 0.03;
+	}
+
+	if (hasItem(items, 'golden-staff')) {
+		result.attackSpeedPct += context.baseStats.critChancePct;
+		if (enabled(state, 'golden-staff')) result.attackSpeedPct += 0.8;
+	}
+
 	if (hasItem(items, 'berserkers-fury') && enabled(state, 'berserkers-fury')) {
 		result.physicalAttack += context.baseStats.physicalAttack * 0.05;
 	}
