@@ -800,6 +800,14 @@
 			isPct: true
 		},
 		{
+			label: 'ATK SPD Cap',
+			value: targetStats.attackSpeedCapPct * 100,
+			color: '#ffb86b',
+			suffix: '%',
+			key: 'attackSpeedCapPct',
+			isPct: true
+		},
+		{
 			label: 'Crit Chance',
 			value: targetStats.critChancePct * 100,
 			color: '#f4f7ff',
@@ -1078,7 +1086,11 @@
 					/>
 			</div>
 
-			<ItemModifierPanel items={loadout.items} state={loadout.itemModifierState} />
+			<ItemModifierPanel
+				items={loadout.items}
+				state={loadout.itemModifierState}
+				targetMaxHp={targetStats.hp}
+			/>
 
 			<div class="border-t border-line pt-4">
 				<ItemSearchGrid

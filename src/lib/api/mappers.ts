@@ -112,6 +112,21 @@ function slugify(value: string): string {
 		.replace(/(^-|-$)/g, '');
 }
 
+const ROLE_ALIASES: Record<string, HeroRole> = {
+	tank: 'tank',
+	fighter: 'fighter',
+	warrior: 'fighter',
+	assassin: 'assassin',
+	mage: 'mage',
+	magician: 'mage',
+	marksman: 'marksman',
+	marks: 'marksman',
+	mm: 'marksman',
+	adc: 'marksman',
+	support: 'support',
+	healer: 'support'
+};
+
 function normalizeRole(role: string[] | string | undefined): HeroRole {
 	const raw = Array.isArray(role) ? role[0] : role;
 	if (!raw) return 'fighter';
@@ -119,21 +134,13 @@ function normalizeRole(role: string[] | string | undefined): HeroRole {
 		.toLowerCase()
 		.trim()
 		.replace(/[^a-z]/g, '');
-	const ROLE_ALIASES: Record<string, HeroRole> = {
-		tank: 'tank',
-		fighter: 'fighter',
-		warrior: 'fighter',
-		assassin: 'assassin',
-		mage: 'mage',
-		magician: 'mage',
-		marksman: 'marksman',
-		marks: 'marksman',
-		mm: 'marksman',
-		adc: 'marksman',
-		support: 'support',
-		healer: 'support'
-	};
 	return ROLE_ALIASES[slug] ?? ROLE_ALIASES[raw.toLowerCase().trim()] ?? 'fighter';
+}
+
+function normalizeRoles(role: string[] | string | undefined): HeroRole[] {
+	const raw = Array.isArray(role) ? role : role ? [role] : [];
+	const roles = raw.map((r) => normalizeRole(r));
+	return [...new Set(roles)].slice(0, 2);
 }
 
 function normalizeCategory(type: string | undefined, tag?: string | null): ItemCategory {
@@ -277,12 +284,14 @@ function parseSkillDetailAttributes(
 }
 
 export function mapHero(hero: BackendHero): Hero {
+	const roles = normalizeRoles(hero.type);
 	return {
 		id: hero._id,
 		slug: slugify(hero.name),
 		name: hero.name,
-		role: normalizeRole(hero.type),
-		lanes: Array.isArray(hero.role) ? hero.role : hero.role ? [hero.role] : [],
+		role: roles[0] ?? 'fighter',
+		roles,
+		lanes: (Array.isArray(hero.role) ? hero.role : hero.role ? [hero.role] : []).slice(0, 2),
 		imageUrl: hero.image || hero.avatar,
 		avatarUrl: hero.avatar || hero.image,
 		baseStats: mapBaseStat(hero.baseStat),

@@ -129,10 +129,12 @@
 
 	let {
 		items,
-		state
+		state,
+		targetMaxHp = 0
 	}: {
 		items: Item[];
 		state: ItemModifierState;
+		targetMaxHp?: number;
 	} = $props();
 
 	const hasItem = (slug: string) => items.some((item) => item.slug === slug);
@@ -140,9 +142,14 @@
 	const activeToggleConfigs = $derived(TOGGLE_CONFIGS.filter((config) => hasItem(config.slug)));
 	const showSeaHalberd = $derived(hasItem('sea-halberd'));
 	const showQueensWings = $derived(hasItem('queens-wings'));
+	const showSkyPiercer = $derived(hasItem('sky-piercer'));
 	const showTargetCurrentHp = $derived(
 		hasItem('demon-hunter-sword') || hasItem('wishing-lantern') || hasItem('sky-piercer')
 	);
+	const skyPiercerStacks = $derived(state.itemStacks['sky-piercer'] ?? 0);
+	const skyPiercerThresholdPct = $derived(0.04 + Math.min(Math.max(skyPiercerStacks, 0), 80) * 0.001);
+	const skyPiercerExecuteHp = $derived(targetMaxHp * skyPiercerThresholdPct);
+	const skyPiercerExecutable = $derived(state.targetCurrentHpPct <= skyPiercerThresholdPct);
 	const hasModifiers = $derived(
 		activeStackConfigs.length > 0 ||
 			activeToggleConfigs.length > 0 ||
@@ -242,6 +249,34 @@
 						<span>1%</span><span>100%</span>
 					</div>
 				</label>
+			{/if}
+
+			{#if showSkyPiercer}
+				<div class="rounded-xl border border-line bg-surface/60 p-3">
+					<div class="mb-2 flex items-center justify-between gap-3">
+						<div>
+							<p class="text-xs font-bold text-ink">Sky Piercer Execute</p>
+							<p class="text-[10px] leading-snug text-ink-faint">Threshold: 4% + 0.1% per stack. Target akan tereksekusi jika current HP berada di bawah nilai ini.</p>
+						</div>
+						<span
+							class={`font-mono-stat rounded-lg px-2 py-1 text-xs ${
+								skyPiercerExecutable ? 'bg-red-500 text-white' : 'bg-accent/10 text-accent'
+							}`}
+						>
+							{skyPiercerExecutable ? 'Executable' : 'Not yet'}
+						</span>
+					</div>
+					<div class="grid grid-cols-2 gap-2 text-[11px] text-ink-faint">
+						<div>
+							<span class="block">Execute threshold</span>
+							<span class="font-mono-stat text-ink">{(skyPiercerThresholdPct * 100).toFixed(1)}%</span>
+						</div>
+						<div>
+							<span class="block">Execute HP</span>
+							<span class="font-mono-stat text-ink">{Math.round(skyPiercerExecuteHp)}</span>
+						</div>
+					</div>
+				</div>
 			{/if}
 
 			{#if showSeaHalberd}

@@ -2,233 +2,147 @@
 	import { resolve } from '$app/paths';
 	import heroImage from '$lib/../assets/landing/novaria.jpg';
 	import miyaImage from '$lib/../assets/landing/Miya_upscayl_1x_upscayl-standard-4x.png';
+
+	const features = [
+		{
+			title: 'Database Hero Lengkap & Build Terbaru',
+			desc: 'Temukan statistik lengkap, role, lane, item, emblem, dan inspirasi build untuk 124+ hero.',
+			href: '/heroes',
+			cta: 'Lihat Semua Hero →'
+		},
+		{
+			title: 'Kalkulator Damage Real-Time',
+			desc: 'Simulasikan damage, ketahanan, skill level, item, emblem, dan target lawan dalam satu workspace.',
+			href: '/calculator',
+			cta: 'Coba Kalkulator →'
+		},
+		{
+			title: 'Analisis Turnamen & Meta',
+			desc: 'Pantau tren kompetitif, matchup populer, dan pola build dari scene Mobile Legends.',
+			href: '/tournaments',
+			cta: 'Lihat Turnamen →'
+		}
+	] as const;
 </script>
 
-<section class="relative min-h-screen overflow-hidden">
-	<div class="absolute inset-0 z-0">
-		<img src={heroImage} alt="" class="h-full w-full object-cover object-[75%_center]" />
-		<div class="absolute inset-0 bg-linear-to-r from-bg via-bg/85 to-bg/15"></div>
-	</div>
+<section class="relative isolate overflow-hidden px-4 pt-28 pb-16 sm:px-6 lg:min-h-screen lg:pt-32">
+	<img src={heroImage} alt="" class="absolute inset-0 -z-20 h-full w-full object-cover object-[75%_center] opacity-45" />
+	<div class="absolute inset-0 -z-10 bg-linear-to-r from-bg via-bg/90 to-bg/45"></div>
+	<div class="absolute top-28 right-4 -z-10 h-72 w-72 rounded-full bg-accent/20 blur-3xl"></div>
 
-	<div class="relative z-10 mx-auto flex min-h-screen max-w-7xl items-center px-4 pt-14 sm:px-6">
-		<div class="max-w-xl space-y-7">
-			<p
-				class="font-display inline-flex rounded-full border border-line bg-surface/80 px-4 py-1.5 text-xs font-bold tracking-[0.22em] text-accent uppercase"
-			>
-				MOBILE LEGENDS · KALKULATOR DAMAGE
+	<div class="mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[0.9fr_1.1fr]">
+		<div class="space-y-7">
+			<p class="font-display inline-flex rounded-full border border-accent/30 bg-surface/75 px-4 py-1.5 text-xs font-bold tracking-[0.22em] text-accent uppercase backdrop-blur">
+				Mobile Legends · Damage Calculator
 			</p>
 			<div class="space-y-5">
-				<h1
-					class="font-display max-w-[600px] text-5xl leading-[0.96] font-bold tracking-tight text-ink sm:text-7xl"
-				>
-					Bangun. Bandingkan. Menangkan.
+				<h1 class="font-display max-w-2xl text-5xl leading-[0.94] font-black tracking-tight text-ink uppercase sm:text-7xl lg:text-8xl">
+					Bangun.<br />Bandingkan.<br />Menangkan.
 				</h1>
-				<p class="max-w-xl text-base leading-8 text-ink-muted">
-					Rancang build optimal, hitung damage & ketahanan secara real-time, dan kuasai setiap
-					matchup sebelum masuk ke land of dawn.
+				<p class="max-w-xl text-base leading-8 text-ink-muted sm:text-lg">
+					Rancang build optimal, hitung damage & ketahanan secara real-time, dan kuasai
+					setiap matchup sebelum masuk ke Land of Dawn.
 				</p>
 			</div>
 			<div class="flex flex-wrap gap-3">
-				<a
-					href={resolve('/calculator')}
-					class="rounded-full bg-accent px-6 py-3 text-sm font-bold text-bg shadow-[0_16px_44px_rgb(255_134_91/0.24)] transition hover:-translate-y-0.5 hover:bg-gold"
-				>
+				<a href={resolve('/calculator')} class="rounded-full bg-accent px-6 py-3 text-sm font-bold text-bg shadow-[0_18px_48px_rgb(255_134_91/0.28)] transition hover:-translate-y-0.5 hover:bg-gold">
 					Mulai Kalkulator
 				</a>
-				<a
-					href={resolve('/heroes')}
-					class="rounded-full border border-line-strong bg-surface/70 px-6 py-3 text-sm font-semibold text-ink transition hover:border-accent hover:text-accent"
-				>
+				<a href={resolve('/heroes')} class="rounded-full border border-accent/45 bg-surface/55 px-6 py-3 text-sm font-semibold text-ink backdrop-blur transition hover:border-accent hover:text-accent">
 					Jelajahi Heroes
 				</a>
 			</div>
 		</div>
-	</div>
-</section>
 
-<section class="relative min-h-screen overflow-hidden">
-	<div class="mx-auto grid min-h-screen max-w-7xl items-center px-4 sm:px-6 lg:grid-cols-2">
-		<div class="space-y-6 py-20">
-			<p
-				class="font-display inline-flex rounded-full border border-role-marksman/30 bg-role-marksman/10 px-3 py-1 text-[10px] font-bold tracking-[0.2em] text-role-marksman uppercase"
-			>
-				Database
-			</p>
-			<h2 class="font-display text-4xl leading-tight font-bold text-ink sm:text-5xl">
-				124+ Hero Lengkap
-			</h2>
-			<p class="max-w-md text-base leading-7 text-ink-muted">
-				Base stats, skill scaling, role, lane, dan matchup untuk seluruh hero Mobile Legends. Saring
-				berdasarkan role atau cari langsung.
-			</p>
-			<a
-				href={resolve('/heroes')}
-				class="inline-block rounded-full border border-role-marksman/40 bg-role-marksman/10 px-5 py-2.5 text-sm font-semibold text-role-marksman transition hover:bg-role-marksman hover:text-white"
-			>
-				Lihat Heroes →
-			</a>
-		</div>
-		<div class="relative flex items-center justify-center py-12">
-			<div class="relative w-full max-w-md">
-				<div
-					class="absolute inset-0 scale-95 -rotate-3 rounded-3xl bg-role-marksman/10 blur-2xl"
-				></div>
-				<img
-					src={miyaImage}
-					alt="Miya"
-					class="relative w-full rounded-2xl object-cover shadow-2xl shadow-black/30"
-				/>
-			</div>
-		</div>
-	</div>
-</section>
-
-<section class="relative min-h-screen overflow-hidden">
-	<div class="mx-auto grid min-h-screen max-w-7xl items-center px-4 sm:px-6 lg:grid-cols-2">
-		<div class="relative flex items-center justify-center py-12 lg:order-first">
-			<div class="relative h-80 w-full max-w-md overflow-hidden rounded-2xl border border-line">
-				<div
-					class="absolute inset-0 bg-linear-to-br from-accent-2/20 via-surface-3 to-accent-2/5"
-				></div>
-				<div
-					class="relative flex h-full flex-col items-center justify-center gap-4 p-8 text-center"
-				>
-					<div class="flex gap-3">
-						<span class="size-14 rounded-xl border border-line bg-surface-3"></span>
-						<span class="size-14 rounded-xl border border-line bg-surface-3"></span>
-						<span class="size-14 rounded-xl border border-line bg-surface-3"></span>
-						<span class="size-14 rounded-xl border border-line bg-surface-3"></span>
-						<span class="size-14 rounded-xl border border-line bg-surface-3"></span>
+		<div class="relative mx-auto w-full max-w-2xl lg:rotate-2">
+			<div class="absolute inset-0 rounded-[2rem] bg-accent/20 blur-2xl"></div>
+			<div class="relative overflow-hidden rounded-[2rem] border border-line-strong/60 bg-surface/78 p-4 shadow-2xl shadow-black/35 backdrop-blur-xl">
+				<div class="mb-4 flex items-center justify-between">
+					<div>
+						<p class="font-display text-lg font-bold text-ink">Kalkulator Damage</p>
+						<p class="text-xs text-ink-muted">Lancelot vs Alpha</p>
 					</div>
-					<span class="size-16 rounded-full border-2 border-dashed border-accent-2/40"></span>
-					<div class="space-y-1.5">
-						<div class="h-2 w-24 rounded bg-accent-2/20"></div>
-						<div class="h-2 w-16 rounded bg-accent-2/10"></div>
-					</div>
+					<span class="rounded-full bg-accent/15 px-3 py-1 text-xs font-semibold text-accent">Live Sim</span>
 				</div>
-			</div>
-		</div>
-		<div class="space-y-6 py-20">
-			<p
-				class="font-display inline-flex rounded-full border border-accent-2/30 bg-accent-2/10 px-3 py-1 text-[10px] font-bold tracking-[0.2em] text-accent-2 uppercase"
-			>
-				Community
-			</p>
-			<h2 class="font-display text-4xl leading-tight font-bold text-ink sm:text-5xl">
-				Build Terbaru
-			</h2>
-			<p class="max-w-md text-base leading-7 text-ink-muted">
-				Browse build populer dari komunitas beserta item dan emblem yang digunakan. Temukan
-				inspirasi untuk hero favoritmu.
-			</p>
-			<a
-				href={resolve('/builds')}
-				class="inline-block rounded-full border border-accent-2/40 bg-accent-2/10 px-5 py-2.5 text-sm font-semibold text-accent-2 transition hover:bg-accent-2 hover:text-white"
-			>
-				Lihat Builds →
-			</a>
-		</div>
-	</div>
-</section>
 
-<section class="relative min-h-screen overflow-hidden">
-	<div class="mx-auto grid min-h-screen max-w-7xl items-center px-4 sm:px-6 lg:grid-cols-2">
-		<div class="space-y-6 py-20">
-			<p
-				class="font-display inline-flex rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-[10px] font-bold tracking-[0.2em] text-accent uppercase"
-			>
-				Interactive
-			</p>
-			<h2 class="font-display text-4xl leading-tight font-bold text-ink sm:text-5xl">
-				Kalkulator Damage
-			</h2>
-			<p class="max-w-md text-base leading-7 text-ink-muted">
-				Hitung damage, DPS, dan output build secara real-time. Bandingkan dua build berdampingan
-				untuk menemukan counter yang tepat.
-			</p>
-			<a
-				href={resolve('/calculator')}
-				class="inline-block rounded-full bg-accent px-5 py-2.5 text-sm font-bold text-bg shadow-[0_8px_24px_rgb(255_134_91/0.2)] transition hover:-translate-y-0.5 hover:bg-gold"
-			>
-				Buka Kalkulator →
-			</a>
-		</div>
-		<div class="relative flex items-center justify-center py-12">
-			<div class="relative h-80 w-full max-w-md overflow-hidden rounded-2xl border border-line">
-				<div
-					class="absolute inset-0 bg-linear-to-br from-accent/15 via-surface-3 to-accent/5"
-				></div>
-				<div class="relative flex h-full flex-col items-center justify-center gap-5 p-8">
-					<div class="flex gap-3">
-						<span class="size-12 rounded-xl border border-accent/30 bg-accent/10"></span>
-						<span
-							class="flex size-12 items-center justify-center rounded-xl border border-accent/50 bg-accent/20 text-xl text-accent"
-							>×</span
-						>
-						<span class="size-12 rounded-xl border border-accent/30 bg-accent/10"></span>
-					</div>
-					<div class="text-center">
-						<p class="font-display text-2xl font-bold text-accent">1 250.5</p>
-						<p class="text-xs text-ink-muted">DPS Output</p>
-					</div>
-					<div class="flex gap-2">
-						<span class="h-2 w-8 rounded bg-accent/30"></span>
-						<span class="h-2 w-8 rounded bg-accent/15"></span>
-						<span class="h-2 w-8 rounded bg-accent/30"></span>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-</section>
-
-<section class="relative min-h-screen overflow-hidden">
-	<div class="mx-auto grid min-h-screen max-w-7xl items-center px-4 sm:px-6 lg:grid-cols-2">
-		<div class="relative flex items-center justify-center py-12 lg:order-first">
-			<div class="relative h-80 w-full max-w-md overflow-hidden rounded-2xl border border-line">
-				<div
-					class="absolute inset-0 bg-linear-to-br from-secondary/15 via-surface-3 to-secondary/5"
-				></div>
-				<div class="relative flex h-full flex-col items-center justify-center gap-5 p-8">
-					<div class="flex gap-4">
-						<div class="text-center">
-							<p class="font-display text-lg font-bold text-secondary">RRQ</p>
-							<p class="text-xs text-ink-muted">3</p>
-						</div>
-						<span class="font-display text-sm text-ink-faint">vs</span>
-						<div class="text-center">
-							<p class="font-display text-lg font-bold text-secondary">ONIC</p>
-							<p class="text-xs text-ink-muted">2</p>
+				<div class="grid gap-3 sm:grid-cols-[1fr_auto_1fr]">
+					<div class="rounded-2xl border border-line bg-bg/60 p-4">
+						<img src={miyaImage} alt="Hero preview" class="mx-auto size-20 rounded-full border border-accent/30 object-cover" />
+						<p class="mt-3 text-center font-bold text-ink">Lancelot</p>
+						<p class="text-center text-xs text-ink-muted">Hero</p>
+						<div class="mt-4 grid grid-cols-3 gap-2">
+							{#each Array(6) as _, i (i)}
+								<span class="aspect-square rounded-xl border border-line bg-surface-3 shadow-inner" class:bg-accent-2={i === 2}></span>
+							{/each}
 						</div>
 					</div>
-					<div class="w-full space-y-2">
-						<div class="h-2 w-full rounded bg-secondary/20"></div>
-						<div class="h-2 w-3/4 rounded bg-secondary/10"></div>
-						<div class="h-2 w-full rounded bg-secondary/20"></div>
-						<div class="h-2 w-2/3 rounded bg-secondary/10"></div>
+					<div class="flex items-center justify-center"><span class="rounded-full border border-accent/40 bg-accent/15 px-3 py-2 text-xs font-black text-accent">VS</span></div>
+					<div class="rounded-2xl border border-line bg-bg/60 p-4">
+						<div class="mx-auto flex size-20 items-center justify-center rounded-full border border-magic/30 bg-magic/10 text-2xl font-black text-magic">A</div>
+						<p class="mt-3 text-center font-bold text-ink">Alpha</p>
+						<p class="text-center text-xs text-ink-muted">Target</p>
+						<div class="mt-4 grid grid-cols-3 gap-2">
+							{#each Array(6) as _, i (i)}
+								<span class="aspect-square rounded-xl border border-line bg-surface-3 shadow-inner" class:bg-secondary={i === 1}></span>
+							{/each}
+						</div>
+					</div>
+				</div>
+
+				<div class="mt-3 grid gap-3 sm:grid-cols-2">
+					<div class="rounded-2xl border border-line bg-bg/60 p-4">
+						<p class="text-xs font-bold text-ink-muted uppercase">Total Item Stats (Hero)</p>
+						<div class="mt-3 space-y-2 text-sm"><p class="flex justify-between"><span>Physical ATK</span><b class="text-good">+65</b></p><p class="flex justify-between"><span>CD Reduction</span><b class="text-good">+15%</b></p></div>
+					</div>
+					<div class="rounded-2xl border border-line bg-bg/60 p-4">
+						<p class="text-xs font-bold text-ink-muted uppercase">Damage Output</p>
+						<p class="font-mono-stat mt-2 text-3xl font-black text-accent">1,250.5</p>
+						<p class="text-xs text-ink-muted">estimated DPS</p>
 					</div>
 				</div>
 			</div>
 		</div>
-		<div class="space-y-6 py-20">
-			<p
-				class="font-display inline-flex rounded-full border border-secondary/30 bg-secondary/10 px-3 py-1 text-[10px] font-bold tracking-[0.2em] text-secondary uppercase"
-			>
-				Esports
-			</p>
-			<h2 class="font-display text-4xl leading-tight font-bold text-ink sm:text-5xl">
-				Pantau Turnamen
-			</h2>
-			<p class="max-w-md text-base leading-7 text-ink-muted">
-				Turnamen berjalan, hasil pertandingan terbaru, dan statistik tim dari scene kompetitif
-				Mobile Legends.
-			</p>
-			<a
-				href={resolve('/tournaments')}
-				class="inline-block rounded-full border border-secondary/40 bg-secondary/10 px-5 py-2.5 text-sm font-semibold text-secondary transition hover:bg-secondary hover:text-white"
-			>
-				Lihat Tournaments →
-			</a>
+	</div>
+</section>
+
+<section class="px-4 py-16 sm:px-6">
+	<div class="mx-auto max-w-7xl">
+		<div class="mb-8 flex flex-wrap items-end justify-between gap-4">
+			<div>
+				<p class="font-display text-xs font-bold tracking-[0.2em] text-accent uppercase">Fitur Utama</p>
+				<h2 class="font-display mt-2 text-3xl font-bold text-ink sm:text-4xl">Theorycraft dalam satu dashboard</h2>
+			</div>
+			<a href={resolve('/builds')} class="text-sm font-semibold text-accent hover:text-gold">Lihat Builds →</a>
+		</div>
+
+		<div class="grid gap-5 lg:grid-cols-3">
+			{#each features as feature, i (feature.title)}
+				<article class="group overflow-hidden rounded-3xl border border-line bg-surface/75 p-5 shadow-xl shadow-black/10 transition hover:-translate-y-1 hover:border-accent/40">
+					<div class="mb-5 rounded-2xl border border-line bg-bg/60 p-4">
+						{#if i === 0}
+							<div class="grid grid-cols-3 gap-2">
+								{#each ['Aamon', 'Akai', 'Aldous'] as name (name)}
+									<div class="rounded-xl bg-surface-3 p-2 text-center"><div class="mx-auto mb-2 size-14 rounded-xl bg-accent/20"></div><p class="truncate text-xs font-semibold">{name}</p></div>
+								{/each}
+							</div>
+						{:else if i === 1}
+							<div class="flex items-center justify-between gap-4"><div class="size-16 rounded-2xl bg-accent/20"></div><div><p class="text-xs text-ink-muted">Skill Damage</p><p class="font-mono-stat text-4xl font-black text-accent">461.4</p></div></div>
+						{:else}
+							<div class="flex items-center justify-center gap-4 py-5"><b class="text-secondary">RRQ</b><span class="rounded-full bg-secondary/15 px-3 py-1 text-xs text-secondary">VS</span><b class="text-secondary">ONIC</b></div>
+						{/if}
+					</div>
+					<h3 class="font-display text-xl font-bold text-ink">{feature.title}</h3>
+					<p class="mt-3 min-h-20 text-sm leading-7 text-ink-muted">{feature.desc}</p>
+					<a href={resolve(feature.href)} class="mt-4 inline-flex text-sm font-bold text-accent transition group-hover:text-gold">{feature.cta}</a>
+				</article>
+			{/each}
 		</div>
 	</div>
 </section>
+
+<footer class="border-t border-line px-4 py-8 sm:px-6">
+	<div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 text-sm text-ink-muted">
+		<div class="flex gap-5"><a href={resolve('/')} class="hover:text-accent">Privacy Policy</a><a href={resolve('/')} class="hover:text-accent">Terms of Service</a><a href={resolve('/')} class="hover:text-accent">Contact</a></div>
+		<p>© 2024 ML Theorycraft. All rights reserved.</p>
+	</div>
+</footer>

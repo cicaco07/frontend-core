@@ -69,6 +69,7 @@ export interface Hero {
 	slug: string;
 	name: string;
 	role: HeroRole;
+	roles?: HeroRole[];
 	lanes?: string[];
 	imageUrl: string;
 	avatarUrl: string;
