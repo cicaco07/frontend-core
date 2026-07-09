@@ -180,7 +180,7 @@ export function mapBaseStat(input?: BackendBaseStat | null): StatBlock {
 	stats.physicalDefense = input.physical_defense ?? 0;
 	stats.magicDefense = input.magic_defense ?? 0;
 	stats.movementSpeed = input.movement_speed ?? 0;
-	stats.attackSpeedPct = (input.attack_speed ?? 0) / 100;
+	stats.attackSpeedPct = input.attack_speed ?? 0;
 	stats.spellVampPct = (input.spell_vamp_ratio ?? 0) / 100;
 	stats.lifestealPct = (input.lifesteal ?? 0) / 100;
 	stats.critChancePct = (input.crit_rate ?? 0) / 100;
@@ -357,8 +357,6 @@ function calculationAttributesToStats(attrs: CalculationAttribute[] = []): Parti
 				break;
 			case 'adaptive_attack':
 				add('adaptiveAttack', attr.value);
-				add('physicalAttack', attr.value);
-				add('magicPower', attr.value);
 				break;
 			case 'physical_defense':
 				add('physicalDefense', attr.value);

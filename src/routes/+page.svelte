@@ -1,7 +1,31 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import heroImage from '$lib/../assets/landing/novaria.jpg';
-	import miyaImage from '$lib/../assets/landing/Miya_upscayl_1x_upscayl-standard-4x.png';
+	import heroMiya from '$lib/assets/landing/db/hero-miya.png';
+	import heroBalmond from '$lib/assets/landing/db/hero-balmond.png';
+	import heroSaber from '$lib/assets/landing/db/hero-saber.png';
+	import heroAlice from '$lib/assets/landing/db/hero-alice.png';
+	import itemAntiqueCuirass from '$lib/assets/landing/db/item-antique-cuirass.png';
+	import itemArcaneBoots from '$lib/assets/landing/db/item-arcane-boots.png';
+	import itemAresBelt from '$lib/assets/landing/db/item-ares-belt.png';
+	import itemAthenaShield from '$lib/assets/landing/db/item-athena-s-shield.png';
+	import itemAzureBlade from '$lib/assets/landing/db/item-azure-blade.png';
+	import itemAllowThrow from '$lib/assets/landing/db/item-allow-throw.png';
+
+	const heroPreview = [
+		{ name: 'Miya', image: heroMiya },
+		{ name: 'Balmond', image: heroBalmond },
+		{ name: 'Saber', image: heroSaber },
+		{ name: 'Alice', image: heroAlice }
+	] as const;
+	const itemPreview = [
+		{ name: 'Antique Cuirass', image: itemAntiqueCuirass },
+		{ name: 'Arcane Boots', image: itemArcaneBoots },
+		{ name: 'Ares Belt', image: itemAresBelt },
+		{ name: "Athena's Shield", image: itemAthenaShield },
+		{ name: 'Azure Blade', image: itemAzureBlade },
+		{ name: 'Allow Throw', image: itemAllowThrow }
+	] as const;
 
 	const features = [
 		{
@@ -25,12 +49,12 @@
 	] as const;
 </script>
 
-<section class="relative isolate overflow-hidden px-4 pt-28 pb-16 sm:px-6 lg:min-h-screen lg:pt-32">
+<section class="relative isolate flex min-h-screen items-center overflow-hidden px-4 pt-24 pb-16 sm:px-6 lg:pt-20">
 	<img src={heroImage} alt="" class="absolute inset-0 -z-20 h-full w-full object-cover object-[75%_center] opacity-45" />
 	<div class="absolute inset-0 -z-10 bg-linear-to-r from-bg via-bg/90 to-bg/45"></div>
 	<div class="absolute top-28 right-4 -z-10 h-72 w-72 rounded-full bg-accent/20 blur-3xl"></div>
 
-	<div class="mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[0.9fr_1.1fr]">
+	<div class="mx-auto grid w-full max-w-7xl items-center gap-10 lg:grid-cols-[0.9fr_1.1fr]">
 		<div class="space-y-7">
 			<p class="font-display inline-flex rounded-full border border-accent/30 bg-surface/75 px-4 py-1.5 text-xs font-bold tracking-[0.22em] text-accent uppercase backdrop-blur">
 				Mobile Legends · Damage Calculator
@@ -67,23 +91,27 @@
 
 				<div class="grid gap-3 sm:grid-cols-[1fr_auto_1fr]">
 					<div class="rounded-2xl border border-line bg-bg/60 p-4">
-						<img src={miyaImage} alt="Hero preview" class="mx-auto size-20 rounded-full border border-accent/30 object-cover" />
+						<img src={heroSaber} alt="Lancelot preview" class="mx-auto size-20 rounded-full border border-accent/30 object-cover" />
 						<p class="mt-3 text-center font-bold text-ink">Lancelot</p>
 						<p class="text-center text-xs text-ink-muted">Hero</p>
 						<div class="mt-4 grid grid-cols-3 gap-2">
-							{#each Array(6) as _, i (i)}
-								<span class="aspect-square rounded-xl border border-line bg-surface-3 shadow-inner" class:bg-accent-2={i === 2}></span>
+							{#each itemPreview as item (item.name)}
+								<span class="aspect-square overflow-hidden rounded-xl border border-line bg-surface-3 shadow-inner" title={item.name}>
+									<img src={item.image} alt={item.name} class="h-full w-full object-cover" loading="lazy" />
+								</span>
 							{/each}
 						</div>
 					</div>
 					<div class="flex items-center justify-center"><span class="rounded-full border border-accent/40 bg-accent/15 px-3 py-2 text-xs font-black text-accent">VS</span></div>
 					<div class="rounded-2xl border border-line bg-bg/60 p-4">
-						<div class="mx-auto flex size-20 items-center justify-center rounded-full border border-magic/30 bg-magic/10 text-2xl font-black text-magic">A</div>
+						<img src={heroBalmond} alt="Alpha preview" class="mx-auto size-20 rounded-full border border-magic/30 object-cover" />
 						<p class="mt-3 text-center font-bold text-ink">Alpha</p>
 						<p class="text-center text-xs text-ink-muted">Target</p>
 						<div class="mt-4 grid grid-cols-3 gap-2">
-							{#each Array(6) as _, i (i)}
-								<span class="aspect-square rounded-xl border border-line bg-surface-3 shadow-inner" class:bg-secondary={i === 1}></span>
+							{#each itemPreview.toReversed() as item (item.name)}
+								<span class="aspect-square overflow-hidden rounded-xl border border-line bg-surface-3 shadow-inner" title={item.name}>
+									<img src={item.image} alt={item.name} class="h-full w-full object-cover" loading="lazy" />
+								</span>
 							{/each}
 						</div>
 					</div>
@@ -121,12 +149,23 @@
 					<div class="mb-5 rounded-2xl border border-line bg-bg/60 p-4">
 						{#if i === 0}
 							<div class="grid grid-cols-3 gap-2">
-								{#each ['Aamon', 'Akai', 'Aldous'] as name (name)}
-									<div class="rounded-xl bg-surface-3 p-2 text-center"><div class="mx-auto mb-2 size-14 rounded-xl bg-accent/20"></div><p class="truncate text-xs font-semibold">{name}</p></div>
+								{#each heroPreview.slice(0, 3) as hero (hero.name)}
+									<div class="rounded-xl bg-surface-3 p-2 text-center">
+										<img src={hero.image} alt={hero.name} class="mx-auto mb-2 size-14 rounded-xl object-cover" loading="lazy" />
+										<p class="truncate text-xs font-semibold">{hero.name}</p>
+									</div>
 								{/each}
 							</div>
 						{:else if i === 1}
-							<div class="flex items-center justify-between gap-4"><div class="size-16 rounded-2xl bg-accent/20"></div><div><p class="text-xs text-ink-muted">Skill Damage</p><p class="font-mono-stat text-4xl font-black text-accent">461.4</p></div></div>
+							<div class="flex items-center justify-between gap-4">
+								<img src={heroAlice} alt="Hero damage preview" class="size-16 rounded-2xl object-cover" loading="lazy" />
+								<div class="flex gap-2">
+									{#each itemPreview.slice(0, 3) as item (item.name)}
+										<img src={item.image} alt={item.name} class="size-9 rounded-lg object-cover" loading="lazy" />
+									{/each}
+								</div>
+								<div><p class="text-xs text-ink-muted">Skill Damage</p><p class="font-mono-stat text-4xl font-black text-accent">461.4</p></div>
+							</div>
 						{:else}
 							<div class="flex items-center justify-center gap-4 py-5"><b class="text-secondary">RRQ</b><span class="rounded-full bg-secondary/15 px-3 py-1 text-xs text-secondary">VS</span><b class="text-secondary">ONIC</b></div>
 						{/if}
