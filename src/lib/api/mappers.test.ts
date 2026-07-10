@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mapTournament, parseStatStrings } from './mappers';
+import { mapHeroStat, mapTournament, mapTournamentStage, parseStatStrings } from './mappers';
 
 describe('parseStatStrings', () => {
 	it('keeps adaptive attack separate until loadout bonuses are resolved', () => {
@@ -70,5 +70,73 @@ describe('mapTournament', () => {
 		expect(tournament.prizePool).toBeUndefined();
 		expect(tournament.startDate).toBeUndefined();
 		expect(tournament.endDate).toBeUndefined();
+	});
+});
+
+describe('tournament detail mappers', () => {
+	it('maps a stage and preserves its display order', () => {
+		expect(
+			mapTournamentStage({
+				_id: 'stage-1',
+				tournamentId: 'tournament-1',
+				name: 'Knockout Stage',
+				slug: 'knockout-stage',
+				liquipediaUrl: 'https://liquipedia.net/mobilelegends/M7/Knockout_Stage',
+				order: 2
+			})
+		).toEqual({
+			id: 'stage-1',
+			name: 'Knockout Stage',
+			slug: 'knockout-stage',
+			liquipediaUrl: 'https://liquipedia.net/mobilelegends/M7/Knockout_Stage',
+			order: 2
+		});
+	});
+
+	it('maps hero statistics including rates and side splits', () => {
+		expect(
+			mapHeroStat({
+				_id: 'stat-1',
+				tournamentId: 'tournament-1',
+				stageId: 'stage-1',
+				heroName: 'Miya',
+				heroSlug: 'miya',
+				heroImageUrl: null,
+				role: 'Gold Lane',
+				picks: 12,
+				bans: 8,
+				picksAndBans: 20,
+				wins: 7,
+				losses: 5,
+				winRate: 58.33,
+				pickRate: 40,
+				banRate: 26.67,
+				presenceRate: 66.67,
+				blueSidePicks: 7,
+				blueSideWins: 4,
+				redSidePicks: 5,
+				redSideWins: 3
+			})
+		).toEqual({
+			id: 'stat-1',
+			stageId: 'stage-1',
+			heroName: 'Miya',
+			heroSlug: 'miya',
+			heroImageUrl: undefined,
+			role: 'Gold Lane',
+			picks: 12,
+			bans: 8,
+			picksAndBans: 20,
+			wins: 7,
+			losses: 5,
+			winRate: 58.33,
+			pickRate: 40,
+			banRate: 26.67,
+			presenceRate: 66.67,
+			blueSidePicks: 7,
+			blueSideWins: 4,
+			redSidePicks: 5,
+			redSideWins: 3
+		});
 	});
 });

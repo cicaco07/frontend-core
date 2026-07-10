@@ -9,7 +9,13 @@ import type {
 	ItemTier
 } from '$lib/types/equipment';
 import type { Build } from '$lib/types/build';
-import type { Tournament, TournamentStatus, TournamentTier } from '$lib/types/tournament';
+import type {
+	HeroStat,
+	Tournament,
+	TournamentStage,
+	TournamentStatus,
+	TournamentTier
+} from '$lib/types/tournament';
 
 export interface BackendBaseStat {
 	hp?: number;
@@ -633,5 +639,71 @@ export function mapTournament(tournament: BackendTournament): Tournament {
 		endDate: tournament.endDate ?? undefined,
 		liquipediaUrl: tournament.liquipediaUrl,
 		status: TOURNAMENT_STATUSES.find((value) => value === status) ?? 'completed'
+	};
+}
+
+export interface BackendTournamentStage {
+	_id: string;
+	tournamentId: string;
+	name: string;
+	slug: string;
+	liquipediaUrl: string;
+	order: number;
+}
+
+export function mapTournamentStage(stage: BackendTournamentStage): TournamentStage {
+	return {
+		id: stage._id,
+		name: stage.name,
+		slug: stage.slug,
+		liquipediaUrl: stage.liquipediaUrl,
+		order: stage.order
+	};
+}
+
+export interface BackendHeroStat {
+	_id: string;
+	tournamentId: string;
+	stageId?: string | null;
+	heroName: string;
+	heroSlug: string;
+	heroImageUrl?: string | null;
+	role?: string | null;
+	picks: number;
+	bans: number;
+	picksAndBans: number;
+	wins: number;
+	losses: number;
+	winRate: number;
+	pickRate: number;
+	banRate: number;
+	presenceRate: number;
+	blueSidePicks: number;
+	blueSideWins: number;
+	redSidePicks: number;
+	redSideWins: number;
+}
+
+export function mapHeroStat(stat: BackendHeroStat): HeroStat {
+	return {
+		id: stat._id,
+		stageId: stat.stageId ?? undefined,
+		heroName: stat.heroName,
+		heroSlug: stat.heroSlug,
+		heroImageUrl: stat.heroImageUrl ?? undefined,
+		role: stat.role ?? undefined,
+		picks: stat.picks,
+		bans: stat.bans,
+		picksAndBans: stat.picksAndBans,
+		wins: stat.wins,
+		losses: stat.losses,
+		winRate: stat.winRate,
+		pickRate: stat.pickRate,
+		banRate: stat.banRate,
+		presenceRate: stat.presenceRate,
+		blueSidePicks: stat.blueSidePicks,
+		blueSideWins: stat.blueSideWins,
+		redSidePicks: stat.redSidePicks,
+		redSideWins: stat.redSideWins
 	};
 }

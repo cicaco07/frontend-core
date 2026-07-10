@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { resolve } from '$app/paths';
 	import type { TournamentStatus, TournamentTier } from '$lib/types';
 	import {
 		CalendarDays,
@@ -90,10 +91,6 @@
 		if (!startDate) return `Until ${formatDate(endDate)}`;
 		if (!endDate) return `Starts ${formatDate(startDate)}`;
 		return `${formatDate(startDate)} — ${formatDate(endDate)}`;
-	}
-
-	function openLiquipedia(url: string) {
-		window.open(url, '_blank', 'noopener,noreferrer');
 	}
 </script>
 
@@ -271,7 +268,8 @@
 	{:else}
 		<div class="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
 			{#each filteredTournaments as tournament (tournament.id)}
-				<article
+				<a
+					href={resolve('/tournaments/[slug]', { slug: tournament.slug })}
 					class="group flex h-full flex-col overflow-hidden rounded-3xl border border-line bg-surface/75 shadow-xl shadow-black/10 transition hover:-translate-y-0.5 hover:border-accent/35"
 				>
 					<div class="flex items-start gap-4 border-b border-line bg-bg/35 p-5">
@@ -358,16 +356,14 @@
 									<CircleCheck class="size-4 text-ink-faint" aria-hidden="true" /> Event ended
 								{/if}
 							</div>
-							<button
-								type="button"
-								onclick={() => openLiquipedia(tournament.liquipediaUrl)}
-								class="inline-flex items-center gap-1.5 rounded-full border border-accent/35 px-3 py-2 text-xs font-bold text-accent transition hover:bg-accent hover:text-bg"
+							<span
+								class="inline-flex items-center gap-1.5 rounded-full border border-accent/35 px-3 py-2 text-xs font-bold text-accent transition group-hover:bg-accent group-hover:text-bg"
 							>
-								Liquipedia <ExternalLink class="size-3.5" aria-hidden="true" />
-							</button>
+								View detail <ExternalLink class="size-3.5" aria-hidden="true" />
+							</span>
 						</div>
 					</div>
-				</article>
+				</a>
 			{/each}
 		</div>
 	{/if}

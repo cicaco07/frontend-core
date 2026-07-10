@@ -307,3 +307,64 @@ export const TOURNAMENTS_QUERY = `
 		}
 	}
 `;
+
+export const TOURNAMENT_DETAIL_QUERY = `
+	query TournamentDetail($id: ID!) {
+		tournament(id: $id) {
+			_id
+			name
+			slug
+			tier
+			tierLevel
+			game
+			region
+			logoUrl
+			prizePool
+			startDate
+			endDate
+			liquipediaUrl
+			liquipediaSlug
+			status
+		}
+	}
+`;
+
+export const TOURNAMENT_STAGES_QUERY = `
+	query TournamentStages($tournamentId: ID!) {
+		tournamentStages(tournamentId: $tournamentId) {
+			_id
+			tournamentId
+			name
+			slug
+			liquipediaUrl
+			order
+		}
+	}
+`;
+
+export const HERO_STATS_QUERY = `
+	query TournamentHeroStats($tournamentId: ID!, $stageId: ID, $limit: Float) {
+		heroStats(tournamentId: $tournamentId, stageId: $stageId, limit: $limit) {
+			_id
+			tournamentId
+			stageId
+			heroName
+			heroSlug
+			heroImageUrl
+			role
+			picks
+			bans
+			picksAndBans
+			wins
+			losses
+			winRate
+			pickRate
+			banRate
+			presenceRate
+			blueSidePicks
+			blueSideWins
+			redSidePicks
+			redSideWins
+		}
+	}
+`;
