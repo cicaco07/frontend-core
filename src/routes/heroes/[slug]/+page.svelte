@@ -238,91 +238,79 @@
 
 	<div class="mt-6">
 		{#if activeTab === 'introduction'}
-			<div class="grid gap-6 lg:grid-cols-[300px_1fr]">
-				<div
-					class="aspect-[3/4] max-h-[400px] overflow-hidden rounded-2xl border border-line bg-surface-3"
-				>
-					{#if hero.imageUrl}
-						<img src={hero.imageUrl} alt={hero.name} class="h-full w-full object-cover" />
-					{/if}
-				</div>
-				<div class="space-y-4">
-					{#if hero.title}
-						<p class="text-lg text-ink-muted italic">"{hero.title}"</p>
-					{/if}
-					{#if hero.lanes && hero.lanes.length}
-						<div>
-							<span class="text-xs font-semibold tracking-wide text-ink-faint uppercase">Lane</span>
-							<p class="mt-1 text-sm text-ink">{hero.lanes.join(' · ')}</p>
-						</div>
-					{/if}
-					{#if hero.specialities && hero.specialities.length}
-						<div>
-							<span class="text-xs font-semibold tracking-wide text-ink-faint uppercase"
-								>Specialities</span
-							>
-							<div class="mt-1 flex flex-wrap gap-1.5">
-								{#each hero.specialities as spec (spec)}
-									<span class="rounded-full bg-surface-3 px-2.5 py-0.5 text-xs text-ink-muted"
-										>{titleCase(spec)}</span
-									>
+			<section class="overflow-hidden rounded-3xl border border-line bg-surface/70 shadow-xl shadow-black/10">
+				<div class="grid lg:grid-cols-[360px_1fr]">
+					<div class="relative min-h-[430px] overflow-hidden bg-surface-3 lg:min-h-[620px]">
+						{#if hero.imageUrl}
+							<img src={hero.imageUrl} alt={hero.name} class="absolute inset-0 h-full w-full object-cover object-top" />
+						{/if}
+						<div class="absolute inset-0 bg-linear-to-t from-bg via-bg/15 to-transparent"></div>
+						<div class="absolute inset-x-0 bottom-0 p-6">
+							<p class="font-display text-3xl font-bold text-white">{hero.name}</p>
+							{#if hero.title}<p class="mt-1 text-sm text-white/70">{hero.title}</p>{/if}
+							<div class="mt-4 flex flex-wrap gap-2">
+								{#each hero.roles ?? [hero.role] as role (role)}
+									<span class="rounded-full px-3 py-1 text-[10px] font-bold text-white uppercase" style="background:{roleColor(role)}">{titleCase(role)}</span>
 								{/each}
 							</div>
 						</div>
-					{/if}
-					{#if hero.abilityScores}
+					</div>
+
+					<div class="space-y-6 p-5 sm:p-7 lg:p-8">
 						<div>
-							<span class="text-xs font-semibold tracking-wide text-ink-faint uppercase"
-								>Ability Scores</span
-							>
-							<div class="mt-2 grid grid-cols-2 gap-3">
-								{#each [{ label: 'Offense', value: hero.abilityScores.offense, color: '#ffb86b' }, { label: 'Durability', value: hero.abilityScores.durability, color: '#5fb38a' }, { label: 'Control Effect', value: hero.abilityScores.controlEffect, color: '#89e0eb' }, { label: 'Difficulty', value: hero.abilityScores.difficulty, color: '#a78bfa' }] as score (score.label)}
-									<div>
-										<div class="flex items-center justify-between text-xs">
-											<span class="text-ink-muted">{score.label}</span>
-											<span class="font-mono-stat text-ink">{score.value}</span>
+							<p class="font-display text-xs font-bold tracking-[0.2em] text-accent uppercase">Hero Overview</p>
+							<h2 class="font-display mt-2 text-2xl font-bold text-ink">Introduction</h2>
+							{#if hero.lore}<p class="mt-3 max-w-3xl text-sm leading-7 text-ink-muted">{hero.lore}</p>{/if}
+						</div>
+
+						<div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+							{#if hero.lanes && hero.lanes.length}
+								<div class="rounded-2xl border border-line bg-bg/45 p-4">
+									<p class="text-[10px] font-bold tracking-wide text-ink-faint uppercase">Lane</p>
+									<p class="mt-2 text-sm font-semibold text-ink">{hero.lanes.join(' · ')}</p>
+								</div>
+							{/if}
+							{#if hero.specialities && hero.specialities.length}
+								<div class="rounded-2xl border border-line bg-bg/45 p-4">
+									<p class="text-[10px] font-bold tracking-wide text-ink-faint uppercase">Speciality</p>
+									<p class="mt-2 text-sm font-semibold text-ink">{hero.specialities.map(titleCase).join(' · ')}</p>
+								</div>
+							{/if}
+							{#if hero.region}
+								<div class="rounded-2xl border border-line bg-bg/45 p-4">
+									<p class="text-[10px] font-bold tracking-wide text-ink-faint uppercase">Region</p>
+									<p class="mt-2 text-sm font-semibold text-ink">{hero.region}</p>
+								</div>
+							{/if}
+							{#if hero.releaseDate}
+								<div class="rounded-2xl border border-line bg-bg/45 p-4">
+									<p class="text-[10px] font-bold tracking-wide text-ink-faint uppercase">Release Date</p>
+									<p class="mt-2 text-sm font-semibold text-ink">{hero.releaseDate}</p>
+								</div>
+							{/if}
+						</div>
+
+						{#if hero.abilityScores}
+							<div class="rounded-2xl border border-line bg-bg/45 p-5">
+								<div class="mb-4 flex items-center justify-between gap-4">
+									<h3 class="font-display font-bold text-ink">Ability Scores</h3>
+									<span class="text-xs text-ink-faint">Scale 0–100</span>
+								</div>
+								<div class="grid gap-x-6 gap-y-4 sm:grid-cols-2">
+									{#each [{ label: 'Offense', value: hero.abilityScores.offense, color: '#ffb86b' }, { label: 'Durability', value: hero.abilityScores.durability, color: '#5fb38a' }, { label: 'Control Effect', value: hero.abilityScores.controlEffect, color: '#89e0eb' }, { label: 'Difficulty', value: hero.abilityScores.difficulty, color: '#a78bfa' }] as score (score.label)}
+										<div>
+											<div class="flex items-center justify-between text-xs"><span class="text-ink-muted">{score.label}</span><span class="font-mono-stat font-bold text-ink">{score.value}</span></div>
+											<div class="mt-2 h-2 overflow-hidden rounded-full bg-surface-3"><div class="h-full rounded-full" style="width:{Math.min(100, Math.max(0, score.value))}%;background:{score.color}"></div></div>
 										</div>
-										<div class="mt-1 h-1.5 w-full overflow-hidden rounded bg-surface-3">
-											<div
-												class="h-full rounded"
-												style="width:{(score.value / 100) * 100}%;background:{score.color}"
-											></div>
-										</div>
-									</div>
-								{/each}
+									{/each}
+								</div>
 							</div>
-						</div>
-					{/if}
-					{#if hero.region}
-						<div>
-							<span class="text-xs font-semibold tracking-wide text-ink-faint uppercase"
-								>Region</span
-							>
-							<p class="mt-1 text-sm text-ink">{hero.region}</p>
-						</div>
-					{/if}
-					{#if hero.releaseDate}
-						<div>
-							<span class="text-xs font-semibold tracking-wide text-ink-faint uppercase"
-								>Release Date</span
-							>
-							<p class="mt-1 text-sm text-ink">{hero.releaseDate}</p>
-						</div>
-					{/if}
-					{#if hero.lore}
-						<div>
-							<span class="text-xs font-semibold tracking-wide text-ink-faint uppercase">Lore</span>
-							<p class="mt-1 text-sm leading-relaxed text-ink-muted">{hero.lore}</p>
-						</div>
-					{/if}
-					<a
-						href={resolve('/calculator')}
-						class="inline-block rounded-full bg-accent px-4 py-2 text-sm font-bold text-bg hover:bg-gold"
-					>
-						Gunakan di Kalkulator Damage
-					</a>
+						{/if}
+
+						<a href={`${resolve('/calculator')}?hero=${encodeURIComponent(hero.slug)}`} class="inline-flex rounded-full bg-accent px-5 py-2.5 text-sm font-bold text-bg transition hover:-translate-y-0.5 hover:bg-gold">Gunakan di Kalkulator Damage</a>
+					</div>
 				</div>
-			</div>
+			</section>
 		{:else if activeTab === 'base-stat'}
 			<section class="rounded-2xl border border-line bg-surface/82 p-5">
 				<div class="mb-3 flex items-center justify-between">

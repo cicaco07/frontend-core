@@ -328,7 +328,10 @@ export function mapHero(hero: BackendHero): Hero {
 		}),
 		title: hero.alias,
 		lore: hero.short_description,
-		specialities: hero.type.map((value) => slugify(value)).filter(Boolean) as Hero['specialities'],
+		specialities: (hero.speciality ?? '')
+			.split(/[,/&]+/)
+			.map((value) => slugify(value))
+			.filter(Boolean) as Hero['specialities'],
 		difficulty: Math.min(3, Math.max(1, Math.round(hero.difficulty))) as Hero['difficulty'],
 		abilityScores: {
 			offense: hero.offense ?? 0,

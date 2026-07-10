@@ -3,7 +3,6 @@ import {
 	sumStats,
 	resolveAdaptiveAttack,
 	scaleStatsByLevel,
-	basicAttackDps,
 	averageBasicAttack,
 	heroSkillDamage,
 	computeDamage,
@@ -183,7 +182,7 @@ export class Loadout {
 		if (this.heroMod?.passive?.type === 'toggle-enhanced-ba' && this.modifierState.baEnhancedActive) {
 			const p = this.heroMod.passive;
 			const rawDmg = computeEnhancedBaRaw(p, this.finalStats);
-			let dmg = computeDamage({
+			const dmg = computeDamage({
 				rawDamage: rawDmg,
 				damageType: p.damageType ?? 'physical',
 				attacker: this.finalStats,

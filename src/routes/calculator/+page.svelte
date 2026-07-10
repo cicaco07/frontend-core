@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { page } from '$app/stores';
 	import { Loadout } from '$lib/stores/loadout.svelte';
 	import { roleColor, titleCase, ITEM_CATEGORIES, categoryColor } from '$lib/utils/labels';
 	import type { Emblem, Item, ItemCategory } from '$lib/types/equipment';
@@ -369,6 +370,16 @@
 		loadout.modifierState = { passiveStacks: 0 };
 		enrichHeroSkills(hero, false);
 	}
+
+	let queryHeroApplied = $state(false);
+	$effect(() => {
+		if (queryHeroApplied) return;
+		const slug = $page.url.searchParams.get('hero');
+		if (!slug) return;
+		queryHeroApplied = true;
+		const hero = data.heroes.find((candidate) => candidate.slug === slug);
+		if (hero) selectHero(hero);
+	});
 
 	function selectTargetHero(hero: Hero) {
 		targetLoadout.hero = hero;

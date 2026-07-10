@@ -2,14 +2,12 @@
 	import type { PageData } from './$types';
 	import type { HeroRole } from '$lib/types';
 	import HeroCard from '$lib/components/hero/HeroCard.svelte';
-	import RoleFilter from '$lib/components/hero/RoleFilter.svelte';
 	import { HERO_ROLES, roleColor, titleCase } from '$lib/utils/labels';
 
 	let { data }: { data: PageData } = $props();
 
 	const LANES = ['Gold Lane', 'Mid Lane', 'Exp Lane', 'Jungle', 'Roam'] as const;
 
-	let filterMode = $state<'lane' | 'type'>('lane');
 	let roles = $state<HeroRole[]>([]);
 	let lanes = $state<string[]>([]);
 	let query = $state('');
@@ -55,24 +53,28 @@
 		</div>
 	</header>
 
-	<section class="space-y-4 rounded-3xl border border-line bg-surface/55 p-4">
+	<section class="space-y-5 rounded-3xl border border-line bg-surface/55 p-5">
 		<div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-			<div class="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
-				<input
-					type="search"
-					placeholder="Search hero…"
-					bind:value={query}
-					class="min-w-56 rounded-full border border-line bg-bg/70 px-4 py-2.5 text-sm text-ink placeholder:text-ink-faint focus:border-accent focus:outline-none sm:w-80"
-				/>
-				<RoleFilter bind:filterMode />
+			<div>
+				<h2 class="font-display font-bold text-ink">Filter Heroes</h2>
+				<p class="mt-1 text-xs text-ink-muted">Pilih maksimal 2 lane dan 2 type. Kombinasi filter menggunakan kecocokan AND.</p>
 			</div>
 			{#if hasActiveFilter}
 				<button type="button" onclick={resetFilters} class="rounded-full border border-negative/40 px-4 py-2 text-xs font-bold text-negative transition hover:bg-negative/10">Reset</button>
 			{/if}
 		</div>
 
-		<div class="flex flex-wrap gap-2">
-			{#if filterMode === 'lane'}
+		<input
+			type="search"
+			placeholder="Search hero…"
+			bind:value={query}
+			class="w-full rounded-2xl border border-line bg-bg/70 px-4 py-3 text-sm text-ink placeholder:text-ink-faint focus:border-accent focus:outline-none"
+		/>
+
+		<div class="grid gap-5 lg:grid-cols-2">
+			<div>
+				<div class="mb-2 flex items-center justify-between"><p class="text-[10px] font-bold tracking-wide text-ink-faint uppercase">Filter by Lane</p><span class="text-[10px] text-ink-faint">{lanes.length}/2</span></div>
+				<div class="flex flex-wrap gap-2">
 				{#each LANES as l (l)}
 					<button
 						type="button"
@@ -87,7 +89,11 @@
 						{l}
 					</button>
 				{/each}
-			{:else}
+				</div>
+			</div>
+			<div>
+				<div class="mb-2 flex items-center justify-between"><p class="text-[10px] font-bold tracking-wide text-ink-faint uppercase">Filter by Type</p><span class="text-[10px] text-ink-faint">{roles.length}/2</span></div>
+				<div class="flex flex-wrap gap-2">
 				{#each HERO_ROLES as r (r)}
 					<button
 						type="button"
@@ -100,7 +106,8 @@
 						{titleCase(r)}
 					</button>
 				{/each}
-			{/if}
+				</div>
+			</div>
 		</div>
 	</section>
 
