@@ -286,3 +286,24 @@ export const OFFICIAL_BUILDS_QUERY = `
 		}
 	}
 `;
+
+export const TOURNAMENTS_QUERY = `
+	query TournamentsList {
+		tournaments {
+			_id
+			name
+			slug
+			tier
+			tierLevel
+			game
+			region
+			logoUrl
+			prizePool
+			startDate
+			endDate
+			liquipediaUrl
+			liquipediaSlug
+			status
+		}
+	}
+`;

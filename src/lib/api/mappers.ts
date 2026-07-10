@@ -9,6 +9,7 @@ import type {
 	ItemTier
 } from '$lib/types/equipment';
 import type { Build } from '$lib/types/build';
+import type { Tournament, TournamentStatus, TournamentTier } from '$lib/types/tournament';
 
 export interface BackendBaseStat {
 	hp?: number;
@@ -437,7 +438,10 @@ export function mapItem(item: BackendItem): Item {
 		tier: TIERS.find((t) => t === item.tier) ?? 'ETC',
 		cost: item.price,
 		imageUrl: item.image,
-		stats: sumStats([parseStatStrings(item.attributes), calculationAttributesToStats(calculationAttributes)]),
+		stats: sumStats([
+			parseStatStrings(item.attributes),
+			calculationAttributesToStats(calculationAttributes)
+		]),
 		calculationAttributes,
 		passiveName: item.story ?? item.tips ?? undefined,
 		passiveDescription: item.description?.join(' ') ?? item.tips ?? undefined
@@ -588,5 +592,46 @@ export function mapBuild(build: BackendBuild): Build {
 			tag: bs.tag
 		})),
 		author: build.user.name
+	};
+}
+
+export interface BackendTournament {
+	_id: string;
+	name: string;
+	slug: string;
+	tier: string;
+	tierLevel: number;
+	game: string;
+	region?: string | null;
+	logoUrl?: string | null;
+	prizePool?: string | null;
+	startDate?: string | null;
+	endDate?: string | null;
+	liquipediaUrl: string;
+	liquipediaSlug: string;
+	status: string;
+}
+
+const TOURNAMENT_TIERS: TournamentTier[] = ['international', 'national', 'regional'];
+const TOURNAMENT_STATUSES: TournamentStatus[] = ['upcoming', 'ongoing', 'completed'];
+
+export function mapTournament(tournament: BackendTournament): Tournament {
+	const tier = tournament.tier.toLowerCase();
+	const status = tournament.status.toLowerCase();
+
+	return {
+		id: tournament._id,
+		name: tournament.name,
+		slug: tournament.slug,
+		tier: TOURNAMENT_TIERS.find((value) => value === tier) ?? 'regional',
+		tierLevel: tournament.tierLevel,
+		game: tournament.game,
+		region: tournament.region ?? undefined,
+		logoUrl: tournament.logoUrl ?? undefined,
+		prizePool: tournament.prizePool ?? undefined,
+		startDate: tournament.startDate ?? undefined,
+		endDate: tournament.endDate ?? undefined,
+		liquipediaUrl: tournament.liquipediaUrl,
+		status: TOURNAMENT_STATUSES.find((value) => value === status) ?? 'completed'
 	};
 }
