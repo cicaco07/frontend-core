@@ -485,7 +485,7 @@
 	);
 
 	function round(n: number): number {
-		return Math.round(n * 10) / 10;
+		return Math.round(n * 100) / 100;
 	}
 
 	const stats = $derived(loadout.finalStats);
@@ -617,11 +617,9 @@
 		{ label: 'Magic Power', value: stats.magicPower, color: '#89e0eb', key: 'magicPower' },
 		{
 			label: 'ATK SPD',
-			value: stats.attackSpeedPct * 100,
+			value: stats.attackSpeedPct,
 			color: '#ffb86b',
-			suffix: '%',
-			key: 'attackSpeedPct',
-			isPct: true
+			key: 'attackSpeedPct'
 		},
 		{
 			label: 'ATK SPD Cap',
@@ -793,11 +791,9 @@
 		{ label: 'Magic Power', value: targetStats.magicPower, color: '#89e0eb', key: 'magicPower' },
 		{
 			label: 'ATK SPD',
-			value: targetStats.attackSpeedPct * 100,
+			value: targetStats.attackSpeedPct,
 			color: '#ffb86b',
-			suffix: '%',
-			key: 'attackSpeedPct',
-			isPct: true
+			key: 'attackSpeedPct'
 		},
 		{
 			label: 'ATK SPD Cap',
@@ -1538,7 +1534,7 @@
 					<div class="flex items-center justify-between">
 						<span class="text-ink-muted">ATK SPD</span>
 						<span class="font-mono-stat text-ink tabular-nums"
-							>+{round(mainItemStats.attackSpeedPct * 100)}%</span
+							>+{round(mainItemStats.attackSpeedPct)}</span
 						>
 					</div>
 				{/if}
@@ -1694,7 +1690,7 @@
 					<div class="flex items-center justify-between">
 						<span class="text-ink-muted">ATK SPD</span>
 						<span class="font-mono-stat text-ink tabular-nums"
-							>+{round(targetItemStats.attackSpeedPct * 100)}%</span
+							>+{round(targetItemStats.attackSpeedPct)}</span
 						>
 					</div>
 				{/if}

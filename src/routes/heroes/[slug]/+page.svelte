@@ -60,7 +60,7 @@
 	const scaledStats = $derived(scaleStatsByLevel(hero.baseStats, hero.statsPerLevel, level));
 
 	function round(n: number): number {
-		return Math.round(n * 10) / 10;
+		return Math.round(n * 100) / 100;
 	}
 
 	function humanizeKey(key: string): string {
@@ -153,7 +153,7 @@
 			value: round(scaledStats.magicPower),
 			growth: hero.statsPerLevel.magicPower
 		},
-		{ label: 'Attack Speed', value: round(scaledStats.attackSpeedPct * 100), suffix: '%' },
+		{ label: 'Attack Speed', value: round(scaledStats.attackSpeedPct) },
 		{ label: 'Crit Chance', value: round(scaledStats.critChancePct * 100), suffix: '%' },
 		{ label: 'Lifesteal', value: round(scaledStats.lifestealPct * 100), suffix: '%' },
 		{ label: 'Spell Vamp', value: round(scaledStats.spellVampPct * 100), suffix: '%' },

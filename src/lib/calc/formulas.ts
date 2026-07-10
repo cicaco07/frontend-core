@@ -14,6 +14,18 @@ export function sumStats(blocks: Array<Partial<StatBlock>>): StatBlock {
 	return total;
 }
 
+export function resolveAdaptiveAttack(stats: Partial<StatBlock>): StatBlock {
+	const total = sumStats([stats]);
+	const adaptive = total.adaptiveAttack;
+	if (!adaptive) return total;
+
+	// Adaptive attack is based on bonus Physical Attack vs Magic Power only;
+	// hero base stats are expected to be excluded by the caller.
+	if (total.magicPower > total.physicalAttack) total.magicPower += adaptive;
+	else total.physicalAttack += adaptive;
+	return total;
+}
+
 export function scaleStatsByLevel(
 	base: StatBlock,
 	perLevel: Partial<StatBlock>,
@@ -96,7 +108,7 @@ export function averageBasicAttack(
 }
 
 export function attacksPerSecond(attacker: StatBlock, baseAttackSpeed = 1): number {
-	return baseAttackSpeed * (1 + attacker.attackSpeedPct);
+	return baseAttackSpeed * attacker.attackSpeedPct;
 }
 
 export function basicAttackDps(

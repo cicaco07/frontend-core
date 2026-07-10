@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
 	sumStats,
+	resolveAdaptiveAttack,
 	scaleStatsByLevel,
 	effectiveResistance,
 	mitigationMultiplier,
@@ -20,6 +21,20 @@ describe('sumStats', () => {
 		expect(total.physicalAttack).toBe(80);
 		expect(total.magicPower).toBe(10);
 		expect(total.hp).toBe(0);
+	});
+});
+
+describe('resolveAdaptiveAttack', () => {
+	it('converts Aamon adaptive attack to magic from skin and emblem bonuses', () => {
+		const total = resolveAdaptiveAttack({ physicalAttack: 0, magicPower: 38, adaptiveAttack: 16 });
+		expect(total.physicalAttack).toBe(0);
+		expect(total.magicPower).toBe(54);
+	});
+
+	it('falls back to physical when bonus physical attack ties or exceeds magic power', () => {
+		const total = resolveAdaptiveAttack({ physicalAttack: 0, magicPower: 0, adaptiveAttack: 16 });
+		expect(total.physicalAttack).toBe(16);
+		expect(total.magicPower).toBe(0);
 	});
 });
 
@@ -85,9 +100,9 @@ describe('averageBasicAttack', () => {
 });
 
 describe('attacksPerSecond', () => {
-	it('scales base attack speed by the bonus ratio', () => {
-		const attacker = { ...emptyStatBlock(), attackSpeedPct: 0.5 };
-		expect(attacksPerSecond(attacker, 1)).toBeCloseTo(1.5);
+	it('uses the stored decimal attack speed value', () => {
+		const attacker = { ...emptyStatBlock(), attackSpeedPct: 1.14 };
+		expect(attacksPerSecond(attacker, 1)).toBeCloseTo(1.14);
 	});
 });
 

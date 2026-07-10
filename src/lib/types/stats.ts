@@ -15,7 +15,7 @@ export interface StatBlock {
 	physicalDefense: number;
 	magicDefense: number;
 
-	attackSpeedPct: number; // ratio over base, 0.25 = +25%
+	attackSpeedPct: number; // decimal attack speed, e.g. 1.14
 	attackSpeedCapPct: number; // 5 = 500% cap display/metadata
 	critChancePct: number; // 0..1
 	critDamagePct: number; // bonus over the default 2.0x, e.g. 0.4 = +40%

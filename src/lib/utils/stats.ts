@@ -26,8 +26,9 @@ export function statLabel(key: keyof StatBlock): string {
 	return STAT_LABELS[key] ?? key;
 }
 
-// Fields ending in `Pct` are ratios (0.4 -> "40%"); all others render flat.
+// Fields ending in `Pct` are ratios (0.4 -> "40%"), except attack speed stores its decimal value.
 export function formatStatValue(key: keyof StatBlock, value: number): string {
+	if (key === 'attackSpeedPct') return `${value}`;
 	if (key.endsWith('Pct')) return `${Math.round(value * 100)}%`;
 	return `${value}`;
 }

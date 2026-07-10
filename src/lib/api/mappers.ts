@@ -212,8 +212,8 @@ export function mapBaseStatGrowth(input?: BackendBaseStat | null): Partial<StatB
 }
 
 const STAT_PATTERNS: Array<[keyof StatBlock, RegExp, boolean]> = [
-	['physicalAttack', /physical\s+attack|\bpa\b|adaptive\s+attack/i, false],
-	['magicPower', /magic\s+power|\bmp\b|adaptive\s+attack/i, false],
+	['physicalAttack', /physical\s+attack|\bpa\b/i, false],
+	['magicPower', /magic\s+power|\bmp\b/i, false],
 	['physicalDefense', /physical\s+defen[sc]e|armor|hybrid\s+defen[sc]e/i, false],
 	['magicDefense', /magic\s+defen[sc]e|magic\s+resist|hybrid\s+defen[sc]e/i, false],
 	['hp', /\bhp\b/i, false],
@@ -239,6 +239,11 @@ export function parseStatStrings(attributes: string[] = []): Partial<StatBlock> 
 		if (Number.isNaN(numeric)) continue;
 
 		const isPctValue = attribute.includes('%');
+
+		if (/adaptive\s+attack/i.test(attribute)) {
+			stats.adaptiveAttack = (stats.adaptiveAttack ?? 0) + numeric;
+			continue;
+		}
 
 		if (/physical\s+pen|adaptive\s+pen/i.test(attribute)) {
 			if (isPctValue) {

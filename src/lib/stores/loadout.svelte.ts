@@ -1,6 +1,7 @@
 import type { Hero, Item, Emblem, StatBlock } from '$lib/types';
 import {
 	sumStats,
+	resolveAdaptiveAttack,
 	scaleStatsByLevel,
 	basicAttackDps,
 	averageBasicAttack,
@@ -56,6 +57,7 @@ export class Loadout {
 		if (!this.hasSkin || !this.hero) return {};
 		const slug = this.hero.slug.toLowerCase();
 		const exceptions: Record<string, Partial<StatBlock>> = {
+			aamon: { magicPower: 8 },
 			alice: { magicPower: 8 },
 			chip: { hp: 100 },
 			esme: { magicPower: 8 },
@@ -122,9 +124,11 @@ export class Loadout {
 		return result;
 	});
 
-	preItemModifierStats = $derived(
-		sumStats([this.heroStats, this.baseBonus, this.itemStats, this.emblemStats, this.modifierBonus])
+	nonHeroBonusStats = $derived(
+		resolveAdaptiveAttack(sumStats([this.baseBonus, this.itemStats, this.emblemStats, this.modifierBonus]))
 	);
+
+	preItemModifierStats = $derived(sumStats([this.heroStats, this.nonHeroBonusStats]));
 
 	itemModifierBonus = $derived(
 		computeItemModifierStats(this.items, this.itemModifierState, {
