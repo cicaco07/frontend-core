@@ -3,15 +3,19 @@ import { error } from '@sveltejs/kit';
 import type { HeroStat } from '$lib/types';
 import { gqlRequest } from '$lib/api/graphql';
 import {
+	HERO_LIST_QUERY,
 	HERO_STATS_QUERY,
 	TOURNAMENT_DETAIL_QUERY,
 	TOURNAMENT_STAGES_QUERY,
 	TOURNAMENTS_QUERY
 } from '$lib/api/queries';
 import {
+	applyMasterHeroAvatars,
+	mapHero,
 	mapHeroStat,
 	mapTournament,
 	mapTournamentStage,
+	type BackendHero,
 	type BackendHeroStat,
 	type BackendTournament,
 	type BackendTournamentStage
@@ -27,7 +31,7 @@ export const load: PageLoad = async ({ params, fetch }) => {
 		const summary = listData.tournaments.find((tournament) => tournament.slug === params.slug);
 		if (!summary) throw error(404, 'Tournament not found');
 
-		const [detailData, stagesData] = await Promise.all([
+		const [detailData, stagesData, heroesData] = await Promise.all([
 			gqlRequest<{ tournament: BackendTournament }, { id: string }>(
 				TOURNAMENT_DETAIL_QUERY,
 				{ id: summary._id },
@@ -37,8 +41,16 @@ export const load: PageLoad = async ({ params, fetch }) => {
 				TOURNAMENT_STAGES_QUERY,
 				{ tournamentId: summary._id },
 				fetch
+			),
+			gqlRequest<{ heroes: { items: BackendHero[] } }>(HERO_LIST_QUERY, undefined, fetch).catch(
+				() => ({ heroes: { items: [] } })
 			)
 		]);
+		const avatarBySlug = heroesData.heroes.items.reduce<Record<string, string>>((lookup, hero) => {
+			const mappedHero = mapHero(hero);
+			if (mappedHero.avatarUrl) lookup[mappedHero.slug] = mappedHero.avatarUrl;
+			return lookup;
+		}, {});
 
 		const stages = stagesData.tournamentStages
 			.map(mapTournamentStage)
@@ -56,7 +68,7 @@ export const load: PageLoad = async ({ params, fetch }) => {
 					{ tournamentId: summary._id, stageId: initialStageId, limit: 200 },
 					fetch
 				);
-				heroStats = statsData.heroStats.map(mapHeroStat);
+				heroStats = applyMasterHeroAvatars(statsData.heroStats.map(mapHeroStat), avatarBySlug);
 			} catch {
 				heroStats = [];
 			}
@@ -66,7 +78,8 @@ export const load: PageLoad = async ({ params, fetch }) => {
 			tournament: mapTournament(detailData.tournament),
 			stages,
 			initialStageId,
-			heroStats
+			heroStats,
+			avatarBySlug
 		};
 	} catch {
 		throw error(404, 'Tournament not found');

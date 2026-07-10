@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { mapHeroStat, mapTournament, mapTournamentStage, parseStatStrings } from './mappers';
+import {
+	applyMasterHeroAvatars,
+	mapHeroStat,
+	mapTournament,
+	mapTournamentStage,
+	parseStatStrings
+} from './mappers';
 
 describe('parseStatStrings', () => {
 	it('keeps adaptive attack separate until loadout bonuses are resolved', () => {
@@ -138,5 +144,34 @@ describe('tournament detail mappers', () => {
 			redSidePicks: 5,
 			redSideWins: 3
 		});
+	});
+
+	it('uses the master hero avatar instead of the tournament image source', () => {
+		const stat = mapHeroStat({
+			_id: 'stat-1',
+			tournamentId: 'tournament-1',
+			heroName: 'Yi Sun-shin',
+			heroSlug: 'yi-sun-shin',
+			heroImageUrl: 'https://liquipedia.net/yi-sun-shin.png',
+			picks: 1,
+			bans: 2,
+			picksAndBans: 3,
+			wins: 1,
+			losses: 0,
+			winRate: 100,
+			pickRate: 10,
+			banRate: 20,
+			presenceRate: 30,
+			blueSidePicks: 1,
+			blueSideWins: 1,
+			redSidePicks: 0,
+			redSideWins: 0
+		});
+
+		expect(
+			applyMasterHeroAvatars([stat], {
+				'yi-sun-shin': 'https://api.example.com/heroes/yi-sun-shin-avatar.png'
+			})[0]?.heroImageUrl
+		).toBe('https://api.example.com/heroes/yi-sun-shin-avatar.png');
 	});
 });

@@ -4,7 +4,7 @@
 	import { resolve } from '$app/paths';
 	import { gqlRequest } from '$lib/api/graphql';
 	import { HERO_STATS_QUERY } from '$lib/api/queries';
-	import { mapHeroStat, type BackendHeroStat } from '$lib/api/mappers';
+	import { applyMasterHeroAvatars, mapHeroStat, type BackendHeroStat } from '$lib/api/mappers';
 	import type { HeroStat } from '$lib/types';
 	import {
 		ArrowLeft,
@@ -73,7 +73,7 @@
 				{ heroStats: BackendHeroStat[] },
 				{ tournamentId: string; stageId: string; limit: number }
 			>(HERO_STATS_QUERY, { tournamentId: tournament.id, stageId, limit: 200 });
-			heroStats = result.heroStats.map(mapHeroStat);
+			heroStats = applyMasterHeroAvatars(result.heroStats.map(mapHeroStat), data.avatarBySlug);
 		} catch {
 			heroStats = [];
 			statsError = true;
@@ -117,6 +117,12 @@
 	function sortIndicator(field: keyof HeroStat): string {
 		if (sortField !== field) return '';
 		return sortDirection === 'asc' ? ' ↑' : ' ↓';
+	}
+
+	function hideBrokenImage(event: Event) {
+		if (event.currentTarget instanceof HTMLImageElement) {
+			event.currentTarget.style.display = 'none';
+		}
 	}
 
 	function openExternal(url: string) {
@@ -382,9 +388,18 @@
 								<td class="px-4 py-3">
 									<div class="flex items-center gap-3">
 										<span
-											class="grid size-10 shrink-0 place-items-center overflow-hidden rounded-xl border border-line bg-bg/60 font-bold text-accent"
+											class="relative grid size-10 shrink-0 place-items-center overflow-hidden rounded-xl border border-line bg-bg/60 font-bold text-accent"
 										>
 											{stat.heroName.charAt(0)}
+											{#if stat.heroImageUrl}
+												<img
+													src={stat.heroImageUrl}
+													alt={stat.heroName}
+													class="absolute inset-0 h-full w-full object-cover"
+													loading="lazy"
+													onerror={hideBrokenImage}
+												/>
+											{/if}
 										</span>
 										<div>
 											<p class="font-semibold text-ink">{stat.heroName}</p>

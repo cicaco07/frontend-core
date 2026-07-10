@@ -707,3 +707,13 @@ export function mapHeroStat(stat: BackendHeroStat): HeroStat {
 		redSideWins: stat.redSideWins
 	};
 }
+
+export function applyMasterHeroAvatars(
+	stats: HeroStat[],
+	avatarBySlug: Readonly<Record<string, string>>
+): HeroStat[] {
+	return stats.map((stat) => ({
+		...stat,
+		heroImageUrl: avatarBySlug[slugify(stat.heroSlug)] ?? avatarBySlug[slugify(stat.heroName)]
+	}));
+}
