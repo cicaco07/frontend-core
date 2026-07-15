@@ -9,11 +9,22 @@
 	import { gqlRequest } from '$lib/api/graphql';
 	import { OFFICIAL_BUILDS_QUERY } from '$lib/api/queries';
 	import { mapBuild, type BackendBuild } from '$lib/api/mappers';
+	import type { PatchChangeType } from '$lib/types/patch-note';
 
 	let { data }: { data: PageData } = $props();
 
 	const hero = $derived(data.hero);
 	const relations = $derived(data.relations);
+	const patchChanges = $derived(data.patchChanges);
+	const patchBadgeClass: Record<PatchChangeType, string> = {
+		BUFF: 'border-good/30 bg-good/10 text-good',
+		NERF: 'border-negative/30 bg-negative/10 text-negative',
+		ADJUSTED: 'border-gold/30 bg-gold/10 text-gold',
+		REWORK: 'border-accent/30 bg-accent/10 text-accent',
+		NEW: 'border-good/30 bg-good/10 text-good',
+		REMOVED: 'border-negative/30 bg-negative/10 text-negative',
+		OTHER: 'border-line bg-bg/60 text-ink-muted'
+	};
 
 	let heroBuilds = $state<Build[]>([]);
 	let buildsLoaded = $state(false);
@@ -594,26 +605,32 @@
 		{:else if activeTab === 'patch-note'}
 			<section class="space-y-4">
 				<h2 class="font-display text-lg font-bold">Patch Note</h2>
-				{#if relations.strongAgainst.length || relations.weakAgainst.length || relations.synergy.length}
-					<div class="grid gap-4 md:grid-cols-3">
-						<RelationGroup
-							title="Strong Against"
-							accent="#addfad"
-							relations={relations.strongAgainst}
-						/>
-						<RelationGroup
-							title="Weak Against"
-							accent="#ff7a7c"
-							relations={relations.weakAgainst}
-						/>
-						<RelationGroup title="Synergy" accent="#b387fa" relations={relations.synergy} />
+				{#if patchChanges.length}
+					<div class="space-y-3">
+						{#each patchChanges as change (change.id)}
+							<article class="rounded-2xl border border-line bg-surface/78 p-4">
+								<div class="flex flex-wrap items-start justify-between gap-3">
+									<div>
+										<h3 class="font-display font-bold text-ink">{change.patchNote.name}</h3>
+										<p class="mt-1 text-xs text-ink-faint">{change.patchNote.version ?? 'No version'} · {change.section}</p>
+									</div>
+									<span class={`rounded-full border px-2.5 py-1 text-[10px] font-bold ${patchBadgeClass[change.changeType]}`}>{change.changeType}</span>
+								</div>
+								<p class="mt-3 text-sm leading-6 text-ink-muted">{change.description}</p>
+								{#if change.details.length}
+									<ul class="mt-3 space-y-2 rounded-xl border border-line bg-bg/45 p-3 text-xs">
+										{#each change.details as detail (detail.rawText)}
+											<li class="flex flex-wrap justify-between gap-2"><span class="text-ink-muted">{detail.field}</span><strong class="font-mono-stat text-ink">{detail.oldValue ?? '-'} → {detail.newValue ?? '-'}</strong></li>
+										{/each}
+									</ul>
+								{/if}
+							</article>
+						{/each}
 					</div>
 				{:else}
-					<div
-						class="flex flex-col items-center justify-center rounded-2xl border border-line bg-surface/82 p-12"
-					>
-						<p class="text-lg font-semibold text-ink-muted">Coming Soon</p>
-						<p class="mt-1 text-sm text-ink-faint">Data patch-note belum tersedia dari backend.</p>
+					<div class="flex flex-col items-center justify-center rounded-2xl border border-line bg-surface/82 p-12">
+						<p class="text-lg font-semibold text-ink-muted">Belum Ada Riwayat</p>
+						<p class="mt-1 text-sm text-ink-faint">Belum ada patch note yang dipublikasikan untuk hero ini.</p>
 					</div>
 				{/if}
 			</section>

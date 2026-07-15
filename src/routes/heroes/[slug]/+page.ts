@@ -2,8 +2,10 @@ import type { PageLoad } from './$types';
 import type { Hero, HeroRelations } from '$lib/types';
 import { error } from '@sveltejs/kit';
 import { gqlRequest } from '$lib/api/graphql';
-import { HERO_DETAIL_QUERY, HERO_LIST_QUERY } from '$lib/api/queries';
+import { HERO_DETAIL_QUERY, HERO_LIST_QUERY, PATCH_CHANGES_QUERY } from '$lib/api/queries';
 import { mapHero, type BackendHero } from '$lib/api/mappers';
+import { mapPatchChange } from '$lib/patch-note';
+import type { BackendPatchChange, PatchChange } from '$lib/types/patch-note';
 
 const EMPTY_RELATIONS: HeroRelations = {
 	strongAgainst: [],
@@ -27,7 +29,18 @@ export const load: PageLoad = async ({ params, fetch }) => {
 			fetch
 		);
 		const hero: Hero = mapHero(detail.hero);
-		return { hero, relations: hero.relations ?? EMPTY_RELATIONS };
+		let patchChanges: PatchChange[] = [];
+		try {
+			const history = await gqlRequest<
+				{ patchChanges: BackendPatchChange[] },
+				{ filter: { targetType: 'HERO'; targetRef: string } }
+			>(PATCH_CHANGES_QUERY, { filter: { targetType: 'HERO', targetRef: hero.id } }, fetch);
+			patchChanges = history.patchChanges.map(mapPatchChange);
+		} catch {
+			patchChanges = [];
+		}
+
+		return { hero, relations: hero.relations ?? EMPTY_RELATIONS, patchChanges };
 	} catch {
 		throw error(404, 'Hero not found');
 	}

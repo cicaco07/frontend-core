@@ -1,3 +1,21 @@
+export const PATCH_CHANGES_QUERY = `
+	query PatchChanges($filter: PatchChangeFilterInput) {
+		patchChanges(filter: $filter) {
+			_id
+			target_type
+			target_ref
+			target_name
+			change_type
+			section
+			title
+			description
+			order
+			details { field old_value new_value raw_text }
+			patch_note { _id name version status published_at start_date }
+		}
+	}
+`;
+
 export const HERO_LIST_QUERY = `
 	query HeroesList {
 		heroes(filter: { limit: 200 }) {
